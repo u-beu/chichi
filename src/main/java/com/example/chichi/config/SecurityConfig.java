@@ -1,7 +1,10 @@
 package com.example.chichi.config;
 
+import com.example.chichi.config.auth.JwtTokenizer;
 import com.example.chichi.config.auth.UserDetailsServiceImpl;
 import com.example.chichi.config.auth.filter.JwtUsernamePasswordAuthenticationFilter;
+import com.example.chichi.config.auth.filter.JwtVerificationFilter;
+import com.example.chichi.config.auth.handler.JwtAuthenticationEntryPoint;
 import com.example.chichi.config.auth.handler.JwtAuthenticationFailureHandler;
 import com.example.chichi.config.auth.handler.JwtAuthenticationSuccessHandler;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,6 +29,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private final UserDetailsServiceImpl userDetailsService;
     private final ObjectMapper objectMapper;
+    private final JwtTokenizer jwtTokenizer;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -38,9 +42,14 @@ public class SecurityConfig {
                 .logout((logout) -> logout
                         .invalidateHttpSession(true))
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
+                );
+        ;
 
-        http.addFilterBefore(jwtUsernamePasswordAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(jwtUsernamePasswordAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(jwtVerificationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -54,9 +63,14 @@ public class SecurityConfig {
     public JwtUsernamePasswordAuthenticationFilter jwtUsernamePasswordAuthenticationFilter() throws Exception {
         JwtUsernamePasswordAuthenticationFilter filter = new JwtUsernamePasswordAuthenticationFilter(objectMapper);
         filter.setAuthenticationManager(authenticationManager());
-        filter.setAuthenticationSuccessHandler(new JwtAuthenticationSuccessHandler());
+        filter.setAuthenticationSuccessHandler(new JwtAuthenticationSuccessHandler(jwtTokenizer));
         filter.setAuthenticationFailureHandler(new JwtAuthenticationFailureHandler());
         return filter;
+    }
+
+    @Bean
+    public JwtVerificationFilter jwtVerificationFilter() {
+        return new JwtVerificationFilter(jwtTokenizer, userDetailsService);
     }
 
     @Bean
