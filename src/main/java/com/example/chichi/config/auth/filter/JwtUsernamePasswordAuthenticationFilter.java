@@ -35,7 +35,7 @@ public class JwtUsernamePasswordAuthenticationFilter extends AbstractAuthenticat
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws IOException {
         if (request.getContentType() == null || !request.getContentType().equals(CONTENT_TYPE)) {
-            throw new AuthenticationServiceException("부적절한 content type");
+            throw new AuthenticationServiceException("적절하지 않은 content type입니다.");
         }
 
         String messageBody = StreamUtils.copyToString(request.getInputStream(), StandardCharsets.UTF_8);

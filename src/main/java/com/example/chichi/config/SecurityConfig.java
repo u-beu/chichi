@@ -1,6 +1,6 @@
 package com.example.chichi.config;
 
-import com.example.chichi.config.auth.JwtTokenizer;
+import com.example.chichi.config.auth.TokenService;
 import com.example.chichi.config.auth.UserDetailsServiceImpl;
 import com.example.chichi.config.auth.filter.JwtUsernamePasswordAuthenticationFilter;
 import com.example.chichi.config.auth.filter.JwtVerificationFilter;
@@ -29,7 +29,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
     private final UserDetailsServiceImpl userDetailsService;
     private final ObjectMapper objectMapper;
-    private final JwtTokenizer jwtTokenizer;
+    private final TokenService tokenService;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -63,14 +63,14 @@ public class SecurityConfig {
     public JwtUsernamePasswordAuthenticationFilter jwtUsernamePasswordAuthenticationFilter() throws Exception {
         JwtUsernamePasswordAuthenticationFilter filter = new JwtUsernamePasswordAuthenticationFilter(objectMapper);
         filter.setAuthenticationManager(authenticationManager());
-        filter.setAuthenticationSuccessHandler(new JwtAuthenticationSuccessHandler(jwtTokenizer));
+        filter.setAuthenticationSuccessHandler(new JwtAuthenticationSuccessHandler(tokenService));
         filter.setAuthenticationFailureHandler(new JwtAuthenticationFailureHandler());
         return filter;
     }
 
     @Bean
     public JwtVerificationFilter jwtVerificationFilter() {
-        return new JwtVerificationFilter(jwtTokenizer, userDetailsService);
+        return new JwtVerificationFilter(tokenService, userDetailsService);
     }
 
     @Bean

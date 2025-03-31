@@ -1,6 +1,6 @@
 package com.example.chichi.config.auth.handler;
 
-import com.example.chichi.config.auth.JwtTokenizer;
+import com.example.chichi.config.auth.TokenService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,22 +14,24 @@ import java.io.IOException;
 @Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
-    //@Autowired
-    private final JwtTokenizer jwtTokenizer;
+    private final TokenService tokenService;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException {
+        String email = ((UserDetails) authentication.getPrincipal()).getUsername();
+        String accessToken = tokenService.createAccessToken(email);
+        String refreshToken = tokenService.createRefreshToken(email);
+        tokenService.saveRefreshToken(email, refreshToken);
+        createResponse(response, accessToken, refreshToken);
+    }
+
+    private void createResponse(HttpServletResponse response, String accessToken, String refreshToken) throws IOException {
+        tokenService.setAccessTokenHeader(response, accessToken);
+        tokenService.setRefreshTokenCookie(response, refreshToken);
         response.setContentType("text/plain;charset=UTF-8");
         response.setStatus(HttpServletResponse.SC_OK);
         response.getWriter().write("로그인 성공");
-        String email = ((UserDetails) authentication.getPrincipal()).getUsername();
-        log.debug("성공 핸들러 email:{}", email);
-        String accessToken = jwtTokenizer.createAccessToken(email);
-        String refreshToken = jwtTokenizer.createRefreshToken(email);
-        jwtTokenizer.setAccessTokenHeader(response, accessToken);
-        jwtTokenizer.setRefreshTokenHeader(response, refreshToken);
-        //발급한 리프레시 토큰을 레디스에 저장하는 로직 추가필요
     }
 }
