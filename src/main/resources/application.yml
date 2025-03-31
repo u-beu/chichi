@@ -37,5 +37,4 @@ jwt:
 
   refresh:
     expiration: 90
-    header: Authorization-refresh
 
