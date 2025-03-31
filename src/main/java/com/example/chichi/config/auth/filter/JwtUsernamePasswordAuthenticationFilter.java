@@ -1,13 +1,12 @@
 package com.example.chichi.config.auth.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.util.StreamUtils;
@@ -16,6 +15,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
+@Slf4j
 public class JwtUsernamePasswordAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
 
     private final ObjectMapper objectMapper;
@@ -33,9 +33,9 @@ public class JwtUsernamePasswordAuthenticationFilter extends AbstractAuthenticat
     }
 
     @Override
-    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException, IOException, ServletException {
+    public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws IOException {
         if (request.getContentType() == null || !request.getContentType().equals(CONTENT_TYPE)) {
-            throw new AuthenticationServiceException("Authentication Content-Type not supported: " + request.getContentType());
+            throw new AuthenticationServiceException("부적절한 content type");
         }
 
         String messageBody = StreamUtils.copyToString(request.getInputStream(), StandardCharsets.UTF_8);
@@ -43,6 +43,7 @@ public class JwtUsernamePasswordAuthenticationFilter extends AbstractAuthenticat
         Map<String, String> map = objectMapper.readValue(messageBody, Map.class);
         String principal = map.get(USERNAME_KEY);
         String credentials = map.get(PASSWORD_KEY);
+        log.debug("principal:{}", principal);
 
         UsernamePasswordAuthenticationToken authRequest = new UsernamePasswordAuthenticationToken(principal, credentials);
         return this.getAuthenticationManager().authenticate(authRequest);
