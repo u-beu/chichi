@@ -29,7 +29,6 @@ public class JwtVerificationFilter extends OncePerRequestFilter {
         if(tokenService.checkBlackList(accessToken)){
             throw new AuthenticationServiceException("블랙리스트된 액세스토큰입니다.");
         }
-        log.debug("진행되면 안돼용");
         if (tokenService.isTokenValid(accessToken)) {
             String email = tokenService.extractEmail(accessToken);
             saveAuthentication(email);
@@ -38,8 +37,8 @@ public class JwtVerificationFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
-        String authorization = request.getHeader("authorization");
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String authorization = request.getHeader("Authorization");
         return authorization == null || !authorization.startsWith("Bearer");
     }
 

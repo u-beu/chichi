@@ -14,11 +14,11 @@ public class TokenRedisRepository {
     private final RedisTemplate<String, String> redisTemplate;
 
     public void save(String key, String value, long expiration) {
-        redisTemplate.opsForValue().set(key, value, expiration, TimeUnit.MILLISECONDS);
+        redisTemplate.opsForValue().set(key, value, expiration, TimeUnit.SECONDS);
     }
 
     public String findTokenByKey(String key) {
-        return (String) redisTemplate.opsForValue().get(key);
+        return redisTemplate.opsForValue().get(key);
     }
 
     public void deleteRefreshTokenByKey(String key) {

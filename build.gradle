@@ -30,9 +30,6 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.security:spring-security-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 	//jwt
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -46,6 +43,18 @@ dependencies {
 
 	//validation
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	//test
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+//	testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+//	testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+//	testImplementation 'org.mockito:mockito-core:3.11.2'
+	testCompileOnly 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+	testRuntimeOnly 'com.h2database:h2'
+	testImplementation 'it.ozimov:embedded-redis:0.7.2'
 }
 
 tasks.named('test') {
