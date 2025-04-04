@@ -2,15 +2,16 @@ package com.example.chichi.domain.user;
 
 import com.example.chichi.config.auth.TokenService;
 import com.example.chichi.exception.ApiException;
-import com.example.chichi.exception.ExceptionType;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import static com.example.chichi.exception.ExceptionType.USER_ALREADY_EXISTS;
+import static com.example.chichi.exception.ExceptionType.*;
 
 @Slf4j
 @Service
@@ -32,28 +33,34 @@ public class UserService {
 
     @Transactional
     public void changePassword(String email, String currentPassword, String newPassword) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new ApiException(ExceptionType.USER_NOT_FOUND));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ApiException(USER_NOT_FOUND));
         String savedPassword = user.getPassword();
         if (passwordEncoder.matches(currentPassword, savedPassword)) {
             user.updatePassword(passwordEncoder.encode(newPassword));
         } else {
-            throw new ApiException(ExceptionType.CURRENT_PASSWORD_MISMATCH);
+            throw new ApiException(CURRENT_PASSWORD_MISMATCH);
         }
     }
 
-    public void refreshToken(String email, String refreshToken, HttpServletResponse response){
-        if(tokenService.matchRefreshToken(email, refreshToken)){
-            String accessToken = tokenService.createAccessToken(email);
+    @Transactional
+    public void refreshToken(String email, String accessToken, String refreshToken, HttpServletResponse response) {
+        if (tokenService.matchRefreshToken(email, refreshToken)) {
+            String newAccessToken = tokenService.createAccessToken(email);
             String newRefreshToken = tokenService.createRefreshToken(email);
-            tokenService.saveRefreshToken(email, newRefreshToken);
-            tokenService.setAccessTokenHeader(response, accessToken);
-            tokenService.setRefreshTokenCookie(response, newRefreshToken);
-        }else{
-            throw new ApiException(ExceptionType.REFRESHTOKEN_MISMATCH);
+            ResponseCookie refreshTokenCookie = tokenService.getRefreshTokenCookie(newRefreshToken);
+
+            tokenService.saveAccessTokenBlackList(accessToken);
+            tokenService.saveRefreshToken(email, newRefreshToken); //덮어씌어져서 delete안해도됨.
+
+            response.setHeader("Authorization", newAccessToken);
+            response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+        } else {
+            throw new ApiException(REFRESHTOKEN_INVALID);
         }
     }
 
-    public void logout(String email, String accessToken){
+    @Transactional
+    public void logout(String email, String accessToken) {
         tokenService.saveAccessTokenBlackList(accessToken);
         tokenService.deleteRefreshToken(email);
     }

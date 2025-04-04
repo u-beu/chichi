@@ -188,4 +188,9 @@ Temporary Items
 *.wat
 *.xhtml
 
-# End of https://www.toptal.com/developers/gitignore/api/macos,java,intellij,web
+### custom ###
+.gradle/
+build/
+.idea/
+*.iml
+Thumbs.db

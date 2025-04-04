@@ -21,7 +21,7 @@ public class UserController {
     @PostMapping("/join")
     public ResponseEntity<String> join(@RequestBody @Valid JoinUserRequest request) {
         userService.join(request.email(), request.password());
-        return new ResponseEntity<>("회원 가입 완료", HttpStatus.OK);
+        return new ResponseEntity<>("회원가입 완료", HttpStatus.OK);
     }
 
     @PostMapping("/myInfo")
@@ -33,9 +33,10 @@ public class UserController {
 
     @PostMapping("/auth/refresh")
     public ResponseEntity<String> refreshToken(@AuthUserEmail String email,
-                                               @CookieValue(value = "refreshToken", required = true) String refreshToken,
+                                               @RequestHeader("Authorization") String accessToken,
+                                               @CookieValue(value = "refreshToken") String refreshToken,
                                                HttpServletResponse response) {
-        userService.refreshToken(email, refreshToken, response);
+        userService.refreshToken(email, accessToken.replace("Bearer ", ""), refreshToken, response);
         return new ResponseEntity<>("토큰 재발급 완료", HttpStatus.OK);
     }
 

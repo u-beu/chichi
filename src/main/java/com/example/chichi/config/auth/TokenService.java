@@ -5,14 +5,13 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.example.chichi.domain.user.TokenRedisRepository;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.Optional;
 
@@ -73,19 +72,14 @@ public class TokenService {
         }
     }
 
-    public void setAccessTokenHeader(HttpServletResponse response, String accessToken) {
-        response.setHeader(accessHeader, accessToken);
-    }
-
-    public void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
-        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", refreshToken)
+    public ResponseCookie getRefreshTokenCookie(String refreshToken) {
+        return ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 //.secure(true)        // TODO https 변경시 적용 필요
                 .sameSite("Strict")
                 .path("/user/auth/refresh")
-                .maxAge(30 * 24 * 60 * 60) // 만료 기간: 30일
+                .maxAge(Duration.ofSeconds(refreshTokenExpirationInSeconds - 10)) // 쿠키 만료 기간 (리프레시보다 10초 짧다)
                 .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
     }
 
     public boolean isTokenValid(String token) {
@@ -103,14 +97,15 @@ public class TokenService {
 
     public boolean matchRefreshToken(String email, String refreshToken) {
         String savedRefreshToken = tokenRedisRepository.findTokenByKey(REFRESH_KEY + email);
+        if (savedRefreshToken == null) return false;
         return savedRefreshToken.equals(refreshToken);
     }
 
     public void saveAccessTokenBlackList(String accessToken) {
-        long tokenExpirationInSeconds = JWT.require(Algorithm.HMAC512(secret)).build().verify(accessToken)
+        long tokenExpirationInMilliSeconds = JWT.require(Algorithm.HMAC512(secret)).build().verify(accessToken)
                 .getExpiresAt().getTime();
         tokenRedisRepository.save(BLACK_KEY + accessToken, "blacklisted",
-                tokenExpirationInSeconds - System.currentTimeMillis());
+                (tokenExpirationInMilliSeconds - System.currentTimeMillis()) / 1000);
     }
 
     public void deleteRefreshToken(String email) {

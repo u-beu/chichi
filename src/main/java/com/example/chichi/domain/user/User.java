@@ -28,7 +28,6 @@ public class User {
 
     @CreatedDate
     private LocalDateTime createdDate = LocalDateTime.now();
-    ;
 
     @LastModifiedDate
     private LocalDateTime modifiedDate;

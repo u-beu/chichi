@@ -6,11 +6,13 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.stream.Collectors;
 
+import static com.example.chichi.exception.ExceptionType.MISSING_COOKIE;
 import static com.example.chichi.exception.ExceptionType.SERVER_ERROR;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
@@ -37,5 +39,10 @@ public class GlobalExceptionHandler {
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .collect(Collectors.joining("\n"));
         return new ResponseEntity<>(errorMessage, BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MissingRequestCookieException.class)
+    public ResponseEntity<String> handleCookieException(MissingRequestCookieException e) {
+        return new ResponseEntity<>(MISSING_COOKIE.getMessage(), MISSING_COOKIE.getHttpStatus());
     }
 }
