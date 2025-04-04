@@ -19,3 +19,22 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
     defer-datasource-initialization: true
+
+  redis:
+    host: localhost
+    port: 6379
+
+logging:
+  level:
+    root: DEBUG
+
+jwt:
+  secret: 8cee197576637b0f65b75ef35f5f661ac446eba42e965c5d5ca2b3ee0482f548a64b50bea543e7cacf61d88c95355b1351cd5af83c6a5d4ba54fc9bd034ae048
+
+  access:
+    expiration: 80
+    header: Authorization
+
+  refresh:
+    expiration: 90
+
