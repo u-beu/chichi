@@ -15,8 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.Optional;
 
 import static com.example.chichi.exception.ExceptionType.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
@@ -78,15 +78,16 @@ class UserServiceTest {
     void changePassword3() {
         //given
         User user = User.builder().password("saved").build();
+        String newPassword = "new-password";
         given(userRepository.findByEmail(anyString())).willReturn(Optional.of(user));
         given(passwordEncoder.matches(anyString(), anyString())).willReturn(true);
-        given(passwordEncoder.encode(anyString())).willReturn("new");
+        given(passwordEncoder.encode(anyString())).willReturn(newPassword);
 
         //when
-        userService.changePassword("testuser@gmail.com", "current", "new");
+        userService.changePassword("testuser@gmail.com", "current", newPassword);
 
         //then
-        assertEquals("new", user.getPassword());
+        assertThat(user.getPassword()).isEqualTo(newPassword);
     }
 
     @Test
@@ -119,8 +120,8 @@ class UserServiceTest {
         userService.refreshToken("testuser@gmail.com", "access", "refresh", response);
 
         //then
-        assertEquals(newRefresh, response.getCookie("refreshToken").getValue());
-        assertEquals(newAccess, response.getHeader("Authorization"));
+        assertThat(response.getCookie("refreshToken").getValue()).isEqualTo(newRefresh);
+        assertThat(response.getHeader("Authorization")).isEqualTo(newAccess);
     }
 
     @Test
