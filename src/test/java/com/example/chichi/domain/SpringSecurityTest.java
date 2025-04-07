@@ -1,32 +1,27 @@
 package com.example.chichi.domain;
 
-import com.example.chichi.domain.user.User;
-import com.example.chichi.domain.user.UserRepository;
+import com.example.chichi.config.CustomTestMySqlContainer;
+import com.example.chichi.config.CustomTestRedisContainer;
 import com.example.chichi.domain.user.UserService;
 import com.example.chichi.domain.user.dto.JoinUserRequest;
 import com.example.chichi.exception.ValidationType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.example.chichi.config.CustomTestRedisContainer.redisContainer;
 import static com.example.chichi.exception.ExceptionType.AUTHENTICATION_REQUIRED;
 import static org.hamcrest.Matchers.containsString;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -35,10 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
-@Transactional
 public class SpringSecurityTest {
-
     @Autowired
     MockMvc mvc;
 
@@ -46,13 +38,15 @@ public class SpringSecurityTest {
     ObjectMapper jsonMapper;
 
     @Autowired
-    PasswordEncoder passwordEncoder;
-
-    @Autowired
-    UserRepository userRepository;
-
-    @MockitoBean
     UserService userService;
+
+    @DynamicPropertySource
+    static void overrideProps(DynamicPropertyRegistry registry) {
+        CustomTestRedisContainer.setup();
+        CustomTestMySqlContainer.setup(registry);
+        registry.add("spring.redis.host", redisContainer::getHost);
+        registry.add("jwt.secret", () -> "test-secret-key");
+    }
 
     @Test
     @DisplayName("사용자 인증없이 로그아웃시 예외가 발생한다.")
@@ -64,8 +58,6 @@ public class SpringSecurityTest {
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().string(AUTHENTICATION_REQUIRED.getMessage()))
                 .andDo(print());
-
-        verify(userService, times(0)).logout(anyString(), anyString());
     }
 
     @Test
@@ -85,8 +77,6 @@ public class SpringSecurityTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("회원가입 완료"))
                 .andDo(print());
-
-        verify(userService, times(1)).join(eq(validEmail), eq(validPassword));
     }
 
     @Test
@@ -115,8 +105,8 @@ public class SpringSecurityTest {
         //given
         String email = "testuser@example.com";
         String password = "123456";
-        User user = new User(email, passwordEncoder.encode(password));
-        userRepository.save(user);
+        userService.join(email, password);
+
         Map<String, String> loginRequest = new HashMap<>();
         loginRequest.put("email", email);
         loginRequest.put("password", password);

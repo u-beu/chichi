@@ -14,8 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import static com.example.chichi.exception.ExceptionType.MISSING_COOKIE;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -91,7 +90,7 @@ class UserControllerTest {
                 .andExpect(content().string(MISSING_COOKIE.getMessage()))
                 .andDo(print());
 
-        verify(userService, times(0)).refreshToken(anyString(), anyString(), anyString(), any());
+        verify(userService, never()).refreshToken(anyString(), anyString(), anyString(), any());
     }
 
     @Test
