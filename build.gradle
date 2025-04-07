@@ -57,6 +57,19 @@ dependencies {
 	testImplementation 'it.ozimov:embedded-redis:0.7.2'
 }
 
+jar {
+	enabled = false
+	manifest {
+		attributes(
+				'Main-Class': 'com.example.chichi.ChichiApplication'
+		)
+	}
+}
+
+tasks.bootJar{
+	archiveFileName = "app.jar"
+}
+
 tasks.named('test') {
 	useJUnitPlatform()
 }
