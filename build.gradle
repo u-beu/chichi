@@ -30,9 +30,44 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'
+
+	//jwt
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+	implementation 'commons-codec:commons-codec:1.5'
+	implementation 'com.auth0:java-jwt:3.13.0'
+
+	//redis
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
+	//validation
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	//test
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testCompileOnly 'org.projectlombok:lombok'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+	testRuntimeOnly 'com.h2database:h2'
+	testImplementation 'it.ozimov:embedded-redis:0.7.2'
+	testImplementation 'org.testcontainers:testcontainers:1.19.3'
+	testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
+	testImplementation 'org.testcontainers:mysql:1.19.3'
+}
+
+jar {
+	enabled = false
+	manifest {
+		attributes(
+				'Main-Class': 'com.example.chichi.ChichiApplication'
+		)
+	}
+}
+
+tasks.bootJar{
+	archiveFileName = "app.jar"
 }
 
 tasks.named('test') {
