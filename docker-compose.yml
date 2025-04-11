@@ -8,8 +8,6 @@ services:
       MYSQL_DATABASE: ${DB_NAME}
     ports:
       - "${DB_PORT}:3306"
-    #volumes:
-    #  - mysql-data:/var/lib/mysql
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-p${DB_PWD}" ]
       interval: 10s
@@ -34,12 +32,12 @@ services:
 
   app:
     build:
-      context: .  # Dockerfile 위치
+      context: .
     image: chichi-app:latest
     container_name: chichi-spring-app
-    depends_on:
-      - mysql
-      - redis
+#    depends_on:
+#      - mysql
+#      - redis
     environment:
       DB_HOST: mysql
       REDIS_HOST: redis
@@ -52,8 +50,39 @@ services:
     networks:
       - backend
 
-volumes:
-  mysql-data:
+  nginx:
+    image: nginx:latest
+    container_name: nginx-container
+    depends_on:
+      - app
+    restart: always
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    ports:
+      - "80:80"
+      - "443:443"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 2
+      start_period: 2s
+    networks:
+      - backend
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+
+  certbot:
+    container_name: certbot-container
+    image: certbot/certbot
+    restart: unless-stopped
+    volumes:
+      - ./data/certbot/conf:/etc/letsencrypt
+      - ./data/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    networks:
+      - backend
 
 networks:
   backend:
