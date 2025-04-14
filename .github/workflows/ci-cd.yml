@@ -19,6 +19,17 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
+        
+    - name: Install Docker 
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker.io
+        sudo usermod -aG docker $USER
+
+    - name: Enable Docker Daemon 
+      run: |
+        sudo systemctl start docker || true
+        docker info
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
