@@ -18,6 +18,7 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
         response.setContentType("text/plain;charset=UTF-8");
         response.setStatus(AUTHENTICATION_REQUIRED.getHttpStatus().value());
+        log.debug("entrypoint 확인:{}",AUTHENTICATION_REQUIRED.getHttpStatus().value());
         response.getWriter().write(AUTHENTICATION_REQUIRED.getMessage());
     }
 }

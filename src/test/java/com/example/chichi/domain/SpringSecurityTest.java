@@ -2,10 +2,12 @@ package com.example.chichi.domain;
 
 import com.example.chichi.config.CustomTestMySqlContainer;
 import com.example.chichi.config.CustomTestRedisContainer;
+import com.example.chichi.config.auth.handler.JwtAuthenticationEntryPoint;
 import com.example.chichi.domain.user.UserService;
 import com.example.chichi.domain.user.dto.JoinUserRequest;
 import com.example.chichi.exception.ValidationType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +21,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.example.chichi.config.CustomTestMySqlContainer.mysql;
 import static com.example.chichi.config.CustomTestRedisContainer.redisContainer;
 import static com.example.chichi.exception.ExceptionType.AUTHENTICATION_REQUIRED;
 import static org.hamcrest.Matchers.containsString;
@@ -41,13 +42,19 @@ public class SpringSecurityTest {
     @Autowired
     UserService userService;
 
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+    @BeforeEach
+    public void setUp() {
+        jwtAuthenticationEntryPoint = new JwtAuthenticationEntryPoint();
+    }
+
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
         CustomTestRedisContainer.setup();
         CustomTestMySqlContainer.setup(registry);
         registry.add("spring.redis.host", redisContainer::getHost);
         registry.add("jwt.secret", () -> "test-secret-key");
-        System.out.println("확인 mysql:running 여부[" + mysql.isRunning() + "], url[" + mysql.getJdbcUrl() + "]");
     }
 
     @Test
