@@ -64,8 +64,8 @@ public class SpringSecurityTest {
         mvc.perform(post("/user/auth/logout")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isUnauthorized())
                 .andExpect(content().string(AUTHENTICATION_REQUIRED.getMessage()))
+                .andExpect(status().isUnauthorized())
                 .andDo(print());
     }
 
