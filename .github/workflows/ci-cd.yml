@@ -1,0 +1,91 @@
+name: Test and buildx docker image, Deploy to EC2
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout source code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        
+    - name: Install Docker using Docker's official script
+      run: |
+        curl -fsSL https://get.docker.com -o get-docker.sh
+        sudo sh get-docker.sh
+        sudo usermod -aG docker $USER
+        docker --version
+        
+    - name: Check Docker is running
+      run: |
+        docker info
+
+    - name: Enable Docker Daemon 
+      run: |
+        sudo systemctl start docker || true
+        docker info
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Run unit tests
+      run: ./gradlew test
+      
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Cache Docker layers
+      uses: actions/cache@v4
+      with:
+        path: .buildx-cache
+        key: ${{ runner.os }}-buildx-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-
+          
+    - name: Log in to DockerHub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build Docker image with Buildx and push Docker image to DockerHub
+      run: |
+        docker buildx build \
+          --cache-from=type=local,src=.buildx-cache \
+          --cache-to=type=local,dest=.buildx-cache \
+          --push \
+          -t ${{ secrets.DOCKERHUB_USERNAME }}/chichi-app:latest \ 
+          .
+
+  deploy:
+    needs: build  
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Deploy to EC2 via SSH
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.EC2_HOST }}
+        username: ${{ secrets.EC2_USER }}
+        key: ${{ secrets.EC2_KEY }}
+        script: |
+          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/chichi-app:latest
+          cd /home/ubuntu/chichi
+          docker-compose down
+          docker-compose up -d --build
