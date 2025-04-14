@@ -31,13 +31,10 @@ services:
       - backend
 
   app:
-    build:
-      context: .
+    #build:
+    #  context: .
     image: chichi-app:latest
     container_name: chichi-spring-app
-#    depends_on:
-#      - mysql
-#      - redis
     environment:
       DB_HOST: mysql
       REDIS_HOST: redis
