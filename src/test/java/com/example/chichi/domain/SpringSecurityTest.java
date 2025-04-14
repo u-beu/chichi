@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.example.chichi.config.CustomTestMySqlContainer.mysql;
 import static com.example.chichi.config.CustomTestRedisContainer.redisContainer;
 import static com.example.chichi.exception.ExceptionType.AUTHENTICATION_REQUIRED;
 import static org.hamcrest.Matchers.containsString;
@@ -46,6 +47,7 @@ public class SpringSecurityTest {
         CustomTestMySqlContainer.setup(registry);
         registry.add("spring.redis.host", redisContainer::getHost);
         registry.add("jwt.secret", () -> "test-secret-key");
+        System.out.println("확인 mysql:running 여부[" + mysql.isRunning() + "], url[" + mysql.getJdbcUrl() + "]");
     }
 
     @Test
