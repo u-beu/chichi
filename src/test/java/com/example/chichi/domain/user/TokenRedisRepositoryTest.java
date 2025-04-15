@@ -11,16 +11,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class TokenRedisRepositoryTest {
 
-    private final TokenRedisRepository tokenRedisRepository=new TokenRedisRepository(redisTemplate);
+    private final TokenRedisRepository tokenRedisRepository = new TokenRedisRepository(redisTemplate);
 
     @BeforeAll
-    static void setup(){
+    static void setup() {
         CustomTestRedisContainer.setup();
     }
 
     @DynamicPropertySource
     static void configureRedis(DynamicPropertyRegistry registry) {
         registry.add("spring.redis.host", redisContainer::getHost);
+        registry.add("spring.redis.port", () -> redisContainer.getMappedPort(6379));
     }
 
     @AfterEach

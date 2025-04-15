@@ -22,7 +22,6 @@ class UserRepositoryTest {
 
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
-        //CustomTestMySqlContainer.setup();
         registry.add("spring.datasource.url", mySQLContainer::getJdbcUrl);
         registry.add("spring.datasource.username", mySQLContainer::getUsername);
         registry.add("spring.datasource.password", mySQLContainer::getPassword);
