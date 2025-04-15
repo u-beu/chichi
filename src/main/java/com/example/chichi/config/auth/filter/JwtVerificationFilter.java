@@ -3,6 +3,7 @@ package com.example.chichi.config.auth.filter;
 import com.example.chichi.config.auth.TokenService;
 import com.example.chichi.config.auth.UserDetailsImpl;
 import com.example.chichi.config.auth.UserDetailsServiceImpl;
+import com.example.chichi.config.auth.handler.JwtAuthenticationEntryPoint;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,16 +23,20 @@ import java.io.IOException;
 public class JwtVerificationFilter extends OncePerRequestFilter {
     private final TokenService tokenService;
     private final UserDetailsServiceImpl userDetailsService;
+    private final JwtAuthenticationEntryPoint entryPoint;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String accessToken = tokenService.extractAccessToken(request).get();
-        if(tokenService.checkBlackList(accessToken)){
-            throw new AuthenticationServiceException("블랙리스트된 액세스토큰입니다.");
+        if (tokenService.checkBlackList(accessToken)) {
+            throw new AuthenticationServiceException("블랙리스트된 액세스토큰");
         }
-        if (tokenService.isTokenValid(accessToken)) {
+        if (tokenService.isTokenValid(accessToken, request, response)) {
             String email = tokenService.extractEmail(accessToken);
             saveAuthentication(email);
+        }else{
+            entryPoint.commence(request, response, new AuthenticationServiceException("토큰 유효성 검증 실패"));
+            return;
         }
         filterChain.doFilter(request, response);
     }

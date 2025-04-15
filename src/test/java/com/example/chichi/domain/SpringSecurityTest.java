@@ -2,12 +2,10 @@ package com.example.chichi.domain;
 
 import com.example.chichi.config.CustomTestMySqlContainer;
 import com.example.chichi.config.CustomTestRedisContainer;
-import com.example.chichi.config.auth.handler.JwtAuthenticationEntryPoint;
 import com.example.chichi.domain.user.UserService;
 import com.example.chichi.domain.user.dto.JoinUserRequest;
 import com.example.chichi.exception.ValidationType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,8 +25,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -42,31 +39,12 @@ public class SpringSecurityTest {
     @Autowired
     UserService userService;
 
-    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
-
-    @BeforeEach
-    public void setUp() {
-        jwtAuthenticationEntryPoint = new JwtAuthenticationEntryPoint();
-    }
-
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
         CustomTestRedisContainer.setup();
         CustomTestMySqlContainer.setup(registry);
         registry.add("spring.redis.host", redisContainer::getHost);
         registry.add("jwt.secret", () -> "test-secret-key");
-    }
-
-    @Test
-    @DisplayName("사용자 인증없이 로그아웃시 예외가 발생한다.")
-    void logout() throws Exception {
-        //when, then
-        mvc.perform(post("/user/auth/logout")
-                        .with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(content().string(AUTHENTICATION_REQUIRED.getMessage()))
-                .andExpect(status().isUnauthorized())
-                .andDo(print());
     }
 
     @Test
@@ -128,6 +106,28 @@ public class SpringSecurityTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().string("로그인 성공"))
+                .andExpect(header().exists("Authorization"))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("유효하지 않은 토큰이면 예외를 발생한다.")
+    void logout() throws Exception {
+        String jwt = "invalid-token";
+
+        mvc.perform(post("/user/auth/logout")
+                        .header("Authorization", "Bearer " + jwt))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string(AUTHENTICATION_REQUIRED.getMessage()))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("토큰을 입력하지 않으면 예외를 발생한다.")
+    void logout2() throws Exception {
+        mvc.perform(post("/user/auth/logout"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().string(AUTHENTICATION_REQUIRED.getMessage()))
                 .andDo(print());
     }
 }

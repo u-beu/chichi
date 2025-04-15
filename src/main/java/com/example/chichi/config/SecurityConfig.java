@@ -44,7 +44,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(exception -> exception
-                        .authenticationEntryPoint(new JwtAuthenticationEntryPoint())
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint())
                 );
         ;
 
@@ -70,7 +70,7 @@ public class SecurityConfig {
 
     @Bean
     public JwtVerificationFilter jwtVerificationFilter() {
-        return new JwtVerificationFilter(tokenService, userDetailsService);
+        return new JwtVerificationFilter(tokenService, userDetailsService, jwtAuthenticationEntryPoint());
     }
 
     @Bean
@@ -86,5 +86,10 @@ public class SecurityConfig {
         daoAuthenticationProvider.setUserDetailsService(userDetailsService);
         daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
         return daoAuthenticationProvider;
+    }
+
+    @Bean
+    public JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint() {
+        return new JwtAuthenticationEntryPoint();
     }
 }

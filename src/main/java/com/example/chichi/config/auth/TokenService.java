@@ -4,13 +4,16 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.example.chichi.domain.user.TokenRedisRepository;
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Date;
 import java.util.Optional;
@@ -82,12 +85,13 @@ public class TokenService {
                 .build();
     }
 
-    public boolean isTokenValid(String token) {
+    public boolean isTokenValid(String token, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         try {
             JWT.require(Algorithm.HMAC512(secret)).build().verify(token);
             return true;
         } catch (JWTVerificationException e) {
-            throw new JWTVerificationException("JWT 검증 실패[" + e.getClass().getSimpleName() + "]:" + e.getMessage());
+            log.debug("JWT 검증 실패[" + e.getClass().getSimpleName() + "]:" + e.getMessage());
+            return false;
         }
     }
 
