@@ -43,12 +43,14 @@ public class SpringSecurityTest {
 
     @BeforeAll
     static void setup(){
+        System.out.println("하늘 setup");
         CustomTestRedisContainer.setup();
         CustomTestMySqlContainer.setup();
     }
 
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
+        System.out.println("하늘 props");
         registry.add("spring.redis.host", redisContainer::getHost);
         registry.add("spring.datasource.url", mySQLContainer::getJdbcUrl);
         registry.add("spring.datasource.username", mySQLContainer::getUsername);
