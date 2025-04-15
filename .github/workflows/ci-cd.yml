@@ -9,14 +9,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
-    services:
-      docker:
-        image: docker:dind
-        options: --privileged
-        ports:
-          - 3306:3306
-          - 6379:6379
           
     steps:
     - name: Checkout source code
@@ -67,7 +59,7 @@ jobs:
           --cache-from=type=local,src=.buildx-cache \
           --cache-to=type=local,dest=.buildx-cache \
           --push \
-          -t ${{ secrets.DOCKERHUB_USERNAME }}/chichi-app:latest \ 
+          -t ${{ secrets.DOCKERHUB_USERNAME }}/chichi-app:latest \
           .
 
   deploy:
