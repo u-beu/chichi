@@ -9,7 +9,15 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-
+    
+    services:
+      docker:
+        image: docker:dind
+        options: --privileged
+        ports:
+          - 3306:3306
+          - 6379:6379
+          
     steps:
     - name: Checkout source code
       uses: actions/checkout@v4
