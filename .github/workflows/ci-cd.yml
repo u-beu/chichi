@@ -20,17 +20,6 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         
-    - name: Install Docker using Docker's official script
-      run: |
-        curl -fsSL https://get.docker.com -o get-docker.sh
-        sudo sh get-docker.sh
-        sudo usermod -aG docker $USER
-        docker --version
-        
-    - name: Check Docker is running
-      run: |
-        docker info
-
     - name: Enable Docker Daemon 
       run: |
         sudo systemctl start docker || true
