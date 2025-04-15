@@ -8,6 +8,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
+
 public class CustomTestRedisContainer {
     public static final GenericContainer redisContainer = new GenericContainer(DockerImageName.parse("redis:7.2"))
             .withExposedPorts(6379);

@@ -1,6 +1,7 @@
 package com.example.chichi.domain.user;
 
 import com.example.chichi.config.CustomTestMySqlContainer;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,7 +13,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Optional;
 
-import static com.example.chichi.config.CustomTestMySqlContainer.mysql;
+import static com.example.chichi.config.CustomTestMySqlContainer.mySQLContainer;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
@@ -21,12 +22,17 @@ class UserRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
+    @BeforeAll
+    static void setup(){
+        CustomTestMySqlContainer.setup();
+    }
+
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
-        CustomTestMySqlContainer.setup();
-        registry.add("spring.datasource.url", mysql::getJdbcUrl);
-        registry.add("spring.datasource.username", mysql::getUsername);
-        registry.add("spring.datasource.password", mysql::getPassword);
+        //CustomTestMySqlContainer.setup();
+        registry.add("spring.datasource.url", mySQLContainer::getJdbcUrl);
+        registry.add("spring.datasource.username", mySQLContainer::getUsername);
+        registry.add("spring.datasource.password", mySQLContainer::getPassword);
     }
 
     @Test
