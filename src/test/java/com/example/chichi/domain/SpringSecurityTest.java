@@ -49,7 +49,7 @@ public class SpringSecurityTest {
     static void overrideProps(DynamicPropertyRegistry registry) {
         System.out.println("하늘 mysql:"+mySQLContainer.getJdbcUrl());
         registry.add("spring.redis.host", redisContainer::getHost);
-        //registry.add("spring.redis.port", () -> redisContainer.getMappedPort(6379));
+        registry.add("spring.redis.port", () -> redisContainer.getMappedPort(6379));
         registry.add("spring.datasource.url", mySQLContainer::getJdbcUrl);
         registry.add("spring.datasource.username", mySQLContainer::getUsername);
         registry.add("spring.datasource.password", mySQLContainer::getPassword);
