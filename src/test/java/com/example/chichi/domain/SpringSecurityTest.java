@@ -47,7 +47,6 @@ public class SpringSecurityTest {
 
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
-        System.out.println("하늘 mysql:"+mySQLContainer.getJdbcUrl());
         registry.add("spring.redis.host", redisContainer::getHost);
         registry.add("spring.redis.port", () -> redisContainer.getMappedPort(6379));
         registry.add("spring.datasource.url", mySQLContainer::getJdbcUrl);
@@ -57,8 +56,8 @@ public class SpringSecurityTest {
     }
 
     @Test
-    @DisplayName("회원가입시 사용자 인증없이 요청한다.")
-    void join1() throws Exception {
+    @DisplayName("회원가입시 사용자 인증없이 요청해도 성공한다.")
+    void authentication_null_join() throws Exception {
         //given
         String validEmail = "test@userexample.com";
         String validPassword = "123456";
@@ -77,7 +76,7 @@ public class SpringSecurityTest {
 
     @Test
     @DisplayName("회원가입시 유효성 검사에 통과하지 못하면 ValidationType 메세지들을 출력한다.")
-    void join2() throws Exception {
+    void invalid_email_and_password_join() throws Exception {
         //given
         String invalidEmail = "testuserexample.com";
         String invalidPassword = "1234";
@@ -96,8 +95,8 @@ public class SpringSecurityTest {
     }
 
     @Test
-    @DisplayName("회원이면 로그인에 성공한다.")
-    void login() throws Exception {
+    @DisplayName("회원임을 검증하면 로그인에 성공한다.")
+    void authentication_check_login() throws Exception {
         //given
         String email = "testuser@example.com";
         String password = "123456";
@@ -121,7 +120,7 @@ public class SpringSecurityTest {
 
     @Test
     @DisplayName("유효하지 않은 토큰이면 예외를 발생한다.")
-    void logout() throws Exception {
+    void invalid_token() throws Exception {
         String jwt = "invalid-token";
 
         mvc.perform(post("/user/auth/logout")
@@ -133,7 +132,7 @@ public class SpringSecurityTest {
 
     @Test
     @DisplayName("토큰을 입력하지 않으면 예외를 발생한다.")
-    void logout2() throws Exception {
+    void token_null() throws Exception {
         mvc.perform(post("/user/auth/logout"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().string(AUTHENTICATION_REQUIRED.getMessage()))

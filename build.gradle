@@ -51,7 +51,6 @@ dependencies {
 	testCompileOnly 'org.projectlombok:lombok'
 	testAnnotationProcessor 'org.projectlombok:lombok'
 	testRuntimeOnly 'com.h2database:h2'
-	testImplementation 'it.ozimov:embedded-redis:0.7.2'
 	testImplementation 'org.testcontainers:testcontainers:1.19.3'
 	testImplementation 'org.testcontainers:junit-jupiter:1.19.3'
 	testImplementation 'org.testcontainers:mysql:1.19.3'
