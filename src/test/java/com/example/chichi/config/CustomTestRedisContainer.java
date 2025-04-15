@@ -14,8 +14,11 @@ public class CustomTestRedisContainer {
             .withExposedPorts(6379);
     public static final RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
 
-    public static void setup() {
+    static {
         redisContainer.start();
+    }
+
+    public static void setup() {
         String redisHost = redisContainer.getHost();
         Integer redisPort = redisContainer.getFirstMappedPort();
 

@@ -1,6 +1,5 @@
 package com.example.chichi.domain;
 
-import com.example.chichi.config.CustomTestMySqlContainer;
 import com.example.chichi.config.CustomTestRedisContainer;
 import com.example.chichi.domain.user.UserService;
 import com.example.chichi.domain.user.dto.JoinUserRequest;
@@ -42,15 +41,12 @@ public class SpringSecurityTest {
     UserService userService;
 
     @BeforeAll
-    static void setup(){
-        System.out.println("하늘 setup");
+    static void setup() {
         CustomTestRedisContainer.setup();
-        CustomTestMySqlContainer.setup();
     }
 
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
-        System.out.println("하늘 props");
         registry.add("spring.redis.host", redisContainer::getHost);
         registry.add("spring.datasource.url", mySQLContainer::getJdbcUrl);
         registry.add("spring.datasource.username", mySQLContainer::getUsername);

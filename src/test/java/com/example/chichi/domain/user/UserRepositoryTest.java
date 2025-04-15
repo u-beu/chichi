@@ -1,7 +1,5 @@
 package com.example.chichi.domain.user;
 
-import com.example.chichi.config.CustomTestMySqlContainer;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,11 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 class UserRepositoryTest {
     @Autowired
     private UserRepository userRepository;
-
-    @BeforeAll
-    static void setup(){
-        CustomTestMySqlContainer.setup();
-    }
 
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {

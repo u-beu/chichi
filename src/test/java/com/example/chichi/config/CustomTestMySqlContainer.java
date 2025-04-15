@@ -9,7 +9,7 @@ public class CustomTestMySqlContainer {
             .withUsername("mock-root")
             .withPassword("1234");
 
-    public static void setup() {
+    static {
         mySQLContainer.start();
     }
 }
