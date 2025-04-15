@@ -52,6 +52,9 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
+        
+    - name: Checkout source code
+      uses: actions/checkout@v4
 
     - name: Build Docker image with Buildx and push Docker image to DockerHub
       run: |
