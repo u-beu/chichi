@@ -12,6 +12,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.Optional;
 
+import static com.example.chichi.config.CustomTestMySqlContainer.mysql;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
@@ -22,7 +23,10 @@ class UserRepositoryTest {
 
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
-        CustomTestMySqlContainer.setup(registry);
+        CustomTestMySqlContainer.setup();
+        registry.add("spring.datasource.url", mysql::getJdbcUrl);
+        registry.add("spring.datasource.username", mysql::getUsername);
+        registry.add("spring.datasource.password", mysql::getPassword);
     }
 
     @Test
