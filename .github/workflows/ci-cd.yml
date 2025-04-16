@@ -75,7 +75,10 @@ jobs:
         echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
         echo "DB_USER=${{ secrets.DB_USER }}" >> .env
         echo "DB_PWD=${{ secrets.DB_PWD }}" >> .env
-        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env 
+        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+        echo "JWT_SECRET=${{ secrets.MYSQL_PORT }}" >> .env
+        echo "JWT_SECRET=${{ secrets.REDIS_PORT }}" >> .env
+        echo "JWT_SECRET=${{ secrets.SPRING_PORT }}" >> .env
         
     - name: Deploy to EC2 via SSH
       uses: appleboy/ssh-action@v1.0.0
