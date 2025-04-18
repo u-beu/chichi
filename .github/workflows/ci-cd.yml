@@ -90,11 +90,11 @@ jobs:
 
     - name: Copy files to EC2
       run: |
-        scp -i private_key.pem -o StrictHostKeyChecking=no \
+        scp -i private_key.pem -o StrictHostKeyChecking=no -r \
             ./docker-compose.yml \
             ./deploy.sh \
             ./.env \
-            -r ./nginx \
+            ./nginx \
             ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
 
     - name: Deploy to EC2 via SSH
