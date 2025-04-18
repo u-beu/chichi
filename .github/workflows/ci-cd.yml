@@ -82,10 +82,15 @@ jobs:
         echo "JWT_SECRET=${{ secrets.MYSQL_PORT }}" >> .env
         echo "JWT_SECRET=${{ secrets.REDIS_PORT }}" >> .env
         echo "JWT_SECRET=${{ secrets.SPRING_PORT }}" >> .env
+        
+    - name: Save EC2 private key
+      run: |
+        echo "${{ secrets.EC2_KEY }}" > private_key.pem
+        chmod 600 private_key.pem
 
     - name: Copy files to EC2
       run: |
-        scp -i ${{ secrets.EC2_KEY }} \
+        scp -i private_key.pem \
             ./docker-compose.yml \
             ./deploy.sh \
             ./.env \
