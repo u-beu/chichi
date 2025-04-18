@@ -82,6 +82,7 @@ jobs:
         echo "MYSQL_PORT=${{ secrets.MYSQL_PORT }}" >> .env
         echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
         echo "SPRING_PORT=${{ secrets.SPRING_PORT }}" >> .env
+        echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
         echo "ACTIVE_COLOR=blue" >> .env
         
     - name: Save EC2 private key

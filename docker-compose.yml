@@ -72,6 +72,8 @@ services:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
+    environment:
+      - ACTIVE_COLOR=${ACTIVE_COLOR}
     ports:
       - "80:80"
       - "443:443"
