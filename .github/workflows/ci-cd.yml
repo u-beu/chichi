@@ -70,6 +70,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Checkout source code
+      uses: actions/checkout@v4
+
     - name: Create .env file
       run: |
         echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
@@ -79,7 +82,16 @@ jobs:
         echo "JWT_SECRET=${{ secrets.MYSQL_PORT }}" >> .env
         echo "JWT_SECRET=${{ secrets.REDIS_PORT }}" >> .env
         echo "JWT_SECRET=${{ secrets.SPRING_PORT }}" >> .env
-        
+
+    - name: Copy files to EC2
+      run: |
+        scp -i ${{ secrets.SSH_KEY }} \
+            ./docker-compose.yml \
+            ./deploy.sh \
+            ./.env \
+            -r ./nginx \
+            ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+
     - name: Deploy to EC2 via SSH
       uses: appleboy/ssh-action@v1.0.0
       with:
@@ -87,6 +99,9 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         script: |
-          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/chichi-app:latest
+          cd /home/ubuntu
+          mv ./docker-compose.yml ./deploy.sh ./.env ./nginx /home/ubuntu/chichi/
+          mkdir -p /home/ubuntu/chichi
           cd /home/ubuntu/chichi
+          sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/chichi-app:latest
           ./deploy.sh
