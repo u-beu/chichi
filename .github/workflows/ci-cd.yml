@@ -105,7 +105,7 @@ jobs:
         key: ${{ secrets.EC2_KEY }}
         script: |
           cd /home/ubuntu
-          mv ./docker-compose.yml ./deploy.sh ./.env ./nginx /home/ubuntu/chichi/
+          mv -f ./docker-compose.yml ./deploy.sh ./.env ./nginx /home/ubuntu/chichi/
           mkdir -p /home/ubuntu/chichi
           cd /home/ubuntu/chichi
           sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/chichi-app:latest
