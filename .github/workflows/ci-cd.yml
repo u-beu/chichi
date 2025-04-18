@@ -90,7 +90,7 @@ jobs:
 
     - name: Copy files to EC2
       run: |
-        scp -i private_key.pem \
+        scp -i private_key.pem -o StrictHostKeyChecking=no \
             ./docker-compose.yml \
             ./deploy.sh \
             ./.env \
