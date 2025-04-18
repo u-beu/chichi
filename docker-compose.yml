@@ -30,12 +30,11 @@ services:
     networks:
       - backend
 
-  app:
-    #build:
-    #  context: .
+  app-blue:
     image: ${DOCKERHUB_USERNAME}/chichi-app:latest
-    container_name: chichi-spring-app
+    container_name: chichi-app-blue
     environment:
+      COLOR: blue
       DB_HOST: mysql
       REDIS_HOST: redis
       DB_NAME: ${DB_NAME}
@@ -43,7 +42,23 @@ services:
       DB_USER: ${DB_USER}
       JWT_SECRET: ${JWT_SECRET}
     ports:
-      - "${SPRING_PORT}:8080"
+      - "8081:8080"
+    networks:
+      - backend
+
+  app-green:
+    image: ${DOCKERHUB_USERNAME}/chichi-app:latest
+    container_name: chichi-app-green
+    environment:
+      COLOR: green
+      DB_HOST: mysql
+      REDIS_HOST: redis
+      DB_NAME: ${DB_NAME}
+      DB_PWD: ${DB_PWD}
+      DB_USER: ${DB_USER}
+      JWT_SECRET: ${JWT_SECRET}
+    ports:
+      - "8082:8080"
     networks:
       - backend
 
@@ -51,7 +66,7 @@ services:
     image: nginx:latest
     container_name: nginx-container
     depends_on:
-      - app
+      - app-${ACTIVE_COLOR}
     restart: always
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf
