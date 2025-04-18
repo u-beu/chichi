@@ -73,7 +73,7 @@ jobs:
     - name: Checkout source code
       uses: actions/checkout@v4
 
-    - name: Create .env file
+    - name: Create .env file #초기 배포 한정
       run: |
         echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
         echo "DB_USER=${{ secrets.DB_USER }}" >> .env
@@ -82,6 +82,7 @@ jobs:
         echo "JWT_SECRET=${{ secrets.MYSQL_PORT }}" >> .env
         echo "JWT_SECRET=${{ secrets.REDIS_PORT }}" >> .env
         echo "JWT_SECRET=${{ secrets.SPRING_PORT }}" >> .env
+        echo "ACTIVE_COLOR=blue" >> .env
         
     - name: Save EC2 private key
       run: |

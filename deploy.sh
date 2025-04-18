@@ -18,7 +18,8 @@ sudo docker compose up -d app-$NEW_COLOR
 echo "대기"
 sleep 5
 
-echo "ACTIVE_COLOR=$NEW_COLOR" > .env
+echo "ACTIVE_COLOR=$NEW_COLOR 로 변경"
+sed -i "s/^ACTIVE_COLOR=.*/ACTIVE_COLOR=$NEW_COLOR/" .env
 sudo docker compose restart nginx
 
 echo "app-$OLD_COLOR 정지 및 삭제"
