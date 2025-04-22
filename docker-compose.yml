@@ -69,11 +69,9 @@ services:
       - app-${ACTIVE_COLOR}
     restart: always
     volumes:
-      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template
+      - ./nginx:/etc/nginx/conf.d
       - ./data/certbot/conf:/etc/letsencrypt
       - ./data/certbot/www:/var/www/certbot
-    environment:
-      - ACTIVE_COLOR=${ACTIVE_COLOR}
     ports:
       - "80:80"
       - "443:443"
@@ -85,7 +83,11 @@ services:
       start_period: 2s
     networks:
       - backend
-    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
+    command: >
+      /bin/sh -c "
+        cp /etc/nginx/conf.d/nginx.${ACTIVE_COLOR}.conf /etc/nginx/nginx.conf && \
+        while :; do sleep 6h & wait $${!}; nginx -s reload; done & \
+        nginx -g 'daemon off;'"
 
   certbot:
     container_name: certbot-container

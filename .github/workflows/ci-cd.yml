@@ -73,31 +73,30 @@ jobs:
     - name: Checkout source code
       uses: actions/checkout@v4
 
-    - name: Create .env file #초기 배포 한정
-      run: |
-        echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
-        echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-        echo "DB_PWD=${{ secrets.DB_PWD }}" >> .env
-        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-        echo "MYSQL_PORT=${{ secrets.MYSQL_PORT }}" >> .env
-        echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
-        echo "SPRING_PORT=${{ secrets.SPRING_PORT }}" >> .env
-        echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
-        echo "ACTIVE_COLOR=blue" >> .env
+#    - name: Create .env file
+#      run: |
+#        echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+#        echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+#        echo "DB_PWD=${{ secrets.DB_PWD }}" >> .env
+#        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+#        echo "MYSQL_PORT=${{ secrets.MYSQL_PORT }}" >> .env
+#        echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
+#        echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
+#        echo "ACTIVE_COLOR=green" >> .env
         
-    - name: Save EC2 private key
-      run: |
-        echo "${{ secrets.EC2_KEY }}" > private_key.pem
-        chmod 600 private_key.pem
+#    - name: Save EC2 private key
+#      run: |
+#        echo "${{ secrets.EC2_KEY }}" > private_key.pem
+#        chmod 600 private_key.pem
 
-    - name: Copy files to EC2
-      run: |
-        scp -i private_key.pem -o StrictHostKeyChecking=no -r \
-            ./docker-compose.yml \
-            ./deploy.sh \
-            ./.env \
-            ./nginx \
-            ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+#    - name: Copy files to EC2
+#      run: |
+#        scp -i private_key.pem -o StrictHostKeyChecking=no -r \
+#            ./docker-compose.yml \
+#            ./deploy.sh \
+#            ./.env \
+#            ./nginx \
+#            ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
 
     - name: Deploy to EC2 via SSH
       uses: appleboy/ssh-action@v1.0.0
@@ -106,11 +105,11 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         script: |
-          cd /home/ubuntu
-          rm -rf /home/ubuntu/chichi
-          mkdir -p /home/ubuntu/chichi
-          mv ./docker-compose.yml ./deploy.sh ./.env ./nginx /home/ubuntu/chichi/
+#          cd /home/ubuntu
+#          rm -rf /home/ubuntu/chichi
+#          mkdir -p /home/ubuntu/chichi
+#          mv ./docker-compose.yml ./deploy.sh ./.env ./nginx /home/ubuntu/chichi/
           cd /home/ubuntu/chichi
-          sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/chichi-app:latest
+#          sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/chichi-app:latest
           chmod +x ./deploy.sh
           ./deploy.sh
