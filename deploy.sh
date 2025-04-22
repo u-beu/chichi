@@ -20,7 +20,7 @@ sleep 5
 
 echo "ACTIVE_COLOR=$NEW_COLOR 로 변경 및 nginx 재로드"
 sed -i "s/^ACTIVE_COLOR=.*/ACTIVE_COLOR=$NEW_COLOR/" .env
-sudo docker exec nginx-container /bin/sh -c "cp /etc/nginx/conf.d/nginx.${ACTIVE_COLOR}.conf /etc/nginx/nginx.conf"
+sudo docker exec nginx-container /bin/sh -c "cp /etc/nginx/conf.d/nginx.$NEW_COLOR.conf /etc/nginx/nginx.conf"
 sudo docker exec nginx-container /bin/sh -c "nginx -t && nginx -s reload"
 
 echo "app-$OLD_COLOR 정지 및 삭제"
