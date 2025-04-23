@@ -32,7 +32,10 @@ services:
 
   app-blue:
     image: ${DOCKERHUB_USERNAME}/chichi-app:latest
-    container_name: chichi-app-blue
+    container_name: app-blue
+    depends_on:
+      - mysql
+      - redis
     environment:
       COLOR: blue
       DB_HOST: mysql
@@ -48,7 +51,10 @@ services:
 
   app-green:
     image: ${DOCKERHUB_USERNAME}/chichi-app:latest
-    container_name: chichi-app-green
+    container_name: app-green
+    depends_on:
+      - mysql
+      - redis
     environment:
       COLOR: green
       DB_HOST: mysql
