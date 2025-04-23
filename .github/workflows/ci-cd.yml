@@ -38,7 +38,7 @@ jobs:
 
     - name: Run unit tests
       run: ./gradlew test
-      
+
   build:
     needs: test
     if: ${{ github.event.inputs.env != 'config' }}
@@ -64,6 +64,14 @@ jobs:
         
     - name: Checkout source code
       uses: actions/checkout@v4
+
+    - name: Set ddl-auto based on env
+      run: |
+        if [ "${{ github.event.inputs.env }}" = "init" ]; then
+          sed -i 's/ddl-auto:.*$/ddl-auto: create/' ./src/main/resources/application.yml
+        else
+          sed -i 's/ddl-auto:.*$/ddl-auto: none/' ./src/main/resources/application.yml
+        fi
 
     - name: Build Docker image with Buildx and push Docker image to DockerHub
       run: |
