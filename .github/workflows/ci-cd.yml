@@ -22,6 +22,10 @@ jobs:
     - name: Checkout source code
       uses: actions/checkout@v4
 
+    - name: Set ddl-auto create
+      run: |
+        sed -i 's/ddl-auto:.*$/ddl-auto: create/' ./src/main/resources/application.yml
+
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
