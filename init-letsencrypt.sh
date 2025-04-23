@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if ! [ -x "$(command -v docker-compose)" ]; then
+if ! [ -x "$(command -v docker compose)" ]; then
   echo 'Error: docker compose 설치 필요' >&2
   exit 1
 fi
@@ -22,7 +22,7 @@ fi
 echo "### $domains 더미 인증서 발급 요청"
 path="/etc/letsencrypt/live/$domains"
 mkdir -p "$data_path/conf/live/$domains"
-docker-compose run --rm --entrypoint "\
+sudo docker compose run --rm --entrypoint "\
   openssl req -x509 -nodes -newkey rsa:$rsa_key_size -days 1\
     -keyout '$path/privkey.pem' \
     -out '$path/fullchain.pem' \
@@ -30,11 +30,11 @@ docker-compose run --rm --entrypoint "\
 echo
 
 echo "### 더미 인증서를 기반으로 nginx 실행"
-docker-compose up --force-recreate -d nginx
+sudo docker compose up --force-recreate -d nginx
 echo
 
 echo "### $domains 더미 인증서 삭제"
-docker-compose run --rm --entrypoint "\
+sudo docker compose run --rm --entrypoint "\
   rm -Rf /etc/letsencrypt/live/$domains && \
   rm -Rf /etc/letsencrypt/archive/$domains && \
   rm -Rf /etc/letsencrypt/renewal/$domains.conf" certbot
@@ -53,7 +53,7 @@ esac
 
 if [ $staging != "0" ]; then staging_arg="--staging"; fi
 
-docker-compose run --rm --entrypoint "\
+sudo docker compose run --rm --entrypoint "\
   certbot certonly --webroot -w /var/www/certbot \
     $staging_arg \
     $email_arg \
@@ -64,4 +64,4 @@ docker-compose run --rm --entrypoint "\
 echo
 
 echo "### nginx 재로드"
-docker-compose exec nginx nginx -s reload
+sudo docker compose exec nginx nginx -s reload
