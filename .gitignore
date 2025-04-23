@@ -196,3 +196,5 @@ build/
 *.iml
 Thumbs.db
 *.env
+nginx/**/*.pem
+nginx/**/*.key

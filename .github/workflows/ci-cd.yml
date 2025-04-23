@@ -1,13 +1,21 @@
 name: Test and buildx docker image, Deploy to EC2
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      env:
+        description: "배포 옵션 선택"
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+          - init
+          - prod
+          - config
 
 jobs:
   test:
+    if: ${{ github.event.inputs.env != 'config' }}
     runs-on: ubuntu-latest
           
     steps:
@@ -33,6 +41,7 @@ jobs:
       
   build:
     needs: test
+    if: ${{ github.event.inputs.env != 'config' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -65,38 +74,40 @@ jobs:
           -t ${{ secrets.DOCKERHUB_USERNAME }}/chichi-app:latest \
           .
 
-  deploy:
-    needs: build  
+  deploy-init:
+    needs: build
+    if: ${{ github.event.inputs.env == 'init' }}
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout source code
       uses: actions/checkout@v4
 
-#    - name: Create .env file
-#      run: |
-#        echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
-#        echo "DB_USER=${{ secrets.DB_USER }}" >> .env
-#        echo "DB_PWD=${{ secrets.DB_PWD }}" >> .env
-#        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
-#        echo "MYSQL_PORT=${{ secrets.MYSQL_PORT }}" >> .env
-#        echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
-#        echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
-#        echo "ACTIVE_COLOR=green" >> .env
+    - name: Create .env file
+      run: |
+        echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+        echo "DB_USER=${{ secrets.DB_USER }}" >> .env
+        echo "DB_PWD=${{ secrets.DB_PWD }}" >> .env
+        echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env
+        echo "MYSQL_PORT=${{ secrets.MYSQL_PORT }}" >> .env
+        echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
+        echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
+        echo "ACTIVE_COLOR=blue" >> .env
         
-#    - name: Save EC2 private key
-#      run: |
-#        echo "${{ secrets.EC2_KEY }}" > private_key.pem
-#        chmod 600 private_key.pem
+    - name: Save EC2 private key
+      run: |
+        echo "${{ secrets.EC2_KEY }}" > private_key.pem
+        chmod 600 private_key.pem
 
-#    - name: Copy files to EC2
-#      run: |
-#        scp -i private_key.pem -o StrictHostKeyChecking=no -r \
-#            ./docker-compose.yml \
-#            ./deploy.sh \
-#            ./.env \
-#            ./nginx \
-#            ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+    - name: Copy files to EC2
+      run: |
+        scp -i private_key.pem -o StrictHostKeyChecking=no -r \
+            ./init-letsencrypt.sh \
+            ./docker-compose.yml \
+            ./deploy.sh \
+            ./.env \
+            ./nginx \
+            ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
 
     - name: Deploy to EC2 via SSH
       uses: appleboy/ssh-action@v1.0.0
@@ -105,11 +116,72 @@ jobs:
         username: ${{ secrets.EC2_USER }}
         key: ${{ secrets.EC2_KEY }}
         script: |
-          # cd /home/ubuntu
-          # rm -rf /home/ubuntu/chichi
-          # mkdir -p /home/ubuntu/chichi
-          # mv ./docker-compose.yml ./deploy.sh ./.env ./nginx /home/ubuntu/chichi/
+          mkdir -p /home/ubuntu/chichi
+          mv ./init-letsencrypt.sh ./docker-compose.yml ./deploy.sh ./.env ./nginx /home/ubuntu/chichi/
           cd /home/ubuntu/chichi
-          # sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/chichi-app:latest
-          chmod +x ./deploy.sh
-          ./deploy.sh
+          sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/chichi-app:latest
+          chmod +x ./init-letsencrypt.sh
+          ./init-letsencrypt.sh
+
+  deploy-prod:
+    needs: build
+    if: ${{ github.event.inputs.env == 'prod' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            cd /home/ubuntu/chichi
+            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/chichi-app:latest
+            chmod +x ./deploy.sh
+            ./deploy.sh
+
+  deploy-config:
+    if: ${{ github.event.inputs.env == 'config' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Create .env.new file
+        run: |
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env.new
+          echo "DB_USER=${{ secrets.DB_USER }}" >> .env.new
+          echo "DB_PWD=${{ secrets.DB_PWD }}" >> .env.new
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> .env.new
+          echo "MYSQL_PORT=${{ secrets.MYSQL_PORT }}" >> .env.new
+          echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env.new
+          echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env.new
+
+      - name: Save EC2 private key
+        run: |
+          echo "${{ secrets.EC2_KEY }}" > private_key.pem
+          chmod 600 private_key.pem
+
+      - name: Copy files to EC2
+        run: |
+          scp -i private_key.pem -o StrictHostKeyChecking=no -r \
+              ./.env.new \
+              ./docker-compose.yml \
+              ./nginx/conf.d \
+              ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/chichi
+
+      - name: Deploy to EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_KEY }}
+          script: |
+            cd /home/ubuntu/chichi
+            EXISTING_ACTIVE_COLOR=$(grep '^ACTIVE_COLOR=' .env | cut -d '=' -f2)
+            echo "ACTIVE_COLOR=$EXISTING_ACTIVE_COLOR" >> .env.new
+            mv .env.new .env
+            chmod +x ./deploy.sh
+            ./deploy.sh
