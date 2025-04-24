@@ -29,7 +29,8 @@ public class JwtVerificationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String accessToken = tokenService.extractAccessToken(request).get();
         if (tokenService.checkBlackList(accessToken)) {
-            throw new AuthenticationServiceException("블랙리스트된 액세스토큰");
+            entryPoint.commence(request, response, new AuthenticationServiceException("블랙리스트된 액세스토큰"));
+            return;
         }
         if (tokenService.isTokenValid(accessToken, request, response)) {
             String email = tokenService.extractEmail(accessToken);

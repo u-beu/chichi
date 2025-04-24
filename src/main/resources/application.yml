@@ -1,7 +1,3 @@
-server:
-  port:
-    8080
-
 spring:
   application:
     name: chichi
@@ -14,15 +10,14 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: none # TODO none
     show-sql: true
     database: mysql
     properties:
       hibernate:
         show_sql: true
         format_sql: true
-        dialect: org.hibernate.dialect.MySQLDialect
-    defer-datasource-initialization: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
 
   redis:
     host: ${REDIS_HOST}
@@ -30,7 +25,7 @@ spring:
 
 logging:
   level:
-    root: INFO
+    root: DEBUG # TODO INFO
 
 jwt:
   secret: ${JWT_SECRET}
@@ -41,3 +36,6 @@ jwt:
   refresh:
     expiration: 90
 
+discord:
+  client-id: ${DISCORD_CLIENT_ID}
+  redirect-uri: ${DISCORD_REDIRECT_URI}

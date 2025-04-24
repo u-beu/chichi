@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/user/join", "/user/login").permitAll()
+                        .requestMatchers("/user/join", "/login", "/images/**").permitAll()
                         .anyRequest().authenticated())
                 .logout((logout) -> logout
                         .invalidateHttpSession(true))
