@@ -15,7 +15,7 @@ import java.io.IOException;
 
 @Slf4j
 @RequiredArgsConstructor
-public class JwtAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
+public class CustomAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
     private final TokenService tokenService;
 
     @Override

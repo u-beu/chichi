@@ -11,7 +11,7 @@ import java.io.IOException;
 import static com.example.chichi.exception.ExceptionType.LOGIN_FAIL;
 
 @Slf4j
-public class JwtAuthenticationFailureHandler implements AuthenticationFailureHandler {
+public class CustomAuthenticationFailureHandler implements AuthenticationFailureHandler {
     @Override
     public void onAuthenticationFailure(HttpServletRequest request,
                                         HttpServletResponse response,

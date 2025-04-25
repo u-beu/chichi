@@ -1,21 +1,18 @@
 package com.example.chichi.config;
 
+import com.example.chichi.config.auth.CustomOAuth2UserService;
 import com.example.chichi.config.auth.TokenService;
-import com.example.chichi.config.auth.UserDetailsServiceImpl;
-import com.example.chichi.config.auth.filter.JwtUsernamePasswordAuthenticationFilter;
-import com.example.chichi.config.auth.filter.JwtVerificationFilter;
-import com.example.chichi.config.auth.handler.JwtAuthenticationEntryPoint;
-import com.example.chichi.config.auth.handler.JwtAuthenticationFailureHandler;
-import com.example.chichi.config.auth.handler.JwtAuthenticationSuccessHandler;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.chichi.config.auth.filter.CustomVerificationFilter;
+import com.example.chichi.config.auth.handler.CustomAuthenticationEntryPoint;
+import com.example.chichi.config.auth.handler.CustomAuthenticationFailureHandler;
+import com.example.chichi.config.auth.handler.CustomAuthenticationSuccessHandler;
+import com.example.chichi.domain.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
@@ -27,9 +24,14 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final UserDetailsServiceImpl userDetailsService;
-    private final ObjectMapper objectMapper;
+    private final UserRepository userRepository;
     private final TokenService tokenService;
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.ignoring()
+                .requestMatchers("/error", "/favicon.ico");
+    }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -37,19 +39,23 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/user/join", "/login", "/images/**").permitAll()
+                        .requestMatchers("/user/join", "/login", "/images/**","/error").permitAll()
                         .anyRequest().authenticated())
+                .oauth2Login(oauth2->oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService()))
+                        .loginPage("/login")
+                        .successHandler(new CustomAuthenticationSuccessHandler(tokenService))
+                        .failureHandler(new CustomAuthenticationFailureHandler()))
                 .logout((logout) -> logout
                         .invalidateHttpSession(true))
                 .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint())
                 );
-        ;
 
-        http.addFilterBefore(jwtUsernamePasswordAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(jwtVerificationFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterAfter(jwtVerificationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
@@ -60,36 +66,17 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtUsernamePasswordAuthenticationFilter jwtUsernamePasswordAuthenticationFilter() throws Exception {
-        JwtUsernamePasswordAuthenticationFilter filter = new JwtUsernamePasswordAuthenticationFilter(objectMapper);
-        filter.setAuthenticationManager(authenticationManager());
-        filter.setAuthenticationSuccessHandler(new JwtAuthenticationSuccessHandler(tokenService));
-        filter.setAuthenticationFailureHandler(new JwtAuthenticationFailureHandler());
-        return filter;
+    public CustomVerificationFilter jwtVerificationFilter() {
+        return new CustomVerificationFilter(tokenService, customOAuth2UserService(), jwtAuthenticationEntryPoint());
     }
 
     @Bean
-    public JwtVerificationFilter jwtVerificationFilter() {
-        return new JwtVerificationFilter(tokenService, userDetailsService, jwtAuthenticationEntryPoint());
+    public CustomAuthenticationEntryPoint jwtAuthenticationEntryPoint() {
+        return new CustomAuthenticationEntryPoint();
     }
 
     @Bean
-    public AuthenticationManager authenticationManager() throws Exception {
-        DaoAuthenticationProvider provider = daoAuthenticationProvider();
-        provider.setPasswordEncoder(passwordEncoder());
-        return new ProviderManager(provider);
-    }
-
-    @Bean
-    public DaoAuthenticationProvider daoAuthenticationProvider() throws Exception {
-        DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
-        daoAuthenticationProvider.setUserDetailsService(userDetailsService);
-        daoAuthenticationProvider.setPasswordEncoder(passwordEncoder());
-        return daoAuthenticationProvider;
-    }
-
-    @Bean
-    public JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint() {
-        return new JwtAuthenticationEntryPoint();
+    public CustomOAuth2UserService customOAuth2UserService() {
+        return new CustomOAuth2UserService(userRepository);
     }
 }

@@ -1,9 +1,9 @@
 package com.example.chichi.config.auth.filter;
 
+import com.example.chichi.config.auth.CustomOAuth2UserService;
 import com.example.chichi.config.auth.TokenService;
-import com.example.chichi.config.auth.UserDetailsImpl;
-import com.example.chichi.config.auth.UserDetailsServiceImpl;
-import com.example.chichi.config.auth.handler.JwtAuthenticationEntryPoint;
+import com.example.chichi.config.auth.handler.CustomAuthenticationEntryPoint;
+import com.example.chichi.domain.user.User;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -20,10 +20,10 @@ import java.io.IOException;
 
 @Slf4j
 @RequiredArgsConstructor
-public class JwtVerificationFilter extends OncePerRequestFilter {
+public class CustomVerificationFilter extends OncePerRequestFilter {
     private final TokenService tokenService;
-    private final UserDetailsServiceImpl userDetailsService;
-    private final JwtAuthenticationEntryPoint entryPoint;
+    private final CustomOAuth2UserService customOAuth2UserService;
+    private final CustomAuthenticationEntryPoint entryPoint;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -35,7 +35,7 @@ public class JwtVerificationFilter extends OncePerRequestFilter {
         if (tokenService.isTokenValid(accessToken, request, response)) {
             String email = tokenService.extractEmail(accessToken);
             saveAuthentication(email);
-        }else{
+        } else {
             entryPoint.commence(request, response, new AuthenticationServiceException("토큰 유효성 검증 실패"));
             return;
         }
@@ -49,7 +49,7 @@ public class JwtVerificationFilter extends OncePerRequestFilter {
     }
 
     private void saveAuthentication(String email) {
-        UserDetailsImpl user = (UserDetailsImpl) userDetailsService.loadUserByUsername(email);
+        User user = customOAuth2UserService.loadUserByEmail(email);
         Authentication authentication = new UsernamePasswordAuthenticationToken(user, null, null);
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
