@@ -14,7 +14,8 @@ public record PrincipalDetails(
         Map<String, Object> attributes) implements OAuth2User, UserDetails {
     @Override
     public String getName() {
-        return attributes.get("globalName").toString(); //TODO 수정필요
+        // 디스코드 별명
+        return (String) attributes.get("global_name");
     }
 
     @Override
@@ -34,7 +35,8 @@ public record PrincipalDetails(
 
     @Override
     public String getUsername() {
-        return attributes.get("username").toString();
+        // 디스코드 사용자명
+        return (String) attributes.get("username");
     }
 
     @Override
@@ -58,6 +60,7 @@ public record PrincipalDetails(
     }
 
     public String getEmail() {
-        return attributes.get("email").toString();
+        // 디스코드 이메일
+        return (String) attributes.get("email");
     }
 }

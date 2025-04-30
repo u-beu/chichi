@@ -1,6 +1,7 @@
 package com.example.chichi.config.auth.filter;
 
 import com.example.chichi.config.auth.CustomOAuth2UserService;
+import com.example.chichi.config.auth.PrincipalDetails;
 import com.example.chichi.config.auth.TokenService;
 import com.example.chichi.config.auth.handler.CustomAuthenticationEntryPoint;
 import com.example.chichi.domain.user.User;
@@ -17,6 +18,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -50,7 +53,10 @@ public class CustomVerificationFilter extends OncePerRequestFilter {
 
     private void saveAuthentication(String email) {
         User user = customOAuth2UserService.loadUserByEmail(email);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(user, null, null);
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("email", user.getEmail());
+        PrincipalDetails principalDetails = new PrincipalDetails(user, attributes);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(principalDetails, null, null);
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }
 }

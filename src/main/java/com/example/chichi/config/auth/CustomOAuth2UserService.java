@@ -22,7 +22,6 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public OAuth2User loadUser(OAuth2UserRequest userRequest) {
         OAuth2User oAuth2User = super.loadUser(userRequest);
         Map<String, Object> attributes = oAuth2User.getAttributes();
-        log.debug("key list:{}", attributes.keySet().toString());
         String email = (String) attributes.get("email");
 
         Optional<User> user = userRepository.findByEmail(email);
