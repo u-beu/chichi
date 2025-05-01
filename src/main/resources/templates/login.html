@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord OAuth2 Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #36393F;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #2f3136;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        #discord-login {
+            background-color: #7289DA;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #discord-login:hover {
+            background-color: #5f73a0;
+        }
+
+        #discord-login:active {
+            background-color: #4e5b7c;
+        }
+
+        .footer {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #b9bbbe;
+        }
+
+        .logo {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <img th:src="@{/images/logo.png}" alt="ChiChi Bot Logo" class="logo">
+    <h1>CHICHI Music Bot</h1>
+    <a th:href="@{/oauth2/authorization/discord}">
+        <button id="discord-login">Login with Discord</button>
+    </a>
+    <div class="footer">
+        <p>Powered by Discord</p>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const clientId = /*[[${clientId}]]*/ '';
+    const redirectUri = /*[[${redirectUri}]]*/ '';
+    const scope = 'identify email';
+    const responseType = 'code';
+    const state = /*[[${state}]]*/ '';
+
+    const loginUrl = `https://discord.com/oauth2/authorize?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&response_type=${responseType}&scope=${scope}&state=${state}`;
+
+    document.getElementById("discord-login").addEventListener("click", function () {
+        window.location.href = loginUrl;
+    });
+</script>
+</body>
+</html>
