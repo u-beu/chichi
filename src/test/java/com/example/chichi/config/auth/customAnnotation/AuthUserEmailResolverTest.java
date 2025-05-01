@@ -1,6 +1,6 @@
 package com.example.chichi.config.auth.customAnnotation;
 
-import com.example.chichi.config.auth.UserDetailsImpl;
+import com.example.chichi.config.auth.PrincipalDetails;
 import com.example.chichi.domain.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +16,9 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,7 +56,11 @@ class AuthUserEmailResolverTest {
     @DisplayName("SecurityContext에 저장된 AuthenticationToken에서 사용자 이메일을 가져온다.")
     void resolveArgument() throws Exception {
         String email = "test@gmail.com";
-        UserDetails mockUser = new UserDetailsImpl(User.builder().email(email).build());
+        String username = "test-username";
+        Map<String, Object> attributes = new HashMap<>();
+        attributes.put("username", username);
+        attributes.put("email", email);
+        UserDetails mockUser = new PrincipalDetails(User.builder().email(email).build(), attributes);
 
         Authentication mockAuth = new UsernamePasswordAuthenticationToken(mockUser, null, null);
         SecurityContextHolder.getContext().setAuthentication(mockAuth);

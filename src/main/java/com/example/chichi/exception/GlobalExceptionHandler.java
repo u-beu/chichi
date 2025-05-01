@@ -9,11 +9,11 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.stream.Collectors;
 
-import static com.example.chichi.exception.ExceptionType.MISSING_COOKIE;
-import static com.example.chichi.exception.ExceptionType.SERVER_ERROR;
+import static com.example.chichi.exception.ExceptionType.*;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Slf4j
@@ -22,13 +22,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<String> handleApiException(ApiException e) {
-        return new ResponseEntity<>(e.getMessage(), HttpStatusCode.valueOf(e.getStatusCode()));
+        return ResponseEntity
+                .status(HttpStatusCode.valueOf(e.getStatusCode()))
+                .body(e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleException(Exception e) {
         log.debug("예외 [{}]:{}", e.getClass().getSimpleName(), e.getMessage());
-        return new ResponseEntity<>(SERVER_ERROR.getMessage(), SERVER_ERROR.getHttpStatus());
+        return ResponseEntity
+                .status(SERVER_ERROR.getHttpStatus())
+                .body(SERVER_ERROR.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -38,11 +42,22 @@ public class GlobalExceptionHandler {
                 .stream()
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .collect(Collectors.joining("\n"));
-        return new ResponseEntity<>(errorMessage, BAD_REQUEST);
+        return ResponseEntity
+                .status(BAD_REQUEST)
+                .body(errorMessage);
     }
 
     @ExceptionHandler(MissingRequestCookieException.class)
     public ResponseEntity<String> handleCookieException(MissingRequestCookieException e) {
-        return new ResponseEntity<>(MISSING_COOKIE.getMessage(), MISSING_COOKIE.getHttpStatus());
+        return ResponseEntity
+                .status(MISSING_COOKIE.getHttpStatus())
+                .body(MISSING_COOKIE.getMessage());
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<String> handleNoResourceFound(NoResourceFoundException ex) {
+        return ResponseEntity
+                .status(RESOURCE_NOT_FOUND.getHttpStatus())
+                .body(RESOURCE_NOT_FOUND.getMessage());
     }
 }

@@ -34,8 +34,10 @@ services:
     image: ${DOCKERHUB_USERNAME}/chichi-app:latest
     container_name: app-blue
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       COLOR: blue
       DB_HOST: mysql
@@ -44,6 +46,8 @@ services:
       DB_PWD: ${DB_PWD}
       DB_USER: ${DB_USER}
       JWT_SECRET: ${JWT_SECRET}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+      DISCORD_REDIRECT_URI: ${DISCORD_REDIRECT_URI}
     ports:
       - "8081:8080"
     networks:
@@ -53,8 +57,10 @@ services:
     image: ${DOCKERHUB_USERNAME}/chichi-app:latest
     container_name: app-green
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       COLOR: green
       DB_HOST: mysql
@@ -63,6 +69,8 @@ services:
       DB_PWD: ${DB_PWD}
       DB_USER: ${DB_USER}
       JWT_SECRET: ${JWT_SECRET}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+      DISCORD_REDIRECT_URI: ${DISCORD_REDIRECT_URI}
     ports:
       - "8082:8080"
     networks:

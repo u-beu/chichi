@@ -198,3 +198,4 @@ Thumbs.db
 *.env
 nginx/**/*.pem
 nginx/**/*.key
+docker-compose-local.yml
