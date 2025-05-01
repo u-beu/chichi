@@ -105,6 +105,9 @@ jobs:
         echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env
         echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env
         echo "ACTIVE_COLOR=blue" >> .env
+        echo "DISCORD_CLIENT_ID" >> .env
+        echo "DISCORD_REDIRECT_URI" >> .env
+        echo "DISCORD_CLIENT_SECRET" >> .env
         
     - name: Save EC2 private key
       run: |
@@ -170,6 +173,9 @@ jobs:
           echo "MYSQL_PORT=${{ secrets.MYSQL_PORT }}" >> .env.new
           echo "REDIS_PORT=${{ secrets.REDIS_PORT }}" >> .env.new
           echo "DOCKERHUB_USERNAME=${{ secrets.DOCKERHUB_USERNAME }}" >> .env.new
+          echo "DISCORD_CLIENT_ID" >> .env.new
+          echo "DISCORD_REDIRECT_URI" >> .env.new
+          echo "DISCORD_CLIENT_SECRET" >> .env.new
 
       - name: Save EC2 private key
         run: |
