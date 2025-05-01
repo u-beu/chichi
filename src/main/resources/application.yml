@@ -10,7 +10,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none # TODO none
+      ddl-auto: none
     show-sql: true
     database: mysql
     properties:
@@ -42,7 +42,7 @@ spring:
 
 logging:
   level:
-    root: DEBUG # TODO INFO
+    root: INFO
     org.springframework.security: TRACE
     org.springframework.security.oauth2.client.endpoint: DEBUG
 
