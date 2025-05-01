@@ -64,9 +64,4 @@ public class UserService {
         tokenService.saveAccessTokenBlackList(accessToken);
         tokenService.deleteRefreshToken(email);
     }
-
-    public String login(String code){
-
-        return null;
-    }
 }

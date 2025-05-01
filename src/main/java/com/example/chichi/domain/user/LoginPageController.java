@@ -14,10 +14,10 @@ import java.util.UUID;
 public class LoginPageController {
     private final UserService userService;
 
-    @Value("${discord.client-id}")
+    @Value("${spring.security.oauth2.client.registration.discord.client-id}")
     private String clientId;
 
-    @Value("${discord.redirect-uri}")
+    @Value("${spring.security.oauth2.client.registration.discord.redirect-uri}")
     private String redirectUri;
 
     @GetMapping("/login")

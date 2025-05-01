@@ -2,10 +2,9 @@ package com.example.chichi.config.auth;
 
 import com.example.chichi.domain.user.User;
 import com.example.chichi.domain.user.UserRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -14,13 +13,19 @@ import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
-@RequiredArgsConstructor
-public class CustomOAuth2UserService extends DefaultOAuth2UserService {
+public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequest, OAuth2User> {
+
+    private final OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate;
     private final UserRepository userRepository;
+
+    public CustomOAuth2UserService(OAuth2UserService<OAuth2UserRequest, OAuth2User> delegate, UserRepository userRepository) {
+        this.delegate = delegate;
+        this.userRepository = userRepository;
+    }
 
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) {
-        OAuth2User oAuth2User = super.loadUser(userRequest);
+        OAuth2User oAuth2User = delegate.loadUser(userRequest);
         Map<String, Object> attributes = oAuth2User.getAttributes();
         String email = (String) attributes.get("email");
 
