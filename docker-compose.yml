@@ -44,6 +44,9 @@ services:
       DB_PWD: ${DB_PWD}
       DB_USER: ${DB_USER}
       JWT_SECRET: ${JWT_SECRET}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET}
+      DISCORD_REDIRECT_URI: ${DISCORD_REDIRECT_URI}
     ports:
       - "8081:8080"
     networks:
@@ -63,6 +66,9 @@ services:
       DB_PWD: ${DB_PWD}
       DB_USER: ${DB_USER}
       JWT_SECRET: ${JWT_SECRET}
+      DISCORD_CLIENT_ID: ${DISCORD_CLIENT_ID}
+      DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET}
+      DISCORD_REDIRECT_URI: ${DISCORD_REDIRECT_URI}
     ports:
       - "8082:8080"
     networks:
