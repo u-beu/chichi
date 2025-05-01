@@ -50,7 +50,7 @@ public class UserService {
             ResponseCookie refreshTokenCookie = tokenService.getRefreshTokenCookie(newRefreshToken);
 
             tokenService.saveAccessTokenBlackList(accessToken);
-            tokenService.saveRefreshToken(email, newRefreshToken); //덮어씌어져서 delete안해도됨.
+            tokenService.saveRefreshToken(email, newRefreshToken);
 
             response.setHeader("Authorization", newAccessToken);
             response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());

@@ -1,10 +1,10 @@
 package com.example.chichi.config.auth.customAnnotation;
 
+import com.example.chichi.config.auth.PrincipalDetails;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -25,7 +25,7 @@ public class AuthUserEmailResolver implements HandlerMethodArgumentResolver {
     }
 
     private String getUserEmail() throws Exception {
-        return ((UserDetails) roadAuthentication().getPrincipal()).getUsername();
+        return ((PrincipalDetails) roadAuthentication().getPrincipal()).getEmail();
     }
 
     private Authentication roadAuthentication() throws Exception {

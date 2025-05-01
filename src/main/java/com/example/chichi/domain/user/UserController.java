@@ -14,17 +14,16 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/user")
 public class UserController {
     private final UserService userService;
 
-    @PostMapping("/join")
+    @PostMapping("/user/join")
     public ResponseEntity<String> join(@RequestBody @Valid JoinUserRequest request) {
         userService.join(request.email(), request.password());
         return new ResponseEntity<>("회원가입 완료", HttpStatus.OK);
     }
 
-    @PostMapping("/myInfo")
+    @PostMapping("/user/myInfo")
     public ResponseEntity<String> changePassword(@AuthUserEmail String email,
                                                  @RequestBody @Valid ChangePasswordRequest request) throws Exception {
         userService.changePassword(email, request.currentPassword(), request.newPassword());
@@ -37,13 +36,13 @@ public class UserController {
                                                @CookieValue(value = "refreshToken") String refreshToken,
                                                HttpServletResponse response) {
         userService.refreshToken(email, accessToken.replace("Bearer ", ""), refreshToken, response);
-        return new ResponseEntity<>("토큰 재발급 완료", HttpStatus.OK);
+        return ResponseEntity.ok("토큰 재발급 완료");
     }
 
     @PostMapping("/auth/logout")
     public ResponseEntity<String> logout(@AuthUserEmail String email,
                                          @RequestHeader("Authorization") String accessToken) {
         userService.logout(email, accessToken.replace("Bearer ", ""));
-        return new ResponseEntity<>("로그아웃", HttpStatus.OK);
+        return ResponseEntity.ok("로그아웃");
     }
 }

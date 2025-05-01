@@ -78,9 +78,8 @@ public class TokenService {
     public ResponseCookie getRefreshTokenCookie(String refreshToken) {
         return ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
-                //.secure(true)        // TODO https 변경시 적용 필요
                 .sameSite("Strict")
-                .path("/user/auth/refresh")
+                .path("/auth/refresh")
                 .maxAge(Duration.ofSeconds(refreshTokenExpirationInSeconds - 10)) // 쿠키 만료 기간 (리프레시보다 10초 짧다)
                 .build();
     }
