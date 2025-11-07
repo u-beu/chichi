@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.UUID;
 
@@ -32,7 +33,11 @@ public class PageController {
     }
 
     @GetMapping("/register")
-    public String registerPage(HttpSession session, Model model) {
+    public String registerPage(@RequestParam Long discordId,
+                               @RequestParam String username,
+                               Model model) {
+        model.addAttribute("discordId", discordId);
+        model.addAttribute("username", username);
         return "register";
     }
 }

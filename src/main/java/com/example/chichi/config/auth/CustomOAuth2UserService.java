@@ -2,12 +2,16 @@ package com.example.chichi.config.auth;
 
 import com.example.chichi.domain.user.User;
 import com.example.chichi.domain.user.UserRepository;
+import jakarta.servlet.http.HttpSession;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.servlet.mvc.condition.RequestConditionHolder;
 
 import java.util.Map;
 import java.util.Optional;
@@ -29,9 +33,17 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
 
         Map<String, Object> attributes = oAuth2User.getAttributes();
         long discordId = Long.parseLong(attributes.get("id").toString());
+        String username = attributes.get("username").toString();
 
         Optional<User> user = userRepository.findByDiscordId(discordId);
         if (user.isEmpty()) {
+            HttpSession session = RequestContextHolder.getRequestAttributes() != null ?
+                    ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest().getSession() : null;
+            if (session != null) {
+                session.setAttribute("discord_id", discordId);
+                session.setAttribute("username", username);
+            }
+
             throw new OAuth2AuthenticationException(
                     new OAuth2Error("NOT_REGISTERED", "미등록 사용자", null));
         }
