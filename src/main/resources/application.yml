@@ -10,7 +10,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: create #todo none
     show-sql: true
     database: mysql
     properties:

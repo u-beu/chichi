@@ -1,5 +1,6 @@
 package com.example.chichi.config.auth.filter;
 
+import com.auth0.jwt.interfaces.Claim;
 import com.example.chichi.config.auth.CustomOAuth2UserService;
 import com.example.chichi.config.auth.PrincipalDetails;
 import com.example.chichi.config.auth.TokenService;
@@ -36,8 +37,12 @@ public class CustomVerificationFilter extends OncePerRequestFilter {
             return;
         }
         if (tokenService.isTokenValid(accessToken, request, response)) {
-            String email = tokenService.extractEmail(accessToken);
-            saveAuthentication(email);
+            Map<String, String> claims = tokenService.extractClaims(accessToken);
+            long discordId = Long.parseLong(claims.get("id"));
+            String email = claims.get("email");
+            String username = claims.get("username");
+
+            saveAuthentication(discordId, email, username);
         } else {
             entryPoint.commence(request, response, new AuthenticationServiceException("토큰 유효성 검증 실패"));
             return;
@@ -51,10 +56,14 @@ public class CustomVerificationFilter extends OncePerRequestFilter {
         return authorization == null || !authorization.startsWith("Bearer");
     }
 
-    private void saveAuthentication(String email) {
-        User user = customOAuth2UserService.loadUserByEmail(email);
+    private void saveAuthentication(long discordId, String email, String username) {
+        User user = customOAuth2UserService.loadUserByDiscordId(discordId);
+
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put("email", user.getEmail());
+        attributes.put("id", discordId);
+        attributes.put("email", email);
+        attributes.put("username", username);
+
         PrincipalDetails principalDetails = new PrincipalDetails(user, attributes);
         Authentication authentication = new UsernamePasswordAuthenticationToken(principalDetails, null, null);
         SecurityContextHolder.getContext().setAuthentication(authentication);

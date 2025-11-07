@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHICHI Bot - Register</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #36393F;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            text-align: center;
+            background-color: #2f3136;
+            padding: 40px;
+            border-radius: 10px;
+            width: 350px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: #b9bbbe;
+            margin-bottom: 25px;
+        }
+
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 6px;
+            border: none;
+            outline: none;
+            background-color: #202225;
+            color: white;
+            font-size: 1rem;
+        }
+
+        input:focus:not([readonly]) {
+            border: 1px solid #7289DA;
+        }
+
+        input[readonly] {
+            color: #c9c9c9;
+            cursor: not-allowed;
+        }
+
+        .submit-btn {
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #7289DA;
+            border: none;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.25s;
+        }
+
+        .submit-btn:hover {
+            background-color: #5f73a0;
+        }
+
+        .submit-btn:active {
+            background-color: #4e5b7c;
+        }
+
+        .footer {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            color: #b9bbbe;
+        }
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <img th:src="@{/images/logo.png}" alt="ChiChi Bot Logo" class="logo">
+    <h1>회원 등록</h1>
+    <p class="subtitle">서비스 이용을 위해 PIN을 등록해주세요.</p>
+
+    <form th:action="@{/register}" method="post">
+
+        <input type="text" name="email" th:value="${email}" readonly>
+
+        <input type="password" name="pin" placeholder="PIN (숫자 6자리)"
+               maxlength="6" inputmode="numeric" pattern="[0-9]*"
+               oninput="this.value=this.value.replace(/[^0-9]/g,'');" required>
+
+        <button type="submit" class="submit-btn">등록하기</button>
+    </form>
+
+    <div class="footer">
+        <p>Powered by Discord</p>
+    </div>
+</div>
+
+</body>
+</html>

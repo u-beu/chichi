@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Controller
 @RequiredArgsConstructor
-public class LoginPageController {
+public class PageController {
     private final UserService userService;
 
     @Value("${spring.security.oauth2.client.registration.discord.client-id}")
@@ -29,5 +29,10 @@ public class LoginPageController {
         model.addAttribute("clientId", clientId);
         model.addAttribute("redirectUri", redirectUri);
         return "login";
+    }
+
+    @GetMapping("/register")
+    public String registerPage(HttpSession session, Model model) {
+        return "register";
     }
 }

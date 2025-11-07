@@ -1,7 +1,7 @@
 package com.example.chichi.domain.user;
 
 import com.example.chichi.config.auth.PrincipalDetails;
-import com.example.chichi.domain.user.dto.ChangePasswordRequest;
+import com.example.chichi.domain.user.dto.ChangePinRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,9 +39,11 @@ class UserControllerTest {
     @MockitoBean
     UserService userService;
 
+    private final long TEST_DISCORD_ID = 12345678910L;
+
     @BeforeEach
     void setAuthentication() {
-        Map<String, Object> attributes = Map.of("email", "test@example.com");
+        Map<String, Object> attributes = Map.of("id", TEST_DISCORD_ID);
 
         OAuth2User oAuth2User = new PrincipalDetails(
                 null,
@@ -59,11 +61,11 @@ class UserControllerTest {
 
     @Test
     @DisplayName("패스워드 변경시 유효성 검사에 통과해야 성공한다.")
-    void changePassword() throws Exception {
+    void changePin() throws Exception {
         //given
-        String currentPassword = "123456";
-        String newPassword = "111222";
-        ChangePasswordRequest validRequest = new ChangePasswordRequest(currentPassword, newPassword);
+        String currentPin = "123456";
+        String newPin = "111222";
+        ChangePinRequest validRequest = new ChangePinRequest(currentPin, newPin);
 
         //when, then
         mvc.perform(post("/user/myInfo")
@@ -72,10 +74,10 @@ class UserControllerTest {
                         .with(csrf())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().string("패스워드 변경 완료"))
+                .andExpect(content().string("PIN 변경 완료"))
                 .andDo(print());
 
-        verify(userService, times(1)).changePassword(eq("test@example.com"), eq(currentPassword), eq(newPassword));
+        verify(userService, times(1)).changePin(eq(TEST_DISCORD_ID), eq(currentPin), eq(newPin));
     }
 
     @Test
@@ -96,7 +98,7 @@ class UserControllerTest {
                 .andExpect(content().string("토큰 재발급 완료"))
                 .andDo(print());
 
-        verify(userService, times(1)).refreshToken(eq("test@example.com"), eq(accessToken), eq(refreshToken), any());
+        verify(userService, times(1)).refreshToken(eq(TEST_DISCORD_ID), eq(accessToken), eq(refreshToken), any());
     }
 
     @Test
@@ -111,7 +113,7 @@ class UserControllerTest {
                 .andExpect(content().string(MISSING_COOKIE.getMessage()))
                 .andDo(print());
 
-        verify(userService, never()).refreshToken(anyString(), anyString(), anyString(), any());
+        verify(userService, never()).refreshToken(anyLong(), anyString(), anyString(), any());
     }
 
     @Test
@@ -129,6 +131,6 @@ class UserControllerTest {
                 .andExpect(content().string("로그아웃"))
                 .andDo(print());
 
-        verify(userService, times(1)).logout(eq("test@example.com"), eq(accessToken));
+        verify(userService, times(1)).logout(eq(TEST_DISCORD_ID), eq(accessToken));
     }
 }

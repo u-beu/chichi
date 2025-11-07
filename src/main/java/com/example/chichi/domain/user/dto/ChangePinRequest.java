@@ -1,0 +1,21 @@
+package com.example.chichi.domain.user.dto;
+
+import com.example.chichi.exception.ValidationType;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+
+public record ChangePinRequest(
+        @NotNull
+        @Pattern(
+                regexp = ValidationType.CHECK_PIN_REGEX,
+                message = ValidationType.CHECK_PIN_MESSAGE
+        )
+        String currentPin,
+        @NotNull
+        @Pattern(
+                regexp = ValidationType.CHECK_PIN_REGEX,
+                message = ValidationType.CHECK_PIN_MESSAGE
+        )
+        String newPin
+) {
+}

@@ -37,21 +37,25 @@ public class CustomOAuth2UserServiceTest {
     @Test
     void loadUser() {
         //given
-        String email = "test-user@gmail.com";
-        String password = "123456";
+        long discordId = 12345678910L;
+        String email = "test@gmail.com";
+        String username = "test name";
+        String pin = "123456";
         User user = User.builder()
-                .email(email)
-                .password(password)
+                .discordId(discordId)
+                .pin(pin)
                 .build();
 
         Map<String, Object> mockAttributes = Map.of(
-                "email", email
+                "id", discordId,
+                "email", email,
+                "username", username
         );
 
         OAuth2User mockOAuth2User = new DefaultOAuth2User(
                 null,
                 mockAttributes,
-                "email"
+                "id"
         );
 
         OAuth2AccessToken accessToken = new OAuth2AccessToken(
@@ -70,20 +74,23 @@ public class CustomOAuth2UserServiceTest {
                 .authorizationUri("https://discord.com/api/oauth2/authorize")
                 .tokenUri("https://discord.com/api/oauth2/token")
                 .userInfoUri("https://discord.com/api/users/@me")
-                .userNameAttributeName("email")
+                .userNameAttributeName("id")
                 .clientName("Discord")
                 .build();
 
         OAuth2UserRequest userRequest = new OAuth2UserRequest(clientRegistration, accessToken);
 
         given(delegate.loadUser(userRequest)).willReturn(mockOAuth2User);
-        given(userRepository.findByEmail(email)).willReturn(Optional.of(user));
+        given(userRepository.findByDiscordId(discordId)).willReturn(Optional.of(user));
 
         //when
         OAuth2User result = customOAuth2UserService.loadUser(userRequest);
 
         //then
         assertThat(result).isInstanceOf(PrincipalDetails.class);
+        assertThat(Optional.ofNullable(result.getAttribute("id")).get()).isEqualTo(discordId);
         assertThat(Optional.ofNullable(result.getAttribute("email")).get()).isEqualTo(email);
+        assertThat(Optional.ofNullable(result.getAttribute("username")).get()).isEqualTo(username);
+
     }
 }

@@ -1,5 +1,6 @@
 package com.example.chichi.domain.user;
 
+import com.auth0.jwt.interfaces.Claim;
 import com.example.chichi.config.auth.TokenService;
 import com.example.chichi.exception.ApiException;
 import org.junit.jupiter.api.DisplayName;
@@ -12,11 +13,14 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.example.chichi.exception.ExceptionType.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
@@ -36,58 +40,60 @@ class UserServiceTest {
     @InjectMocks
     UserService userService;
 
+    private final long TEST_DISCORD_ID = 12345678910L;
+
     @Test
     @DisplayName("회원가입시 이미 회원인 경우 예외를 발생한다.")
     void join() {
         //given
-        given(userRepository.existsByEmail(anyString())).willReturn(true);
+        given(userRepository.existsByDiscordId(anyLong())).willReturn(true);
 
         //when, then
         assertThatExceptionOfType(ApiException.class)
-                .isThrownBy(() -> userService.join("testuser@gmail.com", "password"))
+                .isThrownBy(() -> userService.join(TEST_DISCORD_ID, "pin"))
                 .withMessage(USER_ALREADY_EXISTS.getMessage());
     }
 
     @Test
-    @DisplayName("비밀번호 변경시 회원 정보를 찾을 수 없으면 예외를 발생한다.")
-    void changePassword1() {
+    @DisplayName("PIN 변경시 회원 정보를 찾을 수 없으면 예외를 발생한다.")
+    void changePin1() {
         //given
-        given(userRepository.findByEmail(anyString())).willReturn(Optional.empty());
+        given(userRepository.findByDiscordId(anyLong())).willReturn(Optional.empty());
 
         //when, then
         assertThatExceptionOfType(ApiException.class)
-                .isThrownBy(() -> userService.changePassword("testuser@gmail.com", "current", "new"))
+                .isThrownBy(() -> userService.changePin(TEST_DISCORD_ID, "current-pin", "new-pin"))
                 .withMessage(USER_NOT_FOUND.getMessage());
     }
 
     @Test
-    @DisplayName("현재 비밀번호가 일치하지 않으면 예외를 발생한다.")
-    void changePassword2() {
+    @DisplayName("현재 PIN이 일치하지 않으면 예외를 발생한다.")
+    void changePin2() {
         //given
-        given(userRepository.findByEmail(anyString())).willReturn(Optional.of(User.builder().password("saved").build()));
+        given(userRepository.findByDiscordId(anyLong())).willReturn(Optional.of(User.builder().pin("saved-pin").build()));
         given(passwordEncoder.matches(anyString(), anyString())).willReturn(false);
 
         //when, then
         assertThatExceptionOfType(ApiException.class)
-                .isThrownBy(() -> userService.changePassword("testuser@gmail.com", "current", "new"))
-                .withMessage(CURRENT_PASSWORD_MISMATCH.getMessage());
+                .isThrownBy(() -> userService.changePin(TEST_DISCORD_ID, "current-pin", "new-pin"))
+                .withMessage(CURRENT_PIN_MISMATCH.getMessage());
     }
 
     @Test
-    @DisplayName("현재 비밀번호가 일치하면 비밀번호를 변경한다.")
-    void changePassword3() {
+    @DisplayName("현재 PIN이 일치하면 PIN을 변경한다.")
+    void changePin3() {
         //given
-        User user = User.builder().password("saved").build();
-        String newPassword = "new-password";
-        given(userRepository.findByEmail(anyString())).willReturn(Optional.of(user));
+        User user = User.builder().pin("current-pin").build();
+        String newPin = "new-pin";
+        given(userRepository.findByDiscordId(anyLong())).willReturn(Optional.of(user));
         given(passwordEncoder.matches(anyString(), anyString())).willReturn(true);
-        given(passwordEncoder.encode(anyString())).willReturn(newPassword);
+        given(passwordEncoder.encode(anyString())).willReturn(newPin);
 
         //when
-        userService.changePassword("testuser@gmail.com", "current", newPassword);
+        userService.changePin(TEST_DISCORD_ID, "current", newPin);
 
         //then
-        assertThat(user.getPassword()).isEqualTo(newPassword);
+        assertThat(user.getPin()).isEqualTo(newPin);
     }
 
     @Test
@@ -99,7 +105,7 @@ class UserServiceTest {
 
         //when, then
         assertThatExceptionOfType(ApiException.class)
-                .isThrownBy(() -> userService.refreshToken("testuser@gmail.com", "access", "refresh", response))
+                .isThrownBy(() -> userService.refreshToken(TEST_DISCORD_ID, "access", "refresh", response))
                 .withMessage(REFRESHTOKEN_INVALID.getMessage());
     }
 
@@ -112,12 +118,19 @@ class UserServiceTest {
         ResponseCookie cookie = ResponseCookie.from("refreshToken", newRefresh).build();
         given(tokenService.matchRefreshToken(anyString(), anyString())).willReturn(true);
         MockHttpServletResponse response = new MockHttpServletResponse();
-        given(tokenService.createAccessToken(anyString())).willReturn(newAccess);
-        given(tokenService.createRefreshToken(anyString())).willReturn(newRefresh);
+
+        Map<String, String> claims  = Map.of(
+                "id", String.valueOf(TEST_DISCORD_ID),
+                "email", "test@gmail.com",
+                "username", "test-username"
+        );
+        given(tokenService.extractClaims(anyString())).willReturn(claims);
+        given(tokenService.createAccessToken(anyLong(), anyString(), anyString())).willReturn(newAccess);
+        given(tokenService.createRefreshToken(anyLong(), anyString(), anyString())).willReturn(newRefresh);
         given(tokenService.getRefreshTokenCookie(anyString())).willReturn(cookie);
 
         //when
-        userService.refreshToken("testuser@gmail.com", "access", "refresh", response);
+        userService.refreshToken(TEST_DISCORD_ID, "access", "refresh", response);
 
         //then
         assertThat(response.getCookie("refreshToken").getValue()).isEqualTo(newRefresh);
@@ -128,14 +141,13 @@ class UserServiceTest {
     @DisplayName("로그아웃시 액세스 토큰을 블랙리스트화되고 리프레시 토큰은 삭제된다.")
     void logout() {
         //given
-        String email = "testuser@gmail.com";
         String accessToken = "Bearer access-token";
 
         //when
-        userService.logout(email, accessToken);
+        userService.logout(TEST_DISCORD_ID, accessToken);
 
         //then
         verify(tokenService, times(1)).saveAccessTokenBlackList(accessToken);
-        verify(tokenService, times(1)).deleteRefreshToken(email);
+        verify(tokenService, times(1)).deleteRefreshToken(String.valueOf(TEST_DISCORD_ID));
     }
 }

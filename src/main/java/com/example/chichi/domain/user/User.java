@@ -21,10 +21,10 @@ public class User {
     private long id;
 
     @Column(nullable = false, unique = true)
-    private String email;
+    private long discordId;
 
     @Column(nullable = false)
-    private String password;
+    private String pin;
 
     @CreatedDate
     private LocalDateTime createdDate = LocalDateTime.now();
@@ -33,12 +33,12 @@ public class User {
     private LocalDateTime modifiedDate;
 
     @Builder
-    public User(String email, String password) {
-        this.email = email;
-        this.password = password;
+    public User(long discordId, String pin) {
+        this.discordId = discordId;
+        this.pin = pin;
     }
 
-    public void updatePassword(String newPassword) {
-        this.password = newPassword;
+    public void updatePin(String pin) {
+        this.pin = pin;
     }
 }

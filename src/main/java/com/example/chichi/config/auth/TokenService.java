@@ -3,6 +3,7 @@ package com.example.chichi.config.auth;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.Claim;
 import com.example.chichi.domain.user.TokenRedisRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,7 +17,9 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -36,40 +39,52 @@ public class TokenService {
 
     private static final String ACCESS_TOKEN_SUBJECT = "AccessToken";
     private static final String REFRESH_TOKEN_SUBJECT = "RefreshToken";
-    private static final String USERNAME_CLAIM = "email";
+    private static final String DISCORD_ID_CLAIM = "discord_id";
+    private static final String EMAIL_CLAIM = "email";
+    private static final String USERNAME_CLAIM = "username";
     private static final String BEARER = "Bearer ";
     private final String REFRESH_KEY = "refresh:";
     private final String BLACK_KEY = "black:";
 
     private final TokenRedisRepository tokenRedisRepository;
 
-    public String createAccessToken(String email) {
+    public String createAccessToken(long discordId, String email, String username) {
         return "Bearer " + JWT.create()
                 .withSubject(ACCESS_TOKEN_SUBJECT)
                 .withExpiresAt(new Date(System.currentTimeMillis() + accessTokenExpirationInSeconds * 1000))
-                .withClaim(USERNAME_CLAIM, email)
+                .withClaim(DISCORD_ID_CLAIM, discordId)
+                .withClaim(EMAIL_CLAIM, email)
+                .withClaim(USERNAME_CLAIM, username)
                 .sign(Algorithm.HMAC512(secret));
     }
 
-    public String createRefreshToken(String email) {
+    public String createRefreshToken(long discordId, String email, String username) {
         return JWT.create()
                 .withSubject(REFRESH_TOKEN_SUBJECT)
                 .withExpiresAt(new Date(System.currentTimeMillis() + refreshTokenExpirationInSeconds * 1000))
-                .withClaim(USERNAME_CLAIM, email)
+                .withClaim(DISCORD_ID_CLAIM, discordId)
+                .withClaim(EMAIL_CLAIM, email)
+                .withClaim(USERNAME_CLAIM, username)
                 .sign(Algorithm.HMAC512(secret));
     }
 
     public Optional<String> extractAccessToken(HttpServletRequest request) {
-        return Optional.ofNullable(request.getHeader(accessHeader)).filter(
-                accessToken -> accessToken.startsWith(BEARER)
-        ).map(accessToken -> accessToken.replace(BEARER, ""));
+        return Optional.ofNullable(request.getHeader(accessHeader))
+                .filter(accessToken -> accessToken.startsWith(BEARER)
+                ).map(accessToken -> accessToken.replace(BEARER, ""));
     }
 
-    public String extractEmail(String token) {
+    public Map<String, String> extractClaims(String token) {
         try {
-            return JWT.require(Algorithm.HMAC512(secret)).build().verify(token)
-                    .getClaim(USERNAME_CLAIM)
-                    .asString();
+            Map<String, Claim> claims = JWT.require(Algorithm.HMAC512(secret))
+                    .build()
+                    .verify(token)
+                    .getClaims();
+            return claims.entrySet().stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            entry -> entry.getValue().asString()
+                    ));
         } catch (JWTVerificationException e) {
             throw new JWTVerificationException("JWT 검증 실패[" + e.getClass().getSimpleName() + "]:" + e.getMessage());
         }
@@ -98,8 +113,8 @@ public class TokenService {
         tokenRedisRepository.save(REFRESH_KEY + email, refreshToken, refreshTokenExpirationInSeconds);
     }
 
-    public boolean matchRefreshToken(String email, String refreshToken) {
-        String savedRefreshToken = tokenRedisRepository.findTokenByKey(REFRESH_KEY + email);
+    public boolean matchRefreshToken(String discordId, String refreshToken) {
+        String savedRefreshToken = tokenRedisRepository.findTokenByKey(REFRESH_KEY + discordId);
         if (savedRefreshToken == null) return false;
         return savedRefreshToken.equals(refreshToken);
     }
