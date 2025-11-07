@@ -6,12 +6,8 @@ import jakarta.validation.constraints.Pattern;
 
 public record JoinUserRequest(
         @NotNull
-        @Pattern(regexp = "^[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])*@[0-9a-zA-Z]([-_.]?[0-9a-zA-Z])+[.][a-zA-Z]{2,3}$",
-                message = ValidationType.CHECK_EMAIL)
-        String email,
-        @NotNull
         @Pattern(
-                regexp = "^\\d{6}$",
-                message = ValidationType.CHECK_PASSWORD)
-        String password) {
+                regexp = ValidationType.CHECK_PIN_REGEX,
+                message = ValidationType.CHECK_PIN_MESSAGE)
+        String pin) {
 }

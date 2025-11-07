@@ -26,10 +26,11 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) {
         OAuth2User oAuth2User = delegate.loadUser(userRequest);
-        Map<String, Object> attributes = oAuth2User.getAttributes();
-        String email = (String) attributes.get("email");
 
-        Optional<User> user = userRepository.findByEmail(email);
+        Map<String, Object> attributes = oAuth2User.getAttributes();
+        long discordId = Long.parseLong(attributes.get("id").toString());
+
+        Optional<User> user = userRepository.findByDiscordId(discordId);
         if (user.isEmpty()) {
             throw new OAuth2AuthenticationException(
                     new OAuth2Error("NOT_REGISTERED", "미등록 사용자", null));
@@ -37,7 +38,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         return new PrincipalDetails(user.get(), attributes);
     }
 
-    public User loadUserByEmail(String email) {
-        return userRepository.findByEmail(email).orElseThrow(() -> new IllegalArgumentException(email));
+    public User loadUserByDiscordId(long discordId) {
+        return userRepository.findByDiscordId(discordId).orElseThrow(() -> new IllegalArgumentException(String.valueOf(discordId)));
     }
 }

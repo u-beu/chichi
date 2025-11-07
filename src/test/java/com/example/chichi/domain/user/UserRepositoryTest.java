@@ -22,6 +22,9 @@ class UserRepositoryTest {
     @Autowired
     private UserRepository userRepository;
 
+    private final long TEST_DISCORD_ID = 12345678910L;
+    private final String TEST_PIN = "123456";
+
     @DynamicPropertySource
     static void overrideProps(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", mySQLContainer::getJdbcUrl);
@@ -33,37 +36,33 @@ class UserRepositoryTest {
     @DisplayName("회원이 존재할 시 회원의 이메일로 회원 데이터를 가져온다.")
     void findByEmail() {
         //given
-        String email = "testuser@gmail.com";
-        String password = "123456";
         User user = User.builder()
-                .email(email)
-                .password(password)
+                .discordId(TEST_DISCORD_ID)
+                .pin(TEST_PIN)
                 .build();
         userRepository.save(user);
 
         //when
-        Optional<User> foundUser = userRepository.findByEmail(email);
+        Optional<User> foundUser = userRepository.findByDiscordId(TEST_DISCORD_ID);
 
         //then
         assertThat(foundUser).isPresent();
-        assertThat(foundUser.get().getEmail()).isEqualTo(email);
-        assertThat(foundUser.get().getPassword()).isEqualTo(password);
+        assertThat(foundUser.get().getDiscordId()).isEqualTo(TEST_DISCORD_ID);
+        assertThat(foundUser.get().getPin()).isEqualTo(TEST_PIN);
     }
 
     @Test
     @DisplayName("회원이 존재할 시 True를 반환한다.")
     void existsByEmail() {
         //given
-        String email = "testuser@gmail.com";
-        String password = "123456";
         User user = User.builder()
-                .email(email)
-                .password(password)
+                .discordId(TEST_DISCORD_ID)
+                .pin(TEST_PIN)
                 .build();
         userRepository.save(user);
 
         //when
-        boolean exists = userRepository.existsByEmail(email);
+        boolean exists = userRepository.existsByDiscordId(TEST_DISCORD_ID);
 
         //then
         assertThat(exists).isTrue();

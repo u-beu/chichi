@@ -1,6 +1,7 @@
 package com.example.chichi.config.auth.customAnnotation;
 
 import com.example.chichi.config.auth.PrincipalDetails;
+import com.example.chichi.config.auth.customAnnotation.resolver.AuthUserDiscordIdResolver;
 import com.example.chichi.config.auth.customAnnotation.resolver.AuthUserEmailResolver;
 import com.example.chichi.domain.user.User;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,9 +29,9 @@ import static org.mockito.Mockito.when;
 
 @ContextConfiguration
 @ExtendWith(MockitoExtension.class)
-class AuthUserEmailResolverTest {
+class AuthUserDiscordIdResolverTest {
 
-    private AuthUserEmailResolver authUserEmailResolver;
+    private AuthUserDiscordIdResolver authUserDiscordIdResolver;
 
     @Mock
     private MethodParameter methodParameter;
@@ -43,27 +44,29 @@ class AuthUserEmailResolverTest {
 
     @BeforeEach
     void setUp() {
-        authUserEmailResolver = new AuthUserEmailResolver();
+        authUserDiscordIdResolver = new AuthUserDiscordIdResolver();
     }
 
     @Test
     @DisplayName("커스텀 어노테이션을 인식한다.")
     void supportsParameter() {
         //given, when
-        when(methodParameter.hasParameterAnnotation(AuthUserEmail.class)).thenReturn(true);
+        when(methodParameter.hasParameterAnnotation(AuthUserDiscordId.class)).thenReturn(true);
 
         //then
-        assertTrue(authUserEmailResolver.supportsParameter(methodParameter));
+        assertTrue(authUserDiscordIdResolver.supportsParameter(methodParameter));
     }
 
     @Test
-    @DisplayName("SecurityContext에 저장된 AuthenticationToken에서 사용자 이메일을 가져온다.")
+    @DisplayName("SecurityContext에 저장된 AuthenticationToken에서 사용자 디스코드 id를 가져온다.")
     void resolveArgument() throws Exception {
         //given
         long discordId = 12345678910L;
         String email = "test@gmail.com";
         String username = "test-username";
+
         Map<String, Object> attributes = new HashMap<>();
+        attributes.put("id", discordId);
         attributes.put("username", username);
         attributes.put("email", email);
 
@@ -73,10 +76,10 @@ class AuthUserEmailResolverTest {
         SecurityContextHolder.getContext().setAuthentication(mockAuth);
 
         //when
-        Object result = authUserEmailResolver.resolveArgument(methodParameter, null, webRequest, binderFactory);
+        Object result = authUserDiscordIdResolver.resolveArgument(methodParameter, null, webRequest, binderFactory);
 
         //then
-        assertEquals(email, result);
+        assertEquals(discordId, result);
     }
 
     @Test
@@ -84,10 +87,10 @@ class AuthUserEmailResolverTest {
     void roadAuthentication() {
         //given
         SecurityContextHolder.clearContext();
-
+        
         //when, then
         assertThatExceptionOfType(Exception.class)
-                .isThrownBy(() -> authUserEmailResolver.resolveArgument(methodParameter, null, webRequest, binderFactory))
-                .withMessage("@AuthUserEmail authentication 로드 실패");
+                .isThrownBy(() -> authUserDiscordIdResolver.resolveArgument(methodParameter, null, webRequest, binderFactory))
+                .withMessage("@AuthUserDiscordId authentication 로드 실패");
     }
 }

@@ -12,6 +12,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 import java.io.IOException;
+import java.util.Map;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -22,9 +23,13 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException {
-        String email = ((PrincipalDetails) authentication.getPrincipal()).getEmail();
-        String accessToken = tokenService.createAccessToken(email);
-        String refreshToken = tokenService.createRefreshToken(email);
+        Map<String, Object> attributes = ((PrincipalDetails) authentication.getPrincipal()).getAttributes();
+        long discordId = (long) attributes.get("id");
+        String email = (String) attributes.get("email");
+        String username = (String) attributes.get("username");
+
+        String accessToken = tokenService.createAccessToken(discordId, email, username);
+        String refreshToken = tokenService.createRefreshToken(discordId, email, username);
         tokenService.saveRefreshToken(email, refreshToken);
         setHeader(response, accessToken, refreshToken);
 

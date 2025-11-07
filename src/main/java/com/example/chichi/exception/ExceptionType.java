@@ -10,7 +10,7 @@ public enum ExceptionType {
     SERVER_ERROR(INTERNAL_SERVER_ERROR, "서버 내부 오류입니다."),
     //user, auth
     AUTHENTICATION_REQUIRED(UNAUTHORIZED, "토큰을 찾을 수 없거나, 유효하지 않습니다. 다시 로그인 해주세요."),
-    CURRENT_PASSWORD_MISMATCH(BAD_REQUEST, "현재 비밀번호가 올바르지 않습니다."),
+    CURRENT_PIN_MISMATCH(BAD_REQUEST, "현재 PIN이 올바르지 않습니다."),
     USER_ALREADY_EXISTS(CONFLICT, "이미 가입한 사용자입니다."),
     LOGIN_FAIL(UNAUTHORIZED, "로그인에 실패했습니다."),
     USER_NOT_FOUND(NOT_FOUND, "사용자를 찾을 수 없습니다."),

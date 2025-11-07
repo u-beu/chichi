@@ -1,6 +1,7 @@
-package com.example.chichi.config.auth.customAnnotation;
+package com.example.chichi.config.auth.customAnnotation.resolver;
 
 import com.example.chichi.config.auth.PrincipalDetails;
+import com.example.chichi.config.auth.customAnnotation.AuthUserEmail;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;

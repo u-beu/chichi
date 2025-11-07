@@ -16,9 +16,7 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
     public void onAuthenticationFailure(HttpServletRequest request,
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
-        log.debug("로그인 실패 [{}]:{}", exception.getClass().getSimpleName(), exception.getMessage());
-        response.setContentType("text/plain;charset=UTF-8");
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-        response.getWriter().write(LOGIN_FAIL.getMessage());
+        log.debug("*** 로그인 실패 [{}]:{}", exception.getClass().getSimpleName(), exception.getMessage());
+        response.sendRedirect(request.getContextPath() + "/register");
     }
 }

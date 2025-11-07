@@ -1,7 +1,7 @@
 package com.example.chichi.domain.user;
 
-import com.example.chichi.config.auth.customAnnotation.AuthUserEmail;
-import com.example.chichi.domain.user.dto.ChangePasswordRequest;
+import com.example.chichi.config.auth.customAnnotation.AuthUserDiscordId;
+import com.example.chichi.domain.user.dto.ChangePinRequest;
 import com.example.chichi.domain.user.dto.JoinUserRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -19,30 +19,32 @@ public class UserController {
 
     @PostMapping("/user/join")
     public ResponseEntity<String> join(@RequestBody @Valid JoinUserRequest request) {
-        userService.join(request.email(), request.password());
+        //todo discord id 가져오기
+        long discordId = 1;
+        userService.join(discordId, request.pin());
         return new ResponseEntity<>("회원가입 완료", HttpStatus.OK);
     }
 
     @PostMapping("/user/myInfo")
-    public ResponseEntity<String> changePassword(@AuthUserEmail String email,
-                                                 @RequestBody @Valid ChangePasswordRequest request) throws Exception {
-        userService.changePassword(email, request.currentPassword(), request.newPassword());
-        return new ResponseEntity<>("패스워드 변경 완료", HttpStatus.OK);
+    public ResponseEntity<String> changePin(@AuthUserDiscordId long discordId,
+                                            @RequestBody @Valid ChangePinRequest request) throws Exception {
+        userService.changePin(discordId, request.currentPin(), request.newPin());
+        return new ResponseEntity<>("PIN 변경 완료", HttpStatus.OK);
     }
 
     @PostMapping("/auth/refresh")
-    public ResponseEntity<String> refreshToken(@AuthUserEmail String email,
+    public ResponseEntity<String> refreshToken(@AuthUserDiscordId long discordId,
                                                @RequestHeader("Authorization") String accessToken,
                                                @CookieValue(value = "refreshToken") String refreshToken,
                                                HttpServletResponse response) {
-        userService.refreshToken(email, accessToken.replace("Bearer ", ""), refreshToken, response);
+        userService.refreshToken(discordId, accessToken.replace("Bearer ", ""), refreshToken, response);
         return ResponseEntity.ok("토큰 재발급 완료");
     }
 
     @PostMapping("/auth/logout")
-    public ResponseEntity<String> logout(@AuthUserEmail String email,
+    public ResponseEntity<String> logout(@AuthUserDiscordId long discordId,
                                          @RequestHeader("Authorization") String accessToken) {
-        userService.logout(email, accessToken.replace("Bearer ", ""));
+        userService.logout(discordId, accessToken.replace("Bearer ", ""));
         return ResponseEntity.ok("로그아웃");
     }
 }
