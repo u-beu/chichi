@@ -6,8 +6,8 @@ import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
 import com.example.chichi.domain.user.TokenRedisRepository;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,10 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Date;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -42,49 +39,67 @@ public class TokenService {
     private static final String DISCORD_ID_CLAIM = "discord_id";
     private static final String EMAIL_CLAIM = "email";
     private static final String USERNAME_CLAIM = "username";
-    private static final String BEARER = "Bearer ";
+    private static final String USER_ROLES_CLAIM = "roles";
+    private static final String BEARER_HEADER = "Bearer ";
+    private static final String BEARER_COOKIE = "Bearer+";
     private final String REFRESH_KEY = "refresh:";
     private final String BLACK_KEY = "black:";
 
     private final TokenRedisRepository tokenRedisRepository;
 
-    public String createAccessToken(long discordId, String email, String username) {
+    public String createAccessToken(long discordId, String email, String username, List<String> roles) {
         return "Bearer " + JWT.create()
                 .withSubject(ACCESS_TOKEN_SUBJECT)
                 .withExpiresAt(new Date(System.currentTimeMillis() + accessTokenExpirationInSeconds * 1000))
                 .withClaim(DISCORD_ID_CLAIM, discordId)
                 .withClaim(EMAIL_CLAIM, email)
                 .withClaim(USERNAME_CLAIM, username)
+                .withClaim(USER_ROLES_CLAIM, roles)
                 .sign(Algorithm.HMAC512(secret));
     }
 
-    public String createRefreshToken(long discordId, String email, String username) {
+    public String createRefreshToken(long discordId, String email, String username, List<String> roles) {
         return JWT.create()
                 .withSubject(REFRESH_TOKEN_SUBJECT)
                 .withExpiresAt(new Date(System.currentTimeMillis() + refreshTokenExpirationInSeconds * 1000))
                 .withClaim(DISCORD_ID_CLAIM, discordId)
                 .withClaim(EMAIL_CLAIM, email)
                 .withClaim(USERNAME_CLAIM, username)
+                .withClaim(USER_ROLES_CLAIM, roles)
                 .sign(Algorithm.HMAC512(secret));
     }
 
-    public Optional<String> extractAccessToken(HttpServletRequest request) {
+    public Optional<String> extractAccessTokenFromHeader(HttpServletRequest request) {
         return Optional.ofNullable(request.getHeader(accessHeader))
-                .filter(accessToken -> accessToken.startsWith(BEARER)
-                ).map(accessToken -> accessToken.replace(BEARER, ""));
+                .filter(accessToken -> accessToken.startsWith(BEARER_HEADER)
+                ).map(accessToken -> accessToken.replace(BEARER_HEADER, ""));
     }
 
-    public Map<String, String> extractClaims(String token) {
+    public Optional<String> extractAccessTokenFromCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) return Optional.empty();
+        return Arrays.stream(cookies)
+                .filter(c -> c.getName().equals("accessToken"))
+                .map(Cookie::getValue)
+                .map(s -> s.replace(BEARER_COOKIE, ""))
+                .findFirst();
+    }
+
+    public Map<String, Object> extractClaims(String token) {
         try {
             Map<String, Claim> claims = JWT.require(Algorithm.HMAC512(secret))
                     .build()
                     .verify(token)
                     .getClaims();
-            return claims.entrySet().stream()
-                    .collect(Collectors.toMap(
-                            Map.Entry::getKey,
-                            entry -> entry.getValue().asString()
-                    ));
+            Map<String, Object> result = new HashMap<>();
+            claims.forEach((key, value) -> {
+                switch (key) {
+                    case "discord_id" -> result.put(key, value.asLong());
+                    case "roles" -> result.put(key, value.asList(String.class));
+                    default -> result.put(key, value.asString());
+                }
+            });
+            return result;
         } catch (JWTVerificationException e) {
             throw new JWTVerificationException("JWT 검증 실패[" + e.getClass().getSimpleName() + "]:" + e.getMessage());
         }
@@ -99,7 +114,7 @@ public class TokenService {
                 .build();
     }
 
-    public boolean isTokenValid(String token, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    public boolean isTokenValid(String token) throws ServletException, IOException {
         try {
             JWT.require(Algorithm.HMAC512(secret)).build().verify(token);
             return true;

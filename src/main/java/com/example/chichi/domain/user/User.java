@@ -9,6 +9,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity(name = "users")
 @Getter
@@ -26,6 +28,12 @@ public class User {
     @Column(nullable = false)
     private String pin;
 
+    @Column(name = "user_roles", length = 20)
+    @Enumerated(EnumType.STRING)
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"))
+    private Set<RoleType> roleTypes = new HashSet<>();
+
     @CreatedDate
     private LocalDateTime createdDate = LocalDateTime.now();
 
@@ -33,12 +41,19 @@ public class User {
     private LocalDateTime modifiedDate;
 
     @Builder
-    public User(long discordId, String pin) {
+    public User(long discordId, String pin, Set<RoleType> roleTypes) {
         this.discordId = discordId;
         this.pin = pin;
+        this.roleTypes = roleTypes;
     }
 
     public void updatePin(String pin) {
         this.pin = pin;
+    }
+    public void addRole(RoleType roleType) {
+        roleTypes.add(roleType);
+    }
+    public void removeRole(RoleType roleType){
+        roleTypes.remove(roleType);
     }
 }

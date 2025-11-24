@@ -1,11 +1,10 @@
 package com.example.chichi.config.auth.filter;
 
-import com.auth0.jwt.interfaces.Claim;
 import com.example.chichi.config.auth.CustomOAuth2UserService;
 import com.example.chichi.config.auth.PrincipalDetails;
 import com.example.chichi.config.auth.TokenService;
-import com.example.chichi.config.auth.handler.CustomAuthenticationEntryPoint;
 import com.example.chichi.domain.user.User;
+import com.example.chichi.exception.ExceptionType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,7 +18,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -27,45 +25,37 @@ import java.util.Map;
 public class CustomVerificationFilter extends OncePerRequestFilter {
     private final TokenService tokenService;
     private final CustomOAuth2UserService customOAuth2UserService;
-    private final CustomAuthenticationEntryPoint entryPoint;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String accessToken = tokenService.extractAccessToken(request).get();
+        String accessToken = tokenService.extractAccessTokenFromCookie(request)
+                .orElseThrow(() -> new AuthenticationServiceException(ExceptionType.MISSING_TOKEN.getMessage()));
         if (tokenService.checkBlackList(accessToken)) {
-            entryPoint.commence(request, response, new AuthenticationServiceException("블랙리스트된 액세스토큰"));
-            return;
+            throw new AuthenticationServiceException(ExceptionType.BLACKLIST_TOKEN.getMessage());
         }
-        if (tokenService.isTokenValid(accessToken, request, response)) {
-            Map<String, String> claims = tokenService.extractClaims(accessToken);
-            long discordId = Long.parseLong(claims.get("id"));
-            String email = claims.get("email");
-            String username = claims.get("username");
+        if (!tokenService.isTokenValid(accessToken)) {
+            throw new AuthenticationServiceException(ExceptionType.INVALID_TOKEN.getMessage());
+        }
 
-            saveAuthentication(discordId, email, username);
-        } else {
-            entryPoint.commence(request, response, new AuthenticationServiceException("토큰 유효성 검증 실패"));
-            return;
-        }
+        Map<String, Object> claims = tokenService.extractClaims(accessToken);
+        long discordId = Long.parseLong(claims.get("discord_id").toString());
+
+        User user = customOAuth2UserService.loadUserByDiscordId(discordId)
+                .orElseThrow(() -> new AuthenticationServiceException(ExceptionType.USER_NOT_FOUND.getMessage()));
+
+        PrincipalDetails principalDetails = new PrincipalDetails(user, claims);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(principalDetails, null, principalDetails.getAuthorities());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
         filterChain.doFilter(request, response);
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String authorization = request.getHeader("Authorization");
-        return authorization == null || !authorization.startsWith("Bearer");
-    }
-
-    private void saveAuthentication(long discordId, String email, String username) {
-        User user = customOAuth2UserService.loadUserByDiscordId(discordId);
-
-        Map<String, Object> attributes = new HashMap<>();
-        attributes.put("id", discordId);
-        attributes.put("email", email);
-        attributes.put("username", username);
-
-        PrincipalDetails principalDetails = new PrincipalDetails(user, attributes);
-        Authentication authentication = new UsernamePasswordAuthenticationToken(principalDetails, null, null);
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String path = request.getRequestURI();
+        return path.startsWith("/register") ||
+                path.startsWith("/login") ||
+                path.startsWith("/error") ||
+                path.startsWith("/images");
     }
 }

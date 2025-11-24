@@ -1,18 +1,19 @@
 package com.example.chichi.config.auth.handler;
 
+import com.example.chichi.config.auth.CookieUtils;
 import com.example.chichi.config.auth.PrincipalDetails;
 import com.example.chichi.config.auth.TokenService;
+import com.example.chichi.domain.user.RoleType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
-import java.util.Map;
+import java.util.List;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -23,29 +24,32 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException {
-        Map<String, Object> attributes = ((PrincipalDetails) authentication.getPrincipal()).getAttributes();
-        long discordId = (long) attributes.get("id");
-        String email = (String) attributes.get("email");
-        String username = (String) attributes.get("username");
+        log.debug("*** auth success handler");
+        PrincipalDetails principal = (PrincipalDetails) authentication.getPrincipal();
+        long discordId = Long.parseLong(principal.getName());
+        String email = principal.getEmail();
+        String username = principal.getUsername();
+        List<String> roles = RoleType.toListRoleString(principal.getAuthorities());
 
-        String accessToken = tokenService.createAccessToken(discordId, email, username);
-        String refreshToken = tokenService.createRefreshToken(discordId, email, username);
-        tokenService.saveRefreshToken(email, refreshToken);
-        setHeader(response, accessToken, refreshToken);
+        String accessToken = tokenService.createAccessToken(discordId, email, username, roles);
+        String redirectUrl;
 
-        String globalName = ((PrincipalDetails) authentication.getPrincipal()).getName();
-        setMessage(response, globalName);
-    }
+        if (roles.contains(RoleType.GUEST.getAuthority())) {
+            CookieUtils.addCookie(response, "accessToken", accessToken, RoleType.GUEST);
+            redirectUrl = UriComponentsBuilder.fromPath("/register")
+                    .build()
+                    .toString();
+        } else {
+            CookieUtils.addCookie(response, "accessToken", accessToken, RoleType.USER);
 
-    private void setHeader(HttpServletResponse response, String accessToken, String refreshToken) {
-        ResponseCookie refreshTokenCookie = tokenService.getRefreshTokenCookie(refreshToken);
-        response.setHeader("Authorization", accessToken);
-        response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
-        response.setContentType("text/plain;charset=UTF-8");
-        response.setStatus(HttpServletResponse.SC_OK);
-    }
+            String refreshToken = tokenService.createRefreshToken(discordId, email, username, roles);
+            tokenService.saveRefreshToken(email, refreshToken);
+            CookieUtils.addCookie(response, "refreshToken", refreshToken, RoleType.USER);
 
-    private void setMessage(HttpServletResponse response, String globalName) throws IOException {
-        response.getWriter().write("로그인 성공: " + globalName + "님 환영합니다!");
+            redirectUrl = UriComponentsBuilder.fromPath("/home")
+                    .build()
+                    .toString();
+        }
+        response.sendRedirect(redirectUrl);
     }
 }

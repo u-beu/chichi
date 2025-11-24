@@ -1,6 +1,7 @@
 package com.example.chichi.domain.user;
 
 import com.example.chichi.config.auth.PrincipalDetails;
+import com.example.chichi.domain.user.controller.UserController;
 import com.example.chichi.domain.user.dto.ChangePinRequest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
@@ -17,6 +18,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Map;
+import java.util.Set;
 
 import static com.example.chichi.exception.ExceptionType.MISSING_COOKIE;
 import static org.mockito.ArgumentMatchers.*;
@@ -43,10 +45,16 @@ class UserControllerTest {
 
     @BeforeEach
     void setAuthentication() {
-        Map<String, Object> attributes = Map.of("id", TEST_DISCORD_ID);
-
+        Map<String, Object> attributes = Map.of(
+                "username", "test-username",
+                "email", "test@gmail.com");
+        User testUser=User.builder()
+                .discordId(TEST_DISCORD_ID)
+                .pin("111111")
+                .roleTypes(Set.of(RoleType.USER))
+                .build();
         OAuth2User oAuth2User = new PrincipalDetails(
-                null,
+                testUser,
                 attributes
         );
 

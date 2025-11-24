@@ -1,6 +1,5 @@
 package com.example.chichi.domain.user;
 
-import com.auth0.jwt.interfaces.Claim;
 import com.example.chichi.config.auth.TokenService;
 import com.example.chichi.exception.ApiException;
 import org.junit.jupiter.api.DisplayName;
@@ -13,15 +12,14 @@ import org.springframework.http.ResponseCookie;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static com.example.chichi.exception.ExceptionType.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -43,15 +41,12 @@ class UserServiceTest {
     private final long TEST_DISCORD_ID = 12345678910L;
 
     @Test
-    @DisplayName("회원가입시 이미 회원인 경우 예외를 발생한다.")
+    @DisplayName("회원이 아닐 경우 가입하는 과정에서 회원 정보를 찾을 수 없을 경우 예외를 발생한다.")
     void join() {
-        //given
-        given(userRepository.existsByDiscordId(anyLong())).willReturn(true);
-
         //when, then
         assertThatExceptionOfType(ApiException.class)
-                .isThrownBy(() -> userService.join(TEST_DISCORD_ID, "pin"))
-                .withMessage(USER_ALREADY_EXISTS.getMessage());
+                .isThrownBy(() -> userService.join(TEST_DISCORD_ID, "test-pin"))
+                .withMessage(USER_NOT_FOUND.getMessage());
     }
 
     @Test
@@ -119,14 +114,15 @@ class UserServiceTest {
         given(tokenService.matchRefreshToken(anyString(), anyString())).willReturn(true);
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        Map<String, String> claims  = Map.of(
-                "id", String.valueOf(TEST_DISCORD_ID),
+        Map<String, Object> claims  = Map.of(
+                "discord_id", String.valueOf(TEST_DISCORD_ID),
                 "email", "test@gmail.com",
-                "username", "test-username"
+                "username", "test-username",
+                "roles", List.of(RoleType.USER.getAuthority())
         );
         given(tokenService.extractClaims(anyString())).willReturn(claims);
-        given(tokenService.createAccessToken(anyLong(), anyString(), anyString())).willReturn(newAccess);
-        given(tokenService.createRefreshToken(anyLong(), anyString(), anyString())).willReturn(newRefresh);
+        given(tokenService.createAccessToken(anyLong(), anyString(), anyString(), anyList())).willReturn(newAccess);
+        given(tokenService.createRefreshToken(anyLong(), anyString(), anyString(), anyList())).willReturn(newRefresh);
         given(tokenService.getRefreshTokenCookie(anyString())).willReturn(cookie);
 
         //when
