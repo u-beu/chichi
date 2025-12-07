@@ -3,6 +3,7 @@ package com.example.chichi.domain.user;
 import com.example.chichi.config.auth.PrincipalDetails;
 import com.example.chichi.domain.user.controller.UserController;
 import com.example.chichi.domain.user.dto.ChangePinRequest;
+import com.example.chichi.exception.ApiException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,23 +12,30 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import static com.example.chichi.exception.ExceptionType.MISSING_COOKIE;
+import static com.example.chichi.exception.ExceptionType.REFRESHTOKEN_INVALID;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.willThrow;
 import static org.mockito.Mockito.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
 class UserControllerTest {
@@ -48,7 +56,7 @@ class UserControllerTest {
         Map<String, Object> attributes = Map.of(
                 "username", "test-username",
                 "email", "test@gmail.com");
-        User testUser=User.builder()
+        User testUser = User.builder()
                 .discordId(TEST_DISCORD_ID)
                 .pin("111111")
                 .roleTypes(Set.of(RoleType.USER))
@@ -68,6 +76,60 @@ class UserControllerTest {
     }
 
     @Test
+    @DisplayName("가입시 핀을 입력하면 성공한다.")
+    void register() throws Exception {
+        //세큐리티 컨텍스트 초기화
+        SecurityContextHolder.clearContext();
+
+        //given
+        String pin = "11111";
+        String accessToken = "mock-access-token";
+
+        //GUEST 역할 유저 생성
+        User guest = User.builder()
+                .discordId(TEST_DISCORD_ID)
+                .pin(pin)
+                .roleTypes(Set.of(RoleType.GUEST))
+                .build();
+        Map<String, Object> attributes = Map.of(
+                "username", "test-username",
+                "email", "test@gmail.com");
+
+        OAuth2User oAuth2GuestUser = new PrincipalDetails(
+                guest,
+                attributes
+        );
+        Authentication guest_auth = new UsernamePasswordAuthenticationToken(
+                oAuth2GuestUser, attributes, List.of(RoleType.GUEST::getAuthority)
+        );
+
+        User updatedUser = User.builder()
+                .discordId(TEST_DISCORD_ID)
+                .pin(pin)
+                .roleTypes(Set.of(RoleType.USER))
+                .build();
+        given(userService.register(eq(TEST_DISCORD_ID), eq(pin))).willReturn(updatedUser);
+
+        //when, then
+        mvc.perform(post("/register/pin")
+                        .with(authentication(guest_auth))
+                        .with(csrf())
+                        .param("pin", pin)
+                        .requestAttr("accessToken", accessToken))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/home"))
+                .andDo(print());
+
+        verify(userService, times(1)).register(eq(TEST_DISCORD_ID), eq(pin));
+        verify(userService, times(1)).reissueTokensAfterUserUpdate(
+                eq(updatedUser),
+                eq(attributes),
+                eq(accessToken),
+                any()
+        );
+    }
+
+    @Test
     @DisplayName("패스워드 변경시 유효성 검사에 통과해야 성공한다.")
     void changePin() throws Exception {
         //given
@@ -76,7 +138,7 @@ class UserControllerTest {
         ChangePinRequest validRequest = new ChangePinRequest(currentPin, newPin);
 
         //when, then
-        mvc.perform(post("/user/myInfo")
+        mvc.perform(patch("/users/me/pin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(validRequest))
                         .with(csrf())
@@ -100,13 +162,11 @@ class UserControllerTest {
         mvc.perform(post("/auth/refresh")
                         .cookie(cookie)
                         .with(csrf())
-                        .header("Authorization", "Bearer " + accessToken)
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .requestAttr("accessToken", accessToken))
                 .andExpect(status().isOk())
-                .andExpect(content().string("토큰 재발급 완료"))
                 .andDo(print());
 
-        verify(userService, times(1)).refreshToken(eq(TEST_DISCORD_ID), eq(accessToken), eq(refreshToken), any());
+        verify(userService, times(1)).refreshToken(eq(TEST_DISCORD_ID), eq(refreshToken), any());
     }
 
     @Test
@@ -114,18 +174,37 @@ class UserControllerTest {
     void refreshToken2() throws Exception {
         //when, then
         mvc.perform(post("/auth/refresh")
-                        .with(csrf())
-                        .header("Authorization", "Bearer " + "mock-access-token")
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .with(csrf()))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(MISSING_COOKIE.getMessage()))
                 .andDo(print());
 
-        verify(userService, never()).refreshToken(anyLong(), anyString(), anyString(), any());
+        verify(userService, never()).refreshToken(eq(TEST_DISCORD_ID), anyString(), any());
     }
 
     @Test
-    @DisplayName("로그아웃시 액세스 토큰을 가져온다.")
+    @DisplayName("토큰 재발급시 리프레시 토큰이 유효하지 않아 예외가 발생하면 리다이렉트한다.")
+    void refreshToken3() throws Exception {
+        //given
+        String refreshToken = "mock-refresh-token";
+        String accessToken = "mock-access-token";
+        Cookie cookie = new Cookie("refreshToken", refreshToken);
+        willThrow(new ApiException(REFRESHTOKEN_INVALID))
+                .given(userService)
+                .refreshToken(eq(TEST_DISCORD_ID), eq(refreshToken), any());
+
+        //when, then
+        mvc.perform(post("/auth/refresh")
+                        .cookie(cookie)
+                        .with(csrf())
+                        .requestAttr("accessToken", accessToken))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("로그아웃 요청에 액세스 토큰을 속성에 저장해야 성공한다.")
     void logout() throws Exception {
         //given
         String accessToken = "mock-access-token";
@@ -133,10 +212,9 @@ class UserControllerTest {
         //when, then
         mvc.perform(post("/auth/logout")
                         .with(csrf())
-                        .header("Authorization", "Bearer " + accessToken)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(content().string("로그아웃"))
+                        .requestAttr("accessToken", accessToken))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"))
                 .andDo(print());
 
         verify(userService, times(1)).logout(eq(TEST_DISCORD_ID), eq(accessToken));

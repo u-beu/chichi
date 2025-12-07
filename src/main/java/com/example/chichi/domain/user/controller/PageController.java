@@ -53,12 +53,12 @@ public class PageController {
                            Authentication authentication) {
         if (authentication == null) {
             return "login";
-        }else{
+        } else {
             List<String> listRoleString = RoleType.toListRoleString(authentication.getAuthorities());
-            if(listRoleString.contains(RoleType.GUEST.getAuthority())){
+            if (listRoleString.contains(RoleType.GUEST.getAuthority())) {
                 return "register";
-            }else{
-                String username = ((PrincipalDetails)authentication.getPrincipal()).getUsername();
+            } else {
+                String username = ((PrincipalDetails) authentication.getPrincipal()).getUsername();
                 //todo 임시 데이터
                 List<MusicRecord> records = List.of(
                         new MusicRecord("노래1", "가수1", true),

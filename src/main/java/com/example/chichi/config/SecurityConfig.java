@@ -35,13 +35,16 @@ public class SecurityConfig {
             "/error",
             "/login",
             "/images/**",
-            "/register"
+            "/register",
+            "/home",
+            "/auth/refresh"
     };
     private final String[] GUEST_LIST = {
             "/register/pin"
     };
     private final String[] USER_LIST = {
-            "/user/**"
+            "/users/**",
+            "/auth/logout"
     };
     private final String[] ADMIN_LIST = {
             "/admin/**"

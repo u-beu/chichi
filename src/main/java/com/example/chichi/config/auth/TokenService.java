@@ -69,12 +69,6 @@ public class TokenService {
                 .sign(Algorithm.HMAC512(secret));
     }
 
-    public Optional<String> extractAccessTokenFromHeader(HttpServletRequest request) {
-        return Optional.ofNullable(request.getHeader(accessHeader))
-                .filter(accessToken -> accessToken.startsWith(BEARER_HEADER)
-                ).map(accessToken -> accessToken.replace(BEARER_HEADER, ""));
-    }
-
     public Optional<String> extractAccessTokenFromCookie(HttpServletRequest request) {
         Cookie[] cookies = request.getCookies();
         if (cookies == null) return Optional.empty();
@@ -134,7 +128,7 @@ public class TokenService {
         return savedRefreshToken.equals(refreshToken);
     }
 
-    public void saveAccessTokenBlackList(String accessToken) {
+    public void saveTokenBlackList(String accessToken) {
         long tokenExpirationInMilliSeconds = JWT.require(Algorithm.HMAC512(secret)).build().verify(accessToken)
                 .getExpiresAt().getTime();
         tokenRedisRepository.save(BLACK_KEY + accessToken, "blacklisted",

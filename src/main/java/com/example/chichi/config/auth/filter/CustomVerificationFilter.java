@@ -30,6 +30,8 @@ public class CustomVerificationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String accessToken = tokenService.extractAccessTokenFromCookie(request)
                 .orElseThrow(() -> new AuthenticationServiceException(ExceptionType.MISSING_TOKEN.getMessage()));
+        request.setAttribute("accessToken", accessToken);
+
         if (tokenService.checkBlackList(accessToken)) {
             throw new AuthenticationServiceException(ExceptionType.BLACKLIST_TOKEN.getMessage());
         }
@@ -46,15 +48,14 @@ public class CustomVerificationFilter extends OncePerRequestFilter {
         PrincipalDetails principalDetails = new PrincipalDetails(user, claims);
         Authentication authentication = new UsernamePasswordAuthenticationToken(principalDetails, null, principalDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
-
         filterChain.doFilter(request, response);
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path.startsWith("/register") ||
-                path.startsWith("/login") ||
+        return path.equals("/register") ||
+                path.equals("/login") ||
                 path.startsWith("/error") ||
                 path.startsWith("/images");
     }
