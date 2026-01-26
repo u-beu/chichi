@@ -20,6 +20,7 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -76,6 +77,8 @@ class AuthUserDiscordIdResolverTest {
         UserDetails mockUser = new PrincipalDetails(
                 User.builder()
                         .discordId(discordId)
+                        .pin("saved-pin")
+                        .roleTypes(new HashSet<>(Set.of(RoleType.USER)))
                         .build(),
                 attributes);
 
