@@ -14,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class TokenRedisRepository {
     private final RedisTemplate<String, String> redisTemplate;
-    //todo 메서드명 수정
+
     public void save(String key, String value, long expiration) {
         redisTemplate.opsForValue().set(key, value, expiration, TimeUnit.SECONDS);
     }

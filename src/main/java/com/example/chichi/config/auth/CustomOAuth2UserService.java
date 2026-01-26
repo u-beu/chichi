@@ -31,9 +31,9 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
     public OAuth2User loadUser(OAuth2UserRequest userRequest) {
         OAuth2User oAuth2User = delegate.loadUser(userRequest);
         Map<String, Object> oAuth2UserAttributes = oAuth2User.getAttributes();
-        long discordId = Long.parseLong(oAuth2UserAttributes.get("id").toString());
-        String username = oAuth2UserAttributes.get("username").toString();
-        String email = oAuth2UserAttributes.get("email").toString();
+        long discordId = Long.parseLong(String.valueOf(oAuth2UserAttributes.get("id")));
+        String username = String.valueOf(oAuth2UserAttributes.get("username"));
+        String email = String.valueOf(oAuth2UserAttributes.get("email"));
 
         Map<String, Object> attributes = new HashMap<>();
         attributes.put("discord_id", discordId);

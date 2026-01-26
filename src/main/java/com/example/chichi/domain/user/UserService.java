@@ -34,7 +34,7 @@ public class UserService {
         return user;
     }
 
-    public void reissueTokensAfterUserUpdate(User user, Map<String, Object> claims, String accessToken, HttpServletResponse response) {
+    public void reissueTokensAfterUserRegister(User user, Map<String, Object> claims, String accessToken, HttpServletResponse response) {
         tokenService.saveTokenBlackList(accessToken);
 
         long discordId = Long.parseLong(String.valueOf(claims.get("discord_id")));

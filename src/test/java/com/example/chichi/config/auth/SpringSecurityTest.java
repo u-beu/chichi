@@ -68,7 +68,7 @@ public class SpringSecurityTest {
     UserRepository userRepository;
 
     @BeforeEach
-    void clearTokenRedisRepository() {
+    void clearAllRepository() {
         tokenRedisRepository.deleteAll();
         userRepository.deleteAll();
     }

@@ -1,5 +1,6 @@
 package com.example.chichi.domain.user;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -9,32 +10,46 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.Optional;
 
-import static com.example.chichi.config.CustomTestMySqlContainer.mySQLContainer;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @ExtendWith(SpringExtension.class)
 @ActiveProfiles("test")
+@Testcontainers
 class UserRepositoryTest {
-    @Autowired
-    private UserRepository userRepository;
-
-    private final long TEST_DISCORD_ID = 12345678910L;
-    private final String TEST_PIN = "123456";
+    @Container
+    static MySQLContainer<?> mySQLContainer = new MySQLContainer<>("mysql:8.0")
+            .withDatabaseName("testDB")
+            .withUsername("test")
+            .withPassword("test");
 
     @DynamicPropertySource
-    static void overrideProps(DynamicPropertyRegistry registry) {
+    static void props(DynamicPropertyRegistry registry) {
         registry.add("spring.datasource.url", mySQLContainer::getJdbcUrl);
         registry.add("spring.datasource.username", mySQLContainer::getUsername);
         registry.add("spring.datasource.password", mySQLContainer::getPassword);
     }
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @BeforeEach
+    void clearTokenRedisRepository() {
+        userRepository.deleteAll();
+    }
+
+    private final long TEST_DISCORD_ID = 12345678910L;
+    private final String TEST_PIN = "123456";
+
     @Test
-    @DisplayName("회원이 존재할 시 회원의 이메일로 회원 데이터를 가져온다.")
-    void findByEmail() {
+    @DisplayName("회원이 존재할 시 디스코드id로 회원 데이터를 가져온다.")
+    void findByDiscordId() {
         //given
         User user = User.builder()
                 .discordId(TEST_DISCORD_ID)
@@ -52,8 +67,8 @@ class UserRepositoryTest {
     }
 
     @Test
-    @DisplayName("회원이 존재할 시 True를 반환한다.")
-    void existsByEmail() {
+    @DisplayName("회원이 존재할 시 디스코드id로 검색해 있다면 True를 반환한다.")
+    void existsByDiscordId() {
         //given
         User user = User.builder()
                 .discordId(TEST_DISCORD_ID)

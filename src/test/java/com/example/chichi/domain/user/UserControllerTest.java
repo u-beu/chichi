@@ -121,7 +121,7 @@ class UserControllerTest {
                 .andDo(print());
 
         verify(userService, times(1)).register(eq(TEST_DISCORD_ID), eq(pin));
-        verify(userService, times(1)).reissueTokensAfterUserUpdate(
+        verify(userService, times(1)).reissueTokensAfterUserRegister(
                 eq(updatedUser),
                 eq(attributes),
                 eq(accessToken),

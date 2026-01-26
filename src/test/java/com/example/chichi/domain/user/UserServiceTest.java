@@ -16,7 +16,7 @@ import java.util.*;
 import static com.example.chichi.exception.ExceptionType.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -35,14 +35,12 @@ class UserServiceTest {
     @InjectMocks
     UserService userService;
 
-    private final long TEST_DISCORD_ID = 12345678910L;
-
     @Test
     @DisplayName("회원가입시 회원 정보를 찾을 수 없을 경우 예외를 발생한다.")
     void register1() {
         //when, then
         assertThatExceptionOfType(ApiException.class)
-                .isThrownBy(() -> userService.register(TEST_DISCORD_ID, "test-pin"))
+                .isThrownBy(() -> userService.register(1L, "input-pin"))
                 .withMessage(USER_NOT_FOUND.getMessage());
     }
 
@@ -51,41 +49,58 @@ class UserServiceTest {
     void register2() {
         //given
         User user = User.builder()
-                .discordId(TEST_DISCORD_ID)
-                .roleTypes(new HashSet<>(List.of(RoleType.GUEST)))
+                .discordId(1L)
+                .pin("random-pin")
+                .roleTypes(new HashSet<>(Set.of(RoleType.GUEST)))
                 .build();
-        given(userRepository.findByDiscordId(eq(TEST_DISCORD_ID))).willReturn(Optional.of(user));
+        given(userRepository.findByDiscordId(eq(1L))).willReturn(Optional.of(user));
+        given(passwordEncoder.encode(eq("input-pin"))).willReturn("encoded-pin");
+
         //when
-        userService.register(TEST_DISCORD_ID, "test-pin");
+        userService.register(1L, "input-pin");
+
         //then
         assertThat(user.getRoleTypes()).contains(RoleType.USER);
         assertThat(user.getRoleTypes()).doesNotContain(RoleType.GUEST);
     }
 
     @Test
-    @DisplayName("재발행")
-    void reissueTokensAfterUserUpdate() {
+    @DisplayName("가입 후에 GUEST 역할이 든 액세스 토큰을 블랙리스트하고 USER 역할이 든 액세스 토큰을 재발행한다.")
+    void reissueTokensAfterUserRegister() {
         //given
         User user = User.builder()
-                .discordId(TEST_DISCORD_ID)
-                .roleTypes(Set.of(RoleType.GUEST))
+                .discordId(1L)
+                .roleTypes(new HashSet<>(Set.of(RoleType.USER)))
+                .pin("saved-pin")
                 .build();
         MockHttpServletResponse response = new MockHttpServletResponse();
         Map<String, Object> claims = Map.of(
-                "discord_id", String.valueOf(TEST_DISCORD_ID),
+                "discord_id", String.valueOf(1L),
                 "email", "test@gmail.com",
                 "username", "test-username",
-                "roles", List.of(RoleType.USER.getAuthority())
+                "roles", List.of(RoleType.GUEST.getAuthority())
         );
-        String newAccessToken = "new-access";
-        String newRefreshToken = "new-refresh";
+        String newAccessToken = "new-access-token";
+        String newRefreshToken = "new-refresh-token";
 
-        given(tokenService.createAccessToken(anyLong(), anyString(), anyString(), anyList())).willReturn(newAccessToken);
-        given(tokenService.createRefreshToken(anyLong(), anyString(), anyString(), anyList())).willReturn(newRefreshToken);
+        given(tokenService.createAccessToken(
+                eq(1L),
+                eq("test@gmail.com"),
+                eq("test-username"),
+                eq(List.of(RoleType.USER.getAuthority())))
+        ).willReturn(newAccessToken);
+        given(tokenService.createRefreshToken(
+                eq(1L),
+                eq("test@gmail.com"),
+                eq("test-username"),
+                eq(List.of(RoleType.USER.getAuthority())))
+        ).willReturn(newRefreshToken);
 
         //when
-        userService.reissueTokensAfterUserUpdate(user, claims, "mock-access-token", response);
+        userService.reissueTokensAfterUserRegister(user, claims, "access-token", response);
+
         //then
+        verify(tokenService, times(1)).saveTokenBlackList(eq("access-token"));
         assertThat(Objects.requireNonNull(response.getCookie("accessToken")).getValue())
                 .isEqualTo(newAccessToken);
         assertThat(Objects.requireNonNull(response.getCookie("refreshToken")).getValue())
@@ -96,11 +111,11 @@ class UserServiceTest {
     @DisplayName("PIN 변경시 회원 정보를 찾을 수 없으면 예외를 발생한다.")
     void changePin1() {
         //given
-        given(userRepository.findByDiscordId(anyLong())).willReturn(Optional.empty());
+        given(userRepository.findByDiscordId(eq(1L))).willReturn(Optional.empty());
 
         //when, then
         assertThatExceptionOfType(ApiException.class)
-                .isThrownBy(() -> userService.changePin(TEST_DISCORD_ID, "current-pin", "new-pin"))
+                .isThrownBy(() -> userService.changePin(1L, "current-pin", "new-pin"))
                 .withMessage(USER_NOT_FOUND.getMessage());
     }
 
@@ -108,12 +123,17 @@ class UserServiceTest {
     @DisplayName("현재 PIN이 일치하지 않으면 예외를 발생한다.")
     void changePin2() {
         //given
-        given(userRepository.findByDiscordId(anyLong())).willReturn(Optional.of(User.builder().pin("saved-pin").build()));
-        given(passwordEncoder.matches(anyString(), anyString())).willReturn(false);
+        User user = User.builder()
+                .discordId(1L)
+                .roleTypes(new HashSet<>(Set.of(RoleType.GUEST)))
+                .pin("saved-pin")
+                .build();
+        given(userRepository.findByDiscordId(eq(1L))).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(eq("current-pin"), eq("saved-pin"))).willReturn(false);
 
         //when, then
         assertThatExceptionOfType(ApiException.class)
-                .isThrownBy(() -> userService.changePin(TEST_DISCORD_ID, "current-pin", "new-pin"))
+                .isThrownBy(() -> userService.changePin(1L, "current-pin", "new-pin"))
                 .withMessage(CURRENT_PIN_MISMATCH.getMessage());
     }
 
@@ -121,29 +141,32 @@ class UserServiceTest {
     @DisplayName("현재 PIN이 일치하면 PIN을 변경한다.")
     void changePin3() {
         //given
-        User user = User.builder().pin("current-pin").build();
-        String newPin = "new-pin";
-        given(userRepository.findByDiscordId(anyLong())).willReturn(Optional.of(user));
-        given(passwordEncoder.matches(anyString(), anyString())).willReturn(true);
-        given(passwordEncoder.encode(anyString())).willReturn(newPin);
+        User user = User.builder()
+                .discordId(1L)
+                .roleTypes(new HashSet<>(Set.of(RoleType.GUEST)))
+                .pin("saved-pin")
+                .build();
+        given(userRepository.findByDiscordId(eq(1L))).willReturn(Optional.of(user));
+        given(passwordEncoder.matches(eq("current-pin"), eq("saved-pin"))).willReturn(true);
+        given(passwordEncoder.encode(eq("new-pin"))).willReturn("encoded-pin");
 
         //when
-        userService.changePin(TEST_DISCORD_ID, "current", newPin);
+        userService.changePin(1L, "current-pin", "new-pin");
 
         //then
-        assertThat(user.getPin()).isEqualTo(newPin);
+        assertThat(user.getPin()).isEqualTo("encoded-pin");
     }
 
     @Test
     @DisplayName("리프레시 토큰이 유효하지 않으면 예외가 발생한다.")
     void refreshToken1() {
         //given
-        given(tokenService.matchRefreshToken(anyString(), anyString())).willReturn(false);
+        given(tokenService.matchRefreshToken(eq(String.valueOf(1L)), eq("refresh-token"))).willReturn(false);
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         //when, then
         assertThatExceptionOfType(ApiException.class)
-                .isThrownBy(() -> userService.refreshToken(TEST_DISCORD_ID, "refresh", response))
+                .isThrownBy(() -> userService.refreshToken(1L, "refresh-token", response))
                 .withMessage(INVALID_TOKEN.getMessage());
     }
 
@@ -151,23 +174,33 @@ class UserServiceTest {
     @DisplayName("리프레시 토큰이 유효하면 액세스 토큰을 새로 발급한다.")
     void refreshToken2() {
         //given
-        String newAccessToken = "new-access";
-        String newRefreshToken = "new-refresh";
-        given(tokenService.matchRefreshToken(anyString(), anyString())).willReturn(true);
+        String newAccessToken = "new-access-token";
+        String newRefreshToken = "new-refresh-token";
+        given(tokenService.matchRefreshToken(eq(String.valueOf(1L)), eq("refresh-token"))).willReturn(true);
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         Map<String, Object> claims = Map.of(
-                "discord_id", String.valueOf(TEST_DISCORD_ID),
+                "discord_id", String.valueOf(1L),
                 "email", "test@gmail.com",
                 "username", "test-username",
                 "roles", List.of(RoleType.USER.getAuthority())
         );
-        given(tokenService.extractClaims(anyString())).willReturn(claims);
-        given(tokenService.createAccessToken(anyLong(), anyString(), anyString(), anyList())).willReturn(newAccessToken);
-        given(tokenService.createRefreshToken(anyLong(), anyString(), anyString(), anyList())).willReturn(newRefreshToken);
+        given(tokenService.extractClaims(eq("refresh-token"))).willReturn(claims);
+        given(tokenService.createAccessToken(
+                eq(1L),
+                eq("test@gmail.com"),
+                eq("test-username"),
+                eq(List.of(RoleType.USER.getAuthority())))
+        ).willReturn(newAccessToken);
+        given(tokenService.createRefreshToken(
+                eq(1L),
+                eq("test@gmail.com"),
+                eq("test-username"),
+                eq(List.of(RoleType.USER.getAuthority())))
+        ).willReturn(newRefreshToken);
 
         //when
-        userService.refreshToken(TEST_DISCORD_ID, "refresh", response);
+        userService.refreshToken(1L, "refresh-token", response);
 
         //then
         assertThat(Objects.requireNonNull(response.getCookie("accessToken")).getValue())
@@ -183,10 +216,10 @@ class UserServiceTest {
         String accessToken = "Bearer access-token";
 
         //when
-        userService.logout(TEST_DISCORD_ID, accessToken);
+        userService.logout(1L, accessToken);
 
         //then
-        verify(tokenService, times(1)).saveTokenBlackList(accessToken);
-        verify(tokenService, times(1)).deleteRefreshToken(String.valueOf(TEST_DISCORD_ID));
+        verify(tokenService, times(1)).saveTokenBlackList(eq(accessToken));
+        verify(tokenService, times(1)).deleteRefreshToken(eq(String.valueOf(1L)));
     }
 }

@@ -35,7 +35,7 @@ public class UserController {
         User updatedUser = userService.register(discordId, pin);
         String accessToken = (String) request.getAttribute("accessToken");
 
-        userService.reissueTokensAfterUserUpdate(
+        userService.reissueTokensAfterUserRegister(
                 updatedUser,
                 principal.getAttributes(),
                 accessToken,
