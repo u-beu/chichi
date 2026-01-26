@@ -4,7 +4,7 @@ import com.example.chichi.exception.ValidationType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
-public record JoinUserRequest(
+public record RegisterPinRequest(
         @NotNull
         @Pattern(
                 regexp = ValidationType.CHECK_PIN_REGEX,

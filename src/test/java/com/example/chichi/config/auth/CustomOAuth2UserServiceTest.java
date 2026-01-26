@@ -1,5 +1,6 @@
 package com.example.chichi.config.auth;
 
+import com.example.chichi.domain.user.RoleType;
 import com.example.chichi.domain.user.User;
 import com.example.chichi.domain.user.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -16,10 +17,13 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
 @ExtendWith(MockitoExtension.class)
@@ -37,16 +41,18 @@ public class CustomOAuth2UserServiceTest {
     @Test
     void loadUser() {
         //given
-        long discordId = 12345678910L;
+        long discordId = 1L;
         String email = "test@gmail.com";
-        String username = "test name";
-        String pin = "123456";
+        String username = "test-username";
+        String pin = "saved-pin";
         User user = User.builder()
                 .discordId(discordId)
                 .pin(pin)
+                .roleTypes(new HashSet<>(Set.of(RoleType.USER)))
                 .build();
 
-        Map<String, Object> mockAttributes = Map.of(
+        // 디스코드가 제공해준 데이터
+        Map<String, Object> mockOAuth2Attributes = Map.of(
                 "id", discordId,
                 "email", email,
                 "username", username
@@ -54,7 +60,7 @@ public class CustomOAuth2UserServiceTest {
 
         OAuth2User mockOAuth2User = new DefaultOAuth2User(
                 null,
-                mockAttributes,
+                mockOAuth2Attributes,
                 "id"
         );
 
@@ -80,15 +86,15 @@ public class CustomOAuth2UserServiceTest {
 
         OAuth2UserRequest userRequest = new OAuth2UserRequest(clientRegistration, accessToken);
 
-        given(delegate.loadUser(userRequest)).willReturn(mockOAuth2User);
-        given(userRepository.findByDiscordId(discordId)).willReturn(Optional.of(user));
+        given(delegate.loadUser(eq(userRequest))).willReturn(mockOAuth2User);
+        given(userRepository.findByDiscordId(eq(discordId))).willReturn(Optional.of(user));
 
         //when
         OAuth2User result = customOAuth2UserService.loadUser(userRequest);
 
         //then
         assertThat(result).isInstanceOf(PrincipalDetails.class);
-        assertThat(Optional.ofNullable(result.getAttribute("id")).get()).isEqualTo(discordId);
+        assertThat(Optional.ofNullable(result.getAttribute("discord_id")).get()).isEqualTo(discordId);
         assertThat(Optional.ofNullable(result.getAttribute("email")).get()).isEqualTo(email);
         assertThat(Optional.ofNullable(result.getAttribute("username")).get()).isEqualTo(username);
 

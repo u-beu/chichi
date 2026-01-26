@@ -2,7 +2,7 @@ package com.example.chichi.config.auth.customAnnotation;
 
 import com.example.chichi.config.auth.PrincipalDetails;
 import com.example.chichi.config.auth.customAnnotation.resolver.AuthUserDiscordIdResolver;
-import com.example.chichi.config.auth.customAnnotation.resolver.AuthUserEmailResolver;
+import com.example.chichi.domain.user.RoleType;
 import com.example.chichi.domain.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +21,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -62,15 +63,21 @@ class AuthUserDiscordIdResolverTest {
     void resolveArgument() throws Exception {
         //given
         long discordId = 12345678910L;
+        Set<RoleType> roles= Set.of(RoleType.USER);
         String email = "test@gmail.com";
         String username = "test-username";
 
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put("id", discordId);
+        attributes.put("discord_id", discordId);
         attributes.put("username", username);
         attributes.put("email", email);
+        attributes.put("roles", roles);
 
-        UserDetails mockUser = new PrincipalDetails(User.builder().discordId(discordId).build(), attributes);
+        UserDetails mockUser = new PrincipalDetails(
+                User.builder()
+                        .discordId(discordId)
+                        .build(),
+                attributes);
 
         Authentication mockAuth = new UsernamePasswordAuthenticationToken(mockUser, null, null);
         SecurityContextHolder.getContext().setAuthentication(mockAuth);
@@ -87,7 +94,7 @@ class AuthUserDiscordIdResolverTest {
     void roadAuthentication() {
         //given
         SecurityContextHolder.clearContext();
-        
+
         //when, then
         assertThatExceptionOfType(Exception.class)
                 .isThrownBy(() -> authUserDiscordIdResolver.resolveArgument(methodParameter, null, webRequest, binderFactory))

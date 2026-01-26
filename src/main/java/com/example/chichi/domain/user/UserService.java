@@ -1,17 +1,16 @@
 package com.example.chichi.domain.user;
 
-import com.auth0.jwt.interfaces.Claim;
+import com.example.chichi.config.auth.CookieUtils;
 import com.example.chichi.config.auth.TokenService;
 import com.example.chichi.exception.ApiException;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 import static com.example.chichi.exception.ExceptionType.*;
@@ -24,14 +23,32 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
 
-    public void join(long discordId, String pin) {
-        if (userRepository.existsByDiscordId(discordId)) {
-            throw new ApiException(USER_ALREADY_EXISTS);
-        }
-        userRepository.save(User.builder()
-                .discordId(discordId)
-                .pin(passwordEncoder.encode(pin))
-                .build());
+    @Transactional
+    public User register(long discordId, String pin) {
+        User user = userRepository.findByDiscordId(discordId).orElseThrow(() -> new ApiException(USER_NOT_FOUND));
+
+        user.addRole(RoleType.USER);
+        user.removeRole(RoleType.GUEST);
+
+        user.updatePin(passwordEncoder.encode(pin));
+        return user;
+    }
+
+    public void reissueTokensAfterUserRegister(User user, Map<String, Object> claims, String accessToken, HttpServletResponse response) {
+        tokenService.saveTokenBlackList(accessToken);
+
+        long discordId = Long.parseLong(String.valueOf(claims.get("discord_id")));
+        String username = String.valueOf(claims.get("username"));
+        String email = String.valueOf(claims.get("email"));
+        List<String> roles = user.getRoleTypes().stream()
+                .map(RoleType::getAuthority)
+                .toList();
+
+        String newAccessToken = tokenService.createAccessToken(discordId, email, username, roles);
+        String refreshToken = tokenService.createRefreshToken(discordId, email, username, roles);
+
+        CookieUtils.addCookie(response, "accessToken", newAccessToken, RoleType.USER);
+        CookieUtils.addCookie(response, "refreshToken", refreshToken, RoleType.USER);
     }
 
     @Transactional
@@ -45,31 +62,30 @@ public class UserService {
         }
     }
 
-    @Transactional
-    public void refreshToken(long discordId, String accessToken, String refreshToken, HttpServletResponse response) {
+    public void refreshToken(long discordId, String refreshToken, HttpServletResponse response) {
         if (tokenService.matchRefreshToken(String.valueOf(discordId), refreshToken)) {
+            tokenService.saveTokenBlackList(refreshToken);
 
-            Map<String, String> claims = tokenService.extractClaims(accessToken);
-            String username = claims.get("username");
-            String email = claims.get("email");
+            Map<String, Object> claims = tokenService.extractClaims(refreshToken);
+            String username = String.valueOf(claims.get("username"));
+            String email = String.valueOf(claims.get("email"));
+            // 올바른 형변환
+            @SuppressWarnings("unchecked")
+            List<String> roles = (List<String>) claims.get("roles");
 
-            String newAccessToken = tokenService.createAccessToken(discordId, email, username);
-            String newRefreshToken = tokenService.createRefreshToken(discordId, email, username);
-            ResponseCookie refreshTokenCookie = tokenService.getRefreshTokenCookie(newRefreshToken);
-
-            tokenService.saveAccessTokenBlackList(accessToken);
+            String newAccessToken = tokenService.createAccessToken(discordId, email, username, roles);
+            String newRefreshToken = tokenService.createRefreshToken(discordId, email, username, roles);
             tokenService.saveRefreshToken(String.valueOf(discordId), newRefreshToken);
 
-            response.setHeader("Authorization", newAccessToken);
-            response.addHeader(HttpHeaders.SET_COOKIE, refreshTokenCookie.toString());
+            CookieUtils.addCookie(response, "accessToken", newAccessToken, RoleType.USER);
+            CookieUtils.addCookie(response, "refreshToken", newRefreshToken, RoleType.USER);
         } else {
-            throw new ApiException(REFRESHTOKEN_INVALID);
+            throw new ApiException(INVALID_TOKEN);
         }
     }
 
-    @Transactional
     public void logout(long discordId, String accessToken) {
-        tokenService.saveAccessTokenBlackList(accessToken);
+        tokenService.saveTokenBlackList(accessToken);
         tokenService.deleteRefreshToken(String.valueOf(discordId));
     }
 }

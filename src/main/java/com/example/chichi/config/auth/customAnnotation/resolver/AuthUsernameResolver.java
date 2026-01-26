@@ -2,6 +2,8 @@ package com.example.chichi.config.auth.customAnnotation.resolver;
 
 import com.example.chichi.config.auth.PrincipalDetails;
 import com.example.chichi.config.auth.customAnnotation.AuthUserDiscordId;
+import com.example.chichi.config.auth.customAnnotation.AuthUsername;
+import com.example.chichi.exception.ApiException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;
@@ -14,25 +16,25 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 @Component
 @Slf4j
-public class AuthUserDiscordIdResolver implements HandlerMethodArgumentResolver {
+public class AuthUsernameResolver implements HandlerMethodArgumentResolver {
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return parameter.hasParameterAnnotation(AuthUserDiscordId.class);
+        return parameter.hasParameterAnnotation(AuthUsername.class);
     }
 
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
-        return getUserDiscordId();
+        return getUsername();
     }
 
-    private long getUserDiscordId() throws Exception {
-        return Long.valueOf(((PrincipalDetails) roadAuthentication().getPrincipal()).getName());
+    private String getUsername() throws Exception {
+        return ((PrincipalDetails) roadAuthentication().getPrincipal()).getUsername();
     }
 
     private Authentication roadAuthentication() throws Exception {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null)
-            throw new Exception("@AuthUserDiscordId authentication 로드 실패");
+            throw new Exception("@AuthUsername authentication 로드 실패");
         return authentication;
     }
 }

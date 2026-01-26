@@ -45,7 +45,7 @@ logging:
     root: DEBUG
 
 jwt:
-  secret: "test-secret-key"
+  secret: "test-secret-key-test-secret-key-test-secret-key-test-secret-key-test-secret-key"
   access:
     expiration: 800
     header: Authorization
