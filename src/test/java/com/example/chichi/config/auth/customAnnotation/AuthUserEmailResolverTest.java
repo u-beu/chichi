@@ -2,6 +2,7 @@ package com.example.chichi.config.auth.customAnnotation;
 
 import com.example.chichi.config.auth.PrincipalDetails;
 import com.example.chichi.config.auth.customAnnotation.resolver.AuthUserEmailResolver;
+import com.example.chichi.domain.user.RoleType;
 import com.example.chichi.domain.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,7 +20,9 @@ import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -67,7 +70,12 @@ class AuthUserEmailResolverTest {
         attributes.put("username", username);
         attributes.put("email", email);
 
-        UserDetails mockUser = new PrincipalDetails(User.builder().discordId(discordId).build(), attributes);
+        UserDetails mockUser = new PrincipalDetails(
+                User.builder()
+                        .discordId(discordId)
+                        .pin("saved-pin")
+                        .roleTypes(new HashSet<>(Set.of(RoleType.USER)))
+                        .build(), attributes);
 
         Authentication mockAuth = new UsernamePasswordAuthenticationToken(mockUser, null, null);
         SecurityContextHolder.getContext().setAuthentication(mockAuth);
