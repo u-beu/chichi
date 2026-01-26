@@ -5,8 +5,10 @@ import com.example.chichi.config.auth.PrincipalDetails;
 import com.example.chichi.config.auth.TokenService;
 import com.example.chichi.domain.user.User;
 import com.example.chichi.exception.ExceptionType;
+import com.example.chichi.exception.CustomAuthenticationException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -28,22 +30,28 @@ public class CustomVerificationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String accessToken = tokenService.extractAccessTokenFromCookie(request)
-                .orElseThrow(() -> new AuthenticationServiceException(ExceptionType.MISSING_TOKEN.getMessage()));
+        log.debug("[SECURITY] [OncePerRequestFilter]");
+        Cookie[] cookies = request.getCookies();
+        if(cookies == null){
+            throw new CustomAuthenticationException(ExceptionType.MISSING_COOKIE);
+        }
+
+        String accessToken = tokenService.extractAccessTokenFromCookie(cookies)
+                .orElseThrow(() -> new CustomAuthenticationException(ExceptionType.MISSING_TOKEN));
         request.setAttribute("accessToken", accessToken);
 
         if (tokenService.checkBlackList(accessToken)) {
-            throw new AuthenticationServiceException(ExceptionType.BLACKLIST_TOKEN.getMessage());
+            throw new CustomAuthenticationException(ExceptionType.BLACKLIST_TOKEN);
         }
         if (!tokenService.isTokenValid(accessToken)) {
-            throw new AuthenticationServiceException(ExceptionType.INVALID_TOKEN.getMessage());
+            throw new CustomAuthenticationException(ExceptionType.INVALID_TOKEN);
         }
 
         Map<String, Object> claims = tokenService.extractClaims(accessToken);
         long discordId = Long.parseLong(claims.get("discord_id").toString());
 
         User user = customOAuth2UserService.loadUserByDiscordId(discordId)
-                .orElseThrow(() -> new AuthenticationServiceException(ExceptionType.USER_NOT_FOUND.getMessage()));
+                .orElseThrow(() -> new CustomAuthenticationException(ExceptionType.USER_NOT_FOUND));
 
         PrincipalDetails principalDetails = new PrincipalDetails(user, claims);
         Authentication authentication = new UsernamePasswordAuthenticationToken(principalDetails, null, principalDetails.getAuthorities());

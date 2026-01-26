@@ -80,7 +80,7 @@ public class UserService {
             CookieUtils.addCookie(response, "accessToken", newAccessToken, RoleType.USER);
             CookieUtils.addCookie(response, "refreshToken", newRefreshToken, RoleType.USER);
         } else {
-            throw new ApiException(REFRESHTOKEN_INVALID);
+            throw new ApiException(INVALID_TOKEN);
         }
     }
 

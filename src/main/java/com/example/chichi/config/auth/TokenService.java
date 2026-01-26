@@ -7,7 +7,6 @@ import com.auth0.jwt.interfaces.Claim;
 import com.example.chichi.domain.user.TokenRedisRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,8 +68,7 @@ public class TokenService {
                 .sign(Algorithm.HMAC512(secret));
     }
 
-    public Optional<String> extractAccessTokenFromCookie(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
+    public Optional<String> extractAccessTokenFromCookie(Cookie[] cookies) {
         if (cookies == null) return Optional.empty();
         return Arrays.stream(cookies)
                 .filter(c -> c.getName().equals("accessToken"))

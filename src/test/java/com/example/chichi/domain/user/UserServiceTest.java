@@ -144,7 +144,7 @@ class UserServiceTest {
         //when, then
         assertThatExceptionOfType(ApiException.class)
                 .isThrownBy(() -> userService.refreshToken(TEST_DISCORD_ID, "refresh", response))
-                .withMessage(REFRESHTOKEN_INVALID.getMessage());
+                .withMessage(INVALID_TOKEN.getMessage());
     }
 
     @Test

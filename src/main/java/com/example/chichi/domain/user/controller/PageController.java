@@ -5,7 +5,6 @@ import com.example.chichi.config.auth.TokenService;
 import com.example.chichi.config.auth.customAnnotation.AuthUsername;
 import com.example.chichi.domain.user.RoleType;
 import com.example.chichi.domain.user.dto.MusicRecord;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +48,6 @@ public class PageController {
 
     @GetMapping("/home")
     public String homePage(Model model,
-                           HttpServletResponse response,
                            Authentication authentication) {
         if (authentication == null) {
             return "login";

@@ -30,7 +30,6 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) {
         OAuth2User oAuth2User = delegate.loadUser(userRequest);
-
         Map<String, Object> oAuth2UserAttributes = oAuth2User.getAttributes();
         long discordId = Long.parseLong(oAuth2UserAttributes.get("id").toString());
         String username = oAuth2UserAttributes.get("username").toString();
@@ -56,7 +55,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                     .map(RoleType::getAuthority)
                     .toList());
             return new PrincipalDetails(savedJoinUser, attributes);
-        }else{
+        } else {
             attributes.put("roles", user.get().getRoleTypes()
                     .stream()
                     .map(RoleType::getAuthority)

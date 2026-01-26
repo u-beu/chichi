@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.example.chichi.exception.ExceptionType.INVALID_TOKEN;
 import static com.example.chichi.exception.ExceptionType.MISSING_COOKIE;
-import static com.example.chichi.exception.ExceptionType.REFRESHTOKEN_INVALID;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
@@ -175,7 +175,7 @@ class UserControllerTest {
         //when, then
         mvc.perform(post("/auth/refresh")
                         .with(csrf()))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnauthorized())
                 .andExpect(content().string(MISSING_COOKIE.getMessage()))
                 .andDo(print());
 
@@ -189,7 +189,7 @@ class UserControllerTest {
         String refreshToken = "mock-refresh-token";
         String accessToken = "mock-access-token";
         Cookie cookie = new Cookie("refreshToken", refreshToken);
-        willThrow(new ApiException(REFRESHTOKEN_INVALID))
+        willThrow(new ApiException(INVALID_TOKEN))
                 .given(userService)
                 .refreshToken(eq(TEST_DISCORD_ID), eq(refreshToken), any());
 

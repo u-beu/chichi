@@ -3,6 +3,7 @@ package com.example.chichi.config;
 import com.example.chichi.config.auth.CustomOAuth2UserService;
 import com.example.chichi.config.auth.TokenService;
 import com.example.chichi.config.auth.filter.CustomVerificationFilter;
+import com.example.chichi.config.auth.handler.CustomAccessDeniedHandler;
 import com.example.chichi.config.auth.handler.CustomAuthenticationEntryPoint;
 import com.example.chichi.config.auth.handler.CustomAuthenticationFailureHandler;
 import com.example.chichi.config.auth.handler.CustomAuthenticationSuccessHandler;
@@ -30,6 +31,7 @@ public class SecurityConfig {
     private final UserRepository userRepository;
     private final TokenService tokenService;
     private final PasswordEncoder passwordEncoder;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
 
     private final String[] PASS_LIST = {
             "/error",
@@ -80,6 +82,7 @@ public class SecurityConfig {
                         .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint())
+                        .accessDeniedHandler(customAccessDeniedHandler)
                 );
 
         http.addFilterAfter(jwtVerificationFilter(), ExceptionTranslationFilter.class);

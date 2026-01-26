@@ -24,7 +24,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException {
-        log.debug("*** auth success handler");
+        log.debug("[SECURITY] [AuthenticationSuccessHandler]");
         PrincipalDetails principal = (PrincipalDetails) authentication.getPrincipal();
         long discordId = Long.parseLong(principal.getName());
         String email = principal.getEmail();

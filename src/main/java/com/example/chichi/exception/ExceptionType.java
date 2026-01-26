@@ -12,18 +12,14 @@ public enum ExceptionType {
 
     // back server log
     // user, auth
-    AUTHENTICATION_REQUIRED(UNAUTHORIZED, "토큰을 찾을 수 없거나, 유효하지 않습니다. 다시 로그인 해주세요."),
     CURRENT_PIN_MISMATCH(BAD_REQUEST, "현재 PIN이 올바르지 않습니다."),
-    USER_ALREADY_EXISTS(CONFLICT, "이미 가입한 사용자입니다."),
-    LOGIN_FAIL(UNAUTHORIZED, "로그인에 실패했습니다."),
-    REFRESHTOKEN_INVALID(FORBIDDEN, "리프레시 토큰이 유효하지 않습니다."),
-    MISSING_COOKIE(BAD_REQUEST, "쿠키가 누락됐습니다."),
     RESOURCE_NOT_FOUND(NOT_FOUND, "리소스를 찾을 수 없습니다."),
 
+    MISSING_COOKIE(UNAUTHORIZED, "쿠키 누락"),
     MISSING_TOKEN(UNAUTHORIZED, "토큰 누락"),
     INVALID_TOKEN(UNAUTHORIZED, "토큰 유효성 검증 실패"),
     BLACKLIST_TOKEN(UNAUTHORIZED, "블랙리스트된 액세스토큰"),
-    USER_NOT_FOUND(NOT_FOUND, "비회원");
+    USER_NOT_FOUND(UNAUTHORIZED, "비회원");
 
     private final HttpStatus httpStatus;
     private final String message;
