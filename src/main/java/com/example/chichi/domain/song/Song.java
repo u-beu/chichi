@@ -29,18 +29,38 @@ public class Song {
 
     private String image;
 
+    @Column(nullable = false, name = "video_id")
+    private long videoId;
+
+    @Column(nullable = false, name = "youtube_url")
+    private String youtubeUrl;
+
     @CreatedDate
     private LocalDateTime createdDate;
 
     @Builder
-    public Song(String title, String singer, String image) {
-        if (!StringUtils.hasText(title)) throw new IllegalArgumentException("invalid title");
+    public Song(String title, String singer, String image, long videoId, String youtubeUrl) {
+        if (!StringUtils.hasText(title)) {
+            throw new IllegalArgumentException("invalid title");
+        }
         this.title = title;
 
-        if (!StringUtils.hasText(singer)) throw new IllegalArgumentException("invalid singer");
+        if (!StringUtils.hasText(singer)) {
+            throw new IllegalArgumentException("invalid singer");
+        }
         this.singer = singer;
 
         // todo 기본 이미지 준비하기
         this.image = StringUtils.hasText(image) ? image : null;
+
+        if (videoId <= 0) {
+            throw new IllegalArgumentException("invalid videoId");
+        }
+        this.videoId = videoId;
+
+        if (!StringUtils.hasText(youtubeUrl)) {
+            throw new IllegalArgumentException("invalid youtubeUrl");
+        }
+        this.youtubeUrl = youtubeUrl;
     }
 }
