@@ -1,4 +1,4 @@
-package com.example.chichi.domain.song;
+package com.example.chichi.domain.song.recent;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;

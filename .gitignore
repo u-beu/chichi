@@ -199,3 +199,4 @@ Thumbs.db
 nginx/**/*.pem
 nginx/**/*.key
 docker-compose-local.yml
+/build/generated

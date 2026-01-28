@@ -1,4 +1,4 @@
-package com.example.chichi.domain.song;
+package com.example.chichi.domain.song.recent;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
