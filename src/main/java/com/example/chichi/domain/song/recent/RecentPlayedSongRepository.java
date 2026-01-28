@@ -2,5 +2,5 @@ package com.example.chichi.domain.song.recent;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface RecentPlayedSongRepository  extends JpaRepository<RecentPlayedSong, Long> {
+public interface RecentPlayedSongRepository  extends JpaRepository<RecentPlayedSong, Long>, RecentPlayedSongRepositoryCustom {
 }
