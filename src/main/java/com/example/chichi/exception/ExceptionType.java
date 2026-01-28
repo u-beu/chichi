@@ -19,7 +19,11 @@ public enum ExceptionType {
     MISSING_TOKEN(UNAUTHORIZED, "토큰 누락"),
     INVALID_TOKEN(UNAUTHORIZED, "토큰 유효성 검증 실패"),
     BLACKLIST_TOKEN(UNAUTHORIZED, "블랙리스트된 액세스토큰"),
-    USER_NOT_FOUND(UNAUTHORIZED, "비회원");
+    USER_NOT_FOUND(UNAUTHORIZED, "비회원"),
+
+    //song
+    SONG_NOT_FOUND(NOT_FOUND, "미등록 노래"),
+    DUPLICATE_SONG(CONFLICT, "중복된 노래");
 
     private final HttpStatus httpStatus;
     private final String message;

@@ -1,13 +1,11 @@
 package com.example.chichi.domain.song;
 
+import com.example.chichi.domain.song.dto.AddSongRequest;
+import com.example.chichi.domain.song.dto.SongResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -16,21 +14,26 @@ public class SongController {
     private final SongService songService;
 
     @PostMapping("/songs")
-    public ResponseEntity<String> addSong() {
-        songService.addSong();
-        return ResponseEntity.ok("dummy");
+    public ResponseEntity<SongResponse> addSong(@RequestBody @Valid AddSongRequest request) {
+        SongResponse response = songService.addSong(
+                request.title(),
+                request.singer(),
+                request.image(),
+                request.videoId(),
+                request.youtubeUrl());
+        return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/songs")
-    public ResponseEntity<String> removeSong() {
-        songService.removeSong();
-        return ResponseEntity.ok("dummy");
+    @DeleteMapping("/songs/{songId}")
+    public ResponseEntity<String> removeSong(@PathVariable("songId") long id) {
+        songService.removeSong(id);
+        return ResponseEntity.ok("삭제 완료");
     }
 
-    @GetMapping("/songs")
-    public ResponseEntity<String> getSong() {
-        songService.getSong();
-        return ResponseEntity.ok("dummy");
+    @GetMapping("/songs/{songId}")
+    public ResponseEntity<SongResponse> getSong(@PathVariable("songId") long id) {
+        SongResponse response = songService.getSong(id);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/me/recent-played-songs")
