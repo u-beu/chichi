@@ -26,7 +26,7 @@ public class AuthUserDiscordIdResolver implements HandlerMethodArgumentResolver 
     }
 
     private long getUserDiscordId() throws Exception {
-        return Long.valueOf(((PrincipalDetails) roadAuthentication().getPrincipal()).getName());
+        return Long.valueOf(((PrincipalDetails) roadAuthentication().getPrincipal()).getDiscordId());
     }
 
     private Authentication roadAuthentication() throws Exception {

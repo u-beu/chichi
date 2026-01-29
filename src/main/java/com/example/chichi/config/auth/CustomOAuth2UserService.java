@@ -54,13 +54,13 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
                     .stream()
                     .map(RoleType::getAuthority)
                     .toList());
-            return new PrincipalDetails(savedJoinUser, attributes);
+            return new PrincipalDetails(savedJoinUser.getId(), attributes);
         } else {
             attributes.put("roles", user.get().getRoleTypes()
                     .stream()
                     .map(RoleType::getAuthority)
                     .toList());
-            return new PrincipalDetails(user.get(), attributes);
+            return new PrincipalDetails(user.get().getId(), attributes);
         }
     }
 

@@ -26,7 +26,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
                                         Authentication authentication) throws IOException {
         log.debug("[SECURITY] [AuthenticationSuccessHandler]");
         PrincipalDetails principal = (PrincipalDetails) authentication.getPrincipal();
-        long discordId = Long.parseLong(principal.getName());
+        long discordId = Long.parseLong(principal.getDiscordId());
         String email = principal.getEmail();
         String username = principal.getUsername();
         List<String> roles = RoleType.toListRoleString(principal.getAuthorities());

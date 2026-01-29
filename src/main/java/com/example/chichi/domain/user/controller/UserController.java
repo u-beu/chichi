@@ -31,7 +31,7 @@ public class UserController {
                          HttpServletRequest request,
                          HttpServletResponse response) throws IOException {
         PrincipalDetails principal = (PrincipalDetails) authentication.getPrincipal();
-        long discordId = Long.parseLong(principal.getName());
+        long discordId = Long.parseLong(principal.getDiscordId());
         User updatedUser = userService.register(discordId, pin);
         String accessToken = (String) request.getAttribute("accessToken");
 
@@ -41,7 +41,6 @@ public class UserController {
                 accessToken,
                 response
         );
-
         String redirectUrl = UriComponentsBuilder.fromPath("/home")
                 .build()
                 .toString();

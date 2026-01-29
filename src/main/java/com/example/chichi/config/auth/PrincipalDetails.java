@@ -1,21 +1,20 @@
 package com.example.chichi.config.auth;
 
-import com.example.chichi.domain.user.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 public record PrincipalDetails(
-        User user,
+        Long userId,
         Map<String, Object> attributes) implements OAuth2User, UserDetails {
     @Override
     public String getName() {
-        // 디스코드 식별자 (discord id)
-        return String.valueOf(user.getDiscordId());
+        return String.valueOf(userId);
     }
 
     @Override
@@ -25,8 +24,13 @@ public record PrincipalDetails(
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return user.getRoleTypes().stream()
-                .map(type->new SimpleGrantedAuthority(type.getAuthority()))
+        Object value = attributes.get("roles");
+        if (!(value instanceof List<?> list)) {
+            throw new IllegalStateException("roles attribute is not a list");
+        }
+        return list.stream()
+                .map(String.class::cast)
+                .map(SimpleGrantedAuthority::new)
                 .toList();
     }
 
@@ -64,5 +68,10 @@ public record PrincipalDetails(
     public String getEmail() {
         // 디스코드 이메일
         return attributes.get("email").toString();
+    }
+
+    public String getDiscordId() {
+        // 디스코드 식별자 (discord id)
+        return String.valueOf(attributes.get("discord_id"));
     }
 }
