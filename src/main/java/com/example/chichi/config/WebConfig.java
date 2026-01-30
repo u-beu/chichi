@@ -1,7 +1,7 @@
 package com.example.chichi.config;
 
 import com.example.chichi.config.auth.customAnnotation.resolver.AuthUserDiscordIdResolver;
-import com.example.chichi.config.auth.customAnnotation.resolver.AuthUserEmailResolver;
+import com.example.chichi.config.auth.customAnnotation.resolver.AuthUserIdResolver;
 import com.example.chichi.config.auth.customAnnotation.resolver.AuthUsernameResolver;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
@@ -13,13 +13,13 @@ import java.util.List;
 @Configuration
 @RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
-    private final AuthUserEmailResolver authUserEmailResolver;
+    private final AuthUserIdResolver authUserIdResolver;
     private final AuthUserDiscordIdResolver authUserDiscordIdResolver;
     private final AuthUsernameResolver authUsernameResolver;
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
-        resolvers.add(authUserEmailResolver);
+        resolvers.add(authUserIdResolver);
         resolvers.add(authUserDiscordIdResolver);
         resolvers.add(authUsernameResolver);
     }

@@ -1,7 +1,7 @@
 package com.example.chichi.domain.user.controller;
 
 import com.example.chichi.config.auth.PrincipalDetails;
-import com.example.chichi.config.auth.customAnnotation.AuthUserDiscordId;
+import com.example.chichi.config.auth.customAnnotation.AuthUserId;
 import com.example.chichi.domain.user.User;
 import com.example.chichi.domain.user.UserService;
 import com.example.chichi.domain.user.dto.ChangePinRequest;
@@ -13,7 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -26,13 +26,11 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/register/pin")
-    public void register(Authentication authentication,
+    public void register(@AuthenticationPrincipal PrincipalDetails principal,
                          @RequestParam String pin,
                          HttpServletRequest request,
                          HttpServletResponse response) throws IOException {
-        PrincipalDetails principal = (PrincipalDetails) authentication.getPrincipal();
-        long discordId = Long.parseLong(principal.getDiscordId());
-        User updatedUser = userService.register(discordId, pin);
+        User updatedUser = userService.register(principal.userId(), pin);
         String accessToken = (String) request.getAttribute("accessToken");
 
         userService.reissueTokensAfterUserRegister(
@@ -48,18 +46,18 @@ public class UserController {
     }
 
     @PatchMapping("/users/me/pin")
-    public ResponseEntity<String> changePin(@AuthUserDiscordId long discordId,
+    public ResponseEntity<String> changePin(@AuthUserId Long userId,
                                             @RequestBody @Valid ChangePinRequest request) throws Exception {
-        userService.changePin(discordId, request.currentPin(), request.newPin());
+        userService.changePin(userId, request.currentPin(), request.newPin());
         return new ResponseEntity<>("PIN 변경 완료", HttpStatus.OK);
     }
 
     @PostMapping("/auth/refresh")
-    public void refreshToken(@AuthUserDiscordId long discordId,
+    public void refreshToken(@AuthUserId Long userId,
                              @CookieValue(value = "refreshToken") String refreshToken,
                              HttpServletResponse response) throws IOException {
         try {
-            userService.refreshToken(discordId, refreshToken, response);
+            userService.refreshToken(userId, refreshToken, response);
         } catch (ApiException exception) {
             String redirectUrl = UriComponentsBuilder.fromPath("/login")
                     .build()
@@ -69,11 +67,11 @@ public class UserController {
     }
 
     @PostMapping("/auth/logout")
-    public void logout(@AuthUserDiscordId long discordId,
+    public void logout(@AuthUserId Long userId,
                        HttpServletRequest request,
                        HttpServletResponse response) throws IOException {
         String accessToken = (String) request.getAttribute("accessToken");
-        userService.logout(discordId, accessToken);
+        userService.logout(userId, accessToken);
         String redirectUrl = UriComponentsBuilder.fromPath("/login")
                 .build()
                 .toString();

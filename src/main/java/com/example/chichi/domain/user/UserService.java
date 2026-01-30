@@ -24,8 +24,8 @@ public class UserService {
     private final TokenService tokenService;
 
     @Transactional
-    public User register(long discordId, String pin) {
-        User user = userRepository.findByDiscordId(discordId).orElseThrow(() -> new ApiException(USER_NOT_FOUND));
+    public User register(long userId, String pin) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new ApiException(USER_NOT_FOUND));
 
         user.addRole(RoleType.USER);
         user.removeRole(RoleType.GUEST);
@@ -52,8 +52,8 @@ public class UserService {
     }
 
     @Transactional
-    public void changePin(long discordId, String currentPin, String newPin) {
-        User user = userRepository.findByDiscordId(discordId).orElseThrow(() -> new ApiException(USER_NOT_FOUND));
+    public void changePin(long userId, String currentPin, String newPin) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new ApiException(USER_NOT_FOUND));
         String savedPin = user.getPin();
         if (passwordEncoder.matches(currentPin, savedPin)) {
             user.updatePin(passwordEncoder.encode(newPin));
@@ -62,20 +62,21 @@ public class UserService {
         }
     }
 
-    public void refreshToken(long discordId, String refreshToken, HttpServletResponse response) {
-        if (tokenService.matchRefreshToken(String.valueOf(discordId), refreshToken)) {
+    public void refreshToken(long userId, String refreshToken, HttpServletResponse response) {
+        if (tokenService.matchRefreshToken(String.valueOf(userId), refreshToken)) {
             tokenService.saveTokenBlackList(refreshToken);
 
             Map<String, Object> claims = tokenService.extractClaims(refreshToken);
+            String discordId = String.valueOf(claims.get("discord_id"));
             String username = String.valueOf(claims.get("username"));
             String email = String.valueOf(claims.get("email"));
             // 올바른 형변환
             @SuppressWarnings("unchecked")
             List<String> roles = (List<String>) claims.get("roles");
 
-            String newAccessToken = tokenService.createAccessToken(discordId, email, username, roles);
-            String newRefreshToken = tokenService.createRefreshToken(discordId, email, username, roles);
-            tokenService.saveRefreshToken(String.valueOf(discordId), newRefreshToken);
+            String newAccessToken = tokenService.createAccessToken(Long.parseLong(discordId), email, username, roles);
+            String newRefreshToken = tokenService.createRefreshToken(Long.parseLong(discordId), email, username, roles);
+            tokenService.saveRefreshToken(String.valueOf(userId), newRefreshToken);
 
             CookieUtils.addCookie(response, "accessToken", newAccessToken, RoleType.USER);
             CookieUtils.addCookie(response, "refreshToken", newRefreshToken, RoleType.USER);
@@ -84,8 +85,8 @@ public class UserService {
         }
     }
 
-    public void logout(long discordId, String accessToken) {
+    public void logout(long userId, String accessToken) {
         tokenService.saveTokenBlackList(accessToken);
-        tokenService.deleteRefreshToken(String.valueOf(discordId));
+        tokenService.deleteRefreshToken(String.valueOf(userId));
     }
 }

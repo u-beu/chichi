@@ -53,7 +53,7 @@ class UserServiceTest {
                 .pin("random-pin")
                 .roleTypes(new HashSet<>(Set.of(RoleType.GUEST)))
                 .build();
-        given(userRepository.findByDiscordId(eq(1L))).willReturn(Optional.of(user));
+        given(userRepository.findById(eq(1L))).willReturn(Optional.of(user));
         given(passwordEncoder.encode(eq("input-pin"))).willReturn("encoded-pin");
 
         //when
@@ -111,7 +111,7 @@ class UserServiceTest {
     @DisplayName("PIN 변경시 회원 정보를 찾을 수 없으면 예외를 발생한다.")
     void changePin1() {
         //given
-        given(userRepository.findByDiscordId(eq(1L))).willReturn(Optional.empty());
+        given(userRepository.findById(eq(1L))).willReturn(Optional.empty());
 
         //when, then
         assertThatExceptionOfType(ApiException.class)
@@ -128,7 +128,7 @@ class UserServiceTest {
                 .roleTypes(new HashSet<>(Set.of(RoleType.GUEST)))
                 .pin("saved-pin")
                 .build();
-        given(userRepository.findByDiscordId(eq(1L))).willReturn(Optional.of(user));
+        given(userRepository.findById(eq(1L))).willReturn(Optional.of(user));
         given(passwordEncoder.matches(eq("current-pin"), eq("saved-pin"))).willReturn(false);
 
         //when, then
@@ -146,7 +146,7 @@ class UserServiceTest {
                 .roleTypes(new HashSet<>(Set.of(RoleType.GUEST)))
                 .pin("saved-pin")
                 .build();
-        given(userRepository.findByDiscordId(eq(1L))).willReturn(Optional.of(user));
+        given(userRepository.findById(eq(1L))).willReturn(Optional.of(user));
         given(passwordEncoder.matches(eq("current-pin"), eq("saved-pin"))).willReturn(true);
         given(passwordEncoder.encode(eq("new-pin"))).willReturn("encoded-pin");
 

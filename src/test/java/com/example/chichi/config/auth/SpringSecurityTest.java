@@ -82,7 +82,7 @@ public class SpringSecurityTest {
     }
 
     @Test
-    @DisplayName("충분한 권한이 있을 경우 리소스 접근을 허용한다.")
+    @DisplayName("권한이 있을 경우 리소스 접근을 허용한다.")
     void resource_access_allowed() throws Exception {
         //given
         User user = User.builder()
@@ -93,10 +93,10 @@ public class SpringSecurityTest {
         userRepository.save(user);
 
         String accessToken = tokenService.createAccessToken(user.getDiscordId(),
-                "test",
-                "test",
+                "test@gmail.com",
+                "test-username",
                 user.getRoleTypes().stream()
-                        .map(RoleType::toString)
+                        .map(RoleType::getAuthority)
                         .toList());
         Cookie cookie = new Cookie("accessToken", accessToken.replace("Bearer ", ""));
         //when, then
@@ -109,7 +109,7 @@ public class SpringSecurityTest {
     }
 
     @Test
-    @DisplayName("충분한 권한이 없을 경우 리소스 접근을 거부한다.")
+    @DisplayName("필요한 권한이 없을 경우 리소스 접근을 거부한다.")
     void resource_access_denied() throws Exception {
         //given
         User user = User.builder()

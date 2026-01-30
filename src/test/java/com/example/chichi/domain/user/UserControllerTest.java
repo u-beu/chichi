@@ -1,6 +1,8 @@
 package com.example.chichi.domain.user;
 
 import com.example.chichi.config.auth.PrincipalDetails;
+import com.example.chichi.config.auth.customAnnotation.AuthUserId;
+import com.example.chichi.config.auth.customAnnotation.resolver.AuthUserIdResolver;
 import com.example.chichi.domain.user.controller.UserController;
 import com.example.chichi.domain.user.dto.ChangePinRequest;
 import com.example.chichi.exception.ApiException;
@@ -11,12 +13,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -49,58 +49,59 @@ class UserControllerTest {
     @MockitoBean
     UserService userService;
 
-    private final long TEST_DISCORD_ID = 12345678910L;
+    @MockitoBean
+    AuthUserIdResolver authUserIdResolver;
 
-    @BeforeEach
-    void setAuthentication() {
+    private final long TEST_DISCORD_ID = 111L;
+    private final long TEST_USER_ID = 222L;
+
+    private Authentication createUserAuthentication() {
         Map<String, Object> attributes = Map.of(
+                "discord_id", TEST_DISCORD_ID,
                 "username", "test-username",
-                "email", "test@gmail.com");
-        User testUser = User.builder()
-                .discordId(TEST_DISCORD_ID)
-                .pin("111111")
-                .roleTypes(Set.of(RoleType.USER))
-                .build();
-        OAuth2User oAuth2User = new PrincipalDetails(
-                testUser,
+                "email", "test@gmail.com",
+                "roles", List.of(RoleType.USER.getAuthority()));
+        PrincipalDetails principal = new PrincipalDetails(
+                TEST_USER_ID,
                 attributes
         );
-
-        OAuth2AuthenticationToken authentication = new OAuth2AuthenticationToken(
-                oAuth2User,
-                oAuth2User.getAuthorities(),
+        Authentication authentication = new OAuth2AuthenticationToken(
+                principal,
+                principal.getAuthorities(),
                 "discord"
         );
+        return authentication;
+    }
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+    @BeforeEach
+    void setAuthUserId() throws Exception {
+        given(authUserIdResolver.supportsParameter(any()))
+                .willAnswer(invocation -> {
+                    MethodParameter p = invocation.getArgument(0);
+                    return p.hasParameterAnnotation(AuthUserId.class) && p.getParameterType().equals(Long.class);
+                });
+        given(authUserIdResolver.resolveArgument(any(), any(), any(), any())).willReturn(TEST_USER_ID);
     }
 
     @Test
     @DisplayName("가입시 핀을 입력하면 성공한다.")
     void register() throws Exception {
-        //세큐리티 컨텍스트 초기화
-        SecurityContextHolder.clearContext();
-
         //given
-        String pin = "11111";
+        String pin = "111111";
         String accessToken = "mock-access-token";
 
         //GUEST 역할 유저 생성
-        User guest = User.builder()
-                .discordId(TEST_DISCORD_ID)
-                .pin(pin)
-                .roleTypes(Set.of(RoleType.GUEST))
-                .build();
         Map<String, Object> attributes = Map.of(
+                "discord_id", TEST_DISCORD_ID,
                 "username", "test-username",
-                "email", "test@gmail.com");
-
-        OAuth2User oAuth2GuestUser = new PrincipalDetails(
-                guest,
+                "email", "test@gmail.com",
+                "roles", List.of(RoleType.GUEST.getAuthority()));
+        PrincipalDetails principal = new PrincipalDetails(
+                TEST_USER_ID,
                 attributes
         );
-        Authentication guest_auth = new UsernamePasswordAuthenticationToken(
-                oAuth2GuestUser, attributes, List.of(RoleType.GUEST::getAuthority)
+        Authentication guestAuthentication = new OAuth2AuthenticationToken(
+                principal, principal.getAuthorities(), "discord"
         );
 
         User updatedUser = User.builder()
@@ -108,11 +109,12 @@ class UserControllerTest {
                 .pin(pin)
                 .roleTypes(Set.of(RoleType.USER))
                 .build();
-        given(userService.register(eq(TEST_DISCORD_ID), eq(pin))).willReturn(updatedUser);
+        given(userService.register(eq(TEST_USER_ID), eq(pin))).willReturn(updatedUser);
 
         //when, then
         mvc.perform(post("/register/pin")
-                        .with(authentication(guest_auth))
+                        .principal(guestAuthentication)
+                        .with(authentication(guestAuthentication))
                         .with(csrf())
                         .param("pin", pin)
                         .requestAttr("accessToken", accessToken))
@@ -120,7 +122,7 @@ class UserControllerTest {
                 .andExpect(redirectedUrl("/home"))
                 .andDo(print());
 
-        verify(userService, times(1)).register(eq(TEST_DISCORD_ID), eq(pin));
+        verify(userService, times(1)).register(eq(TEST_USER_ID), eq(pin));
         verify(userService, times(1)).reissueTokensAfterUserRegister(
                 eq(updatedUser),
                 eq(attributes),
@@ -130,11 +132,11 @@ class UserControllerTest {
     }
 
     @Test
-    @DisplayName("패스워드 변경시 유효성 검사에 통과해야 성공한다.")
+    @DisplayName("pin 변경시 유효성 검사(숫자6자리)에 통과해야 성공한다.")
     void changePin() throws Exception {
         //given
-        String currentPin = "123456";
-        String newPin = "111222";
+        String currentPin = "111111";
+        String newPin = "222222";
         ChangePinRequest validRequest = new ChangePinRequest(currentPin, newPin);
 
         //when, then
@@ -142,12 +144,13 @@ class UserControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(validRequest))
                         .with(csrf())
+                        .with(authentication(createUserAuthentication()))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().string("PIN 변경 완료"))
                 .andDo(print());
 
-        verify(userService, times(1)).changePin(eq(TEST_DISCORD_ID), eq(currentPin), eq(newPin));
+        verify(userService, times(1)).changePin(eq(TEST_USER_ID), eq(currentPin), eq(newPin));
     }
 
     @Test
@@ -155,18 +158,17 @@ class UserControllerTest {
     void refreshToken() throws Exception {
         //given
         String refreshToken = "mock-refresh-token";
-        String accessToken = "mock-access-token";
         Cookie cookie = new Cookie("refreshToken", refreshToken);
 
         //when, then
         mvc.perform(post("/auth/refresh")
                         .cookie(cookie)
                         .with(csrf())
-                        .requestAttr("accessToken", accessToken))
+                        .with(authentication(createUserAuthentication())))
                 .andExpect(status().isOk())
                 .andDo(print());
 
-        verify(userService, times(1)).refreshToken(eq(TEST_DISCORD_ID), eq(refreshToken), any());
+        verify(userService, times(1)).refreshToken(eq(TEST_USER_ID), eq(refreshToken), any());
     }
 
     @Test
@@ -174,30 +176,30 @@ class UserControllerTest {
     void refreshToken2() throws Exception {
         //when, then
         mvc.perform(post("/auth/refresh")
-                        .with(csrf()))
+                        .with(csrf())
+                        .with(authentication(createUserAuthentication())))
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().string(MISSING_COOKIE.getMessage()))
                 .andDo(print());
 
-        verify(userService, never()).refreshToken(eq(TEST_DISCORD_ID), anyString(), any());
+        verify(userService, never()).refreshToken(eq(TEST_USER_ID), anyString(), any());
     }
 
     @Test
-    @DisplayName("토큰 재발급시 리프레시 토큰이 유효하지 않아 예외가 발생하면 리다이렉트한다.")
+    @DisplayName("토큰 재발급시 리프레시 토큰이 유효하지 않아 예외가 발생하면 로그인 페이지로 리다이렉트한다.")
     void refreshToken3() throws Exception {
         //given
         String refreshToken = "mock-refresh-token";
-        String accessToken = "mock-access-token";
         Cookie cookie = new Cookie("refreshToken", refreshToken);
         willThrow(new ApiException(INVALID_TOKEN))
                 .given(userService)
-                .refreshToken(eq(TEST_DISCORD_ID), eq(refreshToken), any());
+                .refreshToken(eq(TEST_USER_ID), eq(refreshToken), any());
 
         //when, then
         mvc.perform(post("/auth/refresh")
                         .cookie(cookie)
                         .with(csrf())
-                        .requestAttr("accessToken", accessToken))
+                        .with(authentication(createUserAuthentication())))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login"))
                 .andDo(print());
@@ -212,11 +214,12 @@ class UserControllerTest {
         //when, then
         mvc.perform(post("/auth/logout")
                         .with(csrf())
+                        .with(authentication(createUserAuthentication()))
                         .requestAttr("accessToken", accessToken))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/login"))
                 .andDo(print());
 
-        verify(userService, times(1)).logout(eq(TEST_DISCORD_ID), eq(accessToken));
+        verify(userService, times(1)).logout(eq(TEST_USER_ID), eq(accessToken));
     }
 }

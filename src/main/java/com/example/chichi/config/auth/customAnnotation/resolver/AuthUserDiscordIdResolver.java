@@ -17,7 +17,8 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 public class AuthUserDiscordIdResolver implements HandlerMethodArgumentResolver {
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return parameter.hasParameterAnnotation(AuthUserDiscordId.class);
+        return parameter.hasParameterAnnotation(AuthUserDiscordId.class)
+                && parameter.getParameterType().equals(Long.class);
     }
 
     @Override
@@ -25,7 +26,7 @@ public class AuthUserDiscordIdResolver implements HandlerMethodArgumentResolver 
         return getUserDiscordId();
     }
 
-    private long getUserDiscordId() throws Exception {
+    private Long getUserDiscordId() throws Exception {
         return Long.valueOf(((PrincipalDetails) roadAuthentication().getPrincipal()).getDiscordId());
     }
 
