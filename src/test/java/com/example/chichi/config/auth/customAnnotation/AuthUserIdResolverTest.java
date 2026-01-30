@@ -1,9 +1,8 @@
 package com.example.chichi.config.auth.customAnnotation;
 
 import com.example.chichi.config.auth.PrincipalDetails;
-import com.example.chichi.config.auth.customAnnotation.resolver.AuthUserEmailResolver;
+import com.example.chichi.config.auth.customAnnotation.resolver.AuthUserIdResolver;
 import com.example.chichi.domain.user.RoleType;
-import com.example.chichi.domain.user.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,13 +26,13 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.Mockito.when;
+import static org.mockito.BDDMockito.given;
 
 @ContextConfiguration
 @ExtendWith(MockitoExtension.class)
-class AuthUserEmailResolverTest {
+class AuthUserIdResolverTest {
 
-    private AuthUserEmailResolver authUserEmailResolver;
+    private AuthUserIdResolver authUserIdResolver;
 
     @Mock
     private MethodParameter methodParameter;
@@ -46,45 +45,48 @@ class AuthUserEmailResolverTest {
 
     @BeforeEach
     void setUp() {
-        authUserEmailResolver = new AuthUserEmailResolver();
+        authUserIdResolver = new AuthUserIdResolver();
     }
 
     @Test
-    @DisplayName("커스텀 어노테이션을 인식한다.")
+    @DisplayName("메서드 파라미터의 조건이 맞으면 true를 반환한다.")
     void supportsParameter() {
-        //given, when
-        when(methodParameter.hasParameterAnnotation(AuthUserEmail.class)).thenReturn(true);
+        //given
+        given(methodParameter.hasParameterAnnotation(AuthUserId.class))
+                .willReturn(true);
+        given(methodParameter.getParameterType())
+                .willAnswer(invocation -> Long.class);
+
+        //when
+        boolean result = authUserIdResolver.supportsParameter(methodParameter);
 
         //then
-        assertTrue(authUserEmailResolver.supportsParameter(methodParameter));
+        assertTrue(result);
     }
 
     @Test
     @DisplayName("SecurityContext에 저장된 AuthenticationToken에서 사용자 이메일을 가져온다.")
     void resolveArgument() throws Exception {
         //given
-        long discordId = 12345678910L;
-        String email = "test@gmail.com";
-        String username = "test-username";
+        long userId = 1L;
+
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put("username", username);
-        attributes.put("email", email);
+        attributes.put("discord_id", 12345L);
+        attributes.put("username", "test-username");
+        attributes.put("email", "test@gmail.com");
+        attributes.put("roles", new HashSet<>(Set.of(RoleType.USER)));
 
         UserDetails mockUser = new PrincipalDetails(
-                User.builder()
-                        .discordId(discordId)
-                        .pin("saved-pin")
-                        .roleTypes(new HashSet<>(Set.of(RoleType.USER)))
-                        .build(), attributes);
+                userId, attributes);
 
         Authentication mockAuth = new UsernamePasswordAuthenticationToken(mockUser, null, null);
         SecurityContextHolder.getContext().setAuthentication(mockAuth);
 
         //when
-        Object result = authUserEmailResolver.resolveArgument(methodParameter, null, webRequest, binderFactory);
+        Object result = authUserIdResolver.resolveArgument(methodParameter, null, webRequest, binderFactory);
 
         //then
-        assertEquals(email, result);
+        assertEquals(userId, result);
     }
 
     @Test
@@ -95,7 +97,7 @@ class AuthUserEmailResolverTest {
 
         //when, then
         assertThatExceptionOfType(Exception.class)
-                .isThrownBy(() -> authUserEmailResolver.resolveArgument(methodParameter, null, webRequest, binderFactory))
-                .withMessage("@AuthUserEmail authentication 로드 실패");
+                .isThrownBy(() -> authUserIdResolver.resolveArgument(methodParameter, null, webRequest, binderFactory))
+                .withMessage("@AuthUserId authentication 로드 실패");
     }
 }

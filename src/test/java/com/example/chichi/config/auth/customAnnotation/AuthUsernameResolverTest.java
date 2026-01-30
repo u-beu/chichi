@@ -1,7 +1,7 @@
 package com.example.chichi.config.auth.customAnnotation;
 
 import com.example.chichi.config.auth.PrincipalDetails;
-import com.example.chichi.config.auth.customAnnotation.resolver.AuthUserDiscordIdResolver;
+import com.example.chichi.config.auth.customAnnotation.resolver.AuthUsernameResolver;
 import com.example.chichi.domain.user.RoleType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,9 +30,9 @@ import static org.mockito.BDDMockito.given;
 
 @ContextConfiguration
 @ExtendWith(MockitoExtension.class)
-class AuthUserDiscordIdResolverTest {
+class AuthUsernameResolverTest {
 
-    private AuthUserDiscordIdResolver authUserDiscordIdResolver;
+    private AuthUsernameResolver authUsernameResolver;
 
     @Mock
     private MethodParameter methodParameter;
@@ -45,49 +45,48 @@ class AuthUserDiscordIdResolverTest {
 
     @BeforeEach
     void setUp() {
-        authUserDiscordIdResolver = new AuthUserDiscordIdResolver();
+        authUsernameResolver = new AuthUsernameResolver();
     }
 
     @Test
     @DisplayName("메서드 파라미터의 조건이 맞으면 true를 반환한다.")
     void supportsParameter() {
         //given
-        given(methodParameter.hasParameterAnnotation(AuthUserDiscordId.class))
+        given(methodParameter.hasParameterAnnotation(AuthUsername.class))
                 .willReturn(true);
         given(methodParameter.getParameterType())
-                .willAnswer(invocation -> Long.class);
+                .willAnswer(invocation -> String.class);
 
         //when
-        boolean result = authUserDiscordIdResolver.supportsParameter(methodParameter);
+        boolean result = authUsernameResolver.supportsParameter(methodParameter);
 
         //then
         assertTrue(result);
     }
 
     @Test
-    @DisplayName("SecurityContext에 저장된 AuthenticationToken에서 사용자 디스코드 id를 가져온다.")
+    @DisplayName("SecurityContext에 저장된 AuthenticationToken에서 사용자 이메일을 가져온다.")
     void resolveArgument() throws Exception {
         //given
-        long discordId = 12345L;
+        String username = "test-username";
 
         Map<String, Object> attributes = new HashMap<>();
-        attributes.put("discord_id", discordId);
-        attributes.put("username", "test-username");
+        attributes.put("discord_id", 12345L);
+        attributes.put("username", username);
         attributes.put("email", "test@gmail.com");
         attributes.put("roles", new HashSet<>(Set.of(RoleType.USER)));
 
         UserDetails mockUser = new PrincipalDetails(
-                1L,
-                attributes);
+                1L, attributes);
 
         Authentication mockAuth = new UsernamePasswordAuthenticationToken(mockUser, null, null);
         SecurityContextHolder.getContext().setAuthentication(mockAuth);
 
         //when
-        Object result = authUserDiscordIdResolver.resolveArgument(methodParameter, null, webRequest, binderFactory);
+        Object result = authUsernameResolver.resolveArgument(methodParameter, null, webRequest, binderFactory);
 
         //then
-        assertEquals(discordId, result);
+        assertEquals(username, result);
     }
 
     @Test
@@ -98,7 +97,7 @@ class AuthUserDiscordIdResolverTest {
 
         //when, then
         assertThatExceptionOfType(Exception.class)
-                .isThrownBy(() -> authUserDiscordIdResolver.resolveArgument(methodParameter, null, webRequest, binderFactory))
-                .withMessage("@AuthUserDiscordId authentication 로드 실패");
+                .isThrownBy(() -> authUsernameResolver.resolveArgument(methodParameter, null, webRequest, binderFactory))
+                .withMessage("@AuthUsername authentication 로드 실패");
     }
 }

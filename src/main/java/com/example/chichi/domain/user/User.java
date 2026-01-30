@@ -37,17 +37,21 @@ public class User {
     private Set<RoleType> roleTypes = new HashSet<>();
 
     @CreatedDate
-    private LocalDateTime createdDate = LocalDateTime.now();
+    private LocalDateTime createdDate;
 
     @LastModifiedDate
     private LocalDateTime modifiedDate;
 
     @Builder
     public User(long discordId, String pin, Set<RoleType> roleTypes) {
-        if (discordId <= 0) throw new IllegalArgumentException("invalid discordId");
+        if (discordId <= 0) {
+            throw new IllegalArgumentException("invalid discordId");
+        }
         this.discordId = discordId;
 
-        if (!StringUtils.hasText(pin)) throw new IllegalArgumentException("invalid pin");
+        if (!StringUtils.hasText(pin)) {
+            throw new IllegalArgumentException("invalid pin");
+        }
         this.pin = pin;
 
         this.roleTypes = (roleTypes != null && !roleTypes.isEmpty()) ?
@@ -55,7 +59,9 @@ public class User {
     }
 
     public void updatePin(String pin) {
-        if (!StringUtils.hasText(pin)) throw new IllegalArgumentException("invalid pin");
+        if (!StringUtils.hasText(pin)) {
+            throw new IllegalArgumentException("invalid pin");
+        }
         this.pin = pin;
     }
 
@@ -66,7 +72,9 @@ public class User {
 
     public void removeRole(RoleType roleType) {
         Objects.requireNonNull(roleType, "invalid roleType");
-        if (roleTypes.size() == 1) throw new IllegalArgumentException("cannot remove one last role");
+        if (roleTypes.size() == 1) {
+            throw new IllegalArgumentException("cannot remove one last role");
+        }
         roleTypes.remove(roleType);
     }
 }

@@ -1,7 +1,7 @@
 package com.example.chichi.config.auth.customAnnotation.resolver;
 
 import com.example.chichi.config.auth.PrincipalDetails;
-import com.example.chichi.config.auth.customAnnotation.AuthUserEmail;
+import com.example.chichi.config.auth.customAnnotation.AuthUserId;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;
@@ -14,25 +14,26 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 
 @Component
 @Slf4j
-public class AuthUserEmailResolver implements HandlerMethodArgumentResolver {
+public class AuthUserIdResolver implements HandlerMethodArgumentResolver {
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return parameter.hasParameterAnnotation(AuthUserEmail.class);
+        return parameter.hasParameterAnnotation(AuthUserId.class)
+                && parameter.getParameterType().equals(Long.class);
     }
 
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
-        return getUserEmail();
+        return getUserId();
     }
 
-    private String getUserEmail() throws Exception {
-        return ((PrincipalDetails) roadAuthentication().getPrincipal()).getEmail();
+    private Long getUserId() throws Exception {
+        return Long.parseLong(((PrincipalDetails) roadAuthentication().getPrincipal()).getName());
     }
 
     private Authentication roadAuthentication() throws Exception {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null)
-            throw new Exception("@AuthUserEmail authentication 로드 실패");
+            throw new Exception("@AuthUserId authentication 로드 실패");
         return authentication;
     }
 }

@@ -53,7 +53,7 @@ public class CustomVerificationFilter extends OncePerRequestFilter {
         User user = customOAuth2UserService.loadUserByDiscordId(discordId)
                 .orElseThrow(() -> new CustomAuthenticationException(ExceptionType.USER_NOT_FOUND));
 
-        PrincipalDetails principalDetails = new PrincipalDetails(user, claims);
+        PrincipalDetails principalDetails = new PrincipalDetails(user.getId(), claims);
         Authentication authentication = new UsernamePasswordAuthenticationToken(principalDetails, null, principalDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authentication);
         filterChain.doFilter(request, response);

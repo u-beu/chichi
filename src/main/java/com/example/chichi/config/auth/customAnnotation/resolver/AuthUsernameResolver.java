@@ -1,9 +1,7 @@
 package com.example.chichi.config.auth.customAnnotation.resolver;
 
 import com.example.chichi.config.auth.PrincipalDetails;
-import com.example.chichi.config.auth.customAnnotation.AuthUserDiscordId;
 import com.example.chichi.config.auth.customAnnotation.AuthUsername;
-import com.example.chichi.exception.ApiException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
 import org.springframework.security.core.Authentication;
@@ -19,7 +17,9 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 public class AuthUsernameResolver implements HandlerMethodArgumentResolver {
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
-        return parameter.hasParameterAnnotation(AuthUsername.class);
+        return parameter.hasParameterAnnotation(AuthUsername.class)
+                && parameter.getParameterType().equals(String.class);
+
     }
 
     @Override
