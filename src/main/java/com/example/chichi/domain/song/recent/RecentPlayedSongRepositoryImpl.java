@@ -4,6 +4,6 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-public class RecentPlayedSongRepositoryImpl implements RecentPlayedSongRepositoryCustom{
+public class RecentPlayedSongRepositoryImpl implements RecentPlayedSongRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
 }

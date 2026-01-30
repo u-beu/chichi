@@ -1,6 +1,8 @@
 package com.example.chichi.domain.song;
 
+import com.example.chichi.domain.song.dto.CheckSongResponse;
 import com.example.chichi.domain.song.dto.SongResponse;
+import com.example.chichi.domain.song.recent.RecentPlayedSong;
 import com.example.chichi.domain.song.recent.RecentPlayedSongRepository;
 import com.example.chichi.exception.ApiException;
 import com.example.chichi.exception.ExceptionType;
@@ -8,6 +10,8 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 import static com.example.chichi.exception.ExceptionType.DUPLICATE_SONG;
 
@@ -20,7 +24,7 @@ public class SongService {
 
     @Transactional
     public SongResponse addSong(String title, String singer, String image,
-                                long videoId, String youtubeUrl) {
+                                Long videoId, String youtubeUrl) {
         if (songRepository.existsByVideoId(videoId)) {
             throw new ApiException(DUPLICATE_SONG);
         }
@@ -36,25 +40,43 @@ public class SongService {
     }
 
     @Transactional
-    public void removeSong(long id) {
-        songRepository.deleteById(id);
+    public void removeSong(Long songId) {
+        songRepository.deleteById(songId);
     }
 
-    public SongResponse getSong(long id) {
+    public SongResponse getSong(Long id) {
         Song song = songRepository.findById(id).orElseThrow(
                 () -> new ApiException(ExceptionType.SONG_NOT_FOUND));
         return new SongResponse(song);
     }
 
-    public void addRecentPlayedSong() {
+    public CheckSongResponse isRegisteredSong(Long videoId) {
+        Optional<Song> optionalSong = songRepository.findByVideoId(videoId);
+        if (optionalSong.isPresent()) {
+            return new CheckSongResponse(true, optionalSong.get().getId());
+        } else {
+            return new CheckSongResponse(false, null);
+        }
+    }
+
+    @Transactional
+    public void addRecentPlayedSong(Long songId, Long userId) {
         //todo 30개 제한 로직
+        Optional<RecentPlayedSong> pastRecentPlayedSong = recentPlayedSongRepository.findByUserIdAndSongId(userId, songId);
+        if (pastRecentPlayedSong.isPresent()) {
+            pastRecentPlayedSong.get().updateLastPlayedAt();
+        } else {
+            //생성
+        }
+
     }
 
-    public void removeRecentPlayedSong() {
-
+    @Transactional
+    public void removeRecentPlayedSong(Long userId, Long songId) {
+        recentPlayedSongRepository.deleteByUserIdAndSongId(userId, songId);
     }
 
-    public void getRecentPlayedSongList() {
-
+    public void getRecentPlayedSongList(Long userId) {
+        //todo 생성
     }
 }

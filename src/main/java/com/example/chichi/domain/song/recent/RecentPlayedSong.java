@@ -37,9 +37,7 @@ public class RecentPlayedSong {
         last_played_at = LocalDateTime.now();
     }
 
-    public void updateLastPlayedAt(LocalDateTime lastPlayTime) {
-        if (!lastPlayTime.isAfter(last_played_at))
-            throw new IllegalArgumentException("invalid lastPlayTime");
-        last_played_at = lastPlayTime;
+    public void updateLastPlayedAt() {
+        last_played_at = LocalDateTime.now();
     }
 }
