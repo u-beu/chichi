@@ -1,8 +1,8 @@
 package com.example.chichi.domain.song;
 
 import com.example.chichi.domain.song.dto.CheckSongResponse;
+import com.example.chichi.domain.song.dto.SongListResponse;
 import com.example.chichi.domain.song.dto.SongResponse;
-import com.example.chichi.domain.song.recent.RecentPlayedSong;
 import com.example.chichi.domain.song.recent.RecentPlayedSongRepository;
 import com.example.chichi.exception.ApiException;
 import com.example.chichi.exception.ExceptionType;
@@ -11,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.List;
 import java.util.Optional;
 
 import static com.example.chichi.exception.ExceptionType.DUPLICATE_SONG;
@@ -21,6 +24,8 @@ import static com.example.chichi.exception.ExceptionType.DUPLICATE_SONG;
 public class SongService {
     private final SongRepository songRepository;
     private final RecentPlayedSongRepository recentPlayedSongRepository;
+
+    private final int RECENT_SONG_LIMIT = 30;
 
     @Transactional
     public SongResponse addSong(String title, String singer, String image,
@@ -60,23 +65,31 @@ public class SongService {
     }
 
     @Transactional
-    public void addRecentPlayedSong(Long songId, Long userId) {
-        //todo 30개 제한 로직
-        Optional<RecentPlayedSong> pastRecentPlayedSong = recentPlayedSongRepository.findByUserIdAndSongId(userId, songId);
-        if (pastRecentPlayedSong.isPresent()) {
-            pastRecentPlayedSong.get().updateLastPlayedAt();
-        } else {
-            //생성
-        }
-
+    public void addRecentPlayedSong(Long userId, Long songId) {
+        long score = LocalDateTime.now()
+                .atZone(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli();
+        recentPlayedSongRepository.save(String.valueOf(userId), String.valueOf(songId), score);
+        recentPlayedSongRepository.deleteOverLimit(String.valueOf(userId), RECENT_SONG_LIMIT);
     }
 
     @Transactional
     public void removeRecentPlayedSong(Long userId, Long songId) {
-        recentPlayedSongRepository.deleteByUserIdAndSongId(userId, songId);
+        recentPlayedSongRepository.deleteByUserIdAndSongId(String.valueOf(userId), String.valueOf(songId));
     }
 
-    public void getRecentPlayedSongList(Long userId) {
-        //todo 생성
+    public SongListResponse getRecentPlayedSongList(Long userId) {
+        List<Long> recentSongs = recentPlayedSongRepository.findAllRecentPlayedSongByIdLatest(String.valueOf(userId));
+        List<Song> songs = songRepository.findAllById(recentSongs);
+
+        List<SongListResponse.SongSimpleResponse> items = songs.stream()
+                .map(song -> new SongListResponse.SongSimpleResponse(
+                        song.getTitle(),
+                        song.getSinger(),
+                        song.getImage()))
+                .toList();
+        return new SongListResponse(
+                items, new SongListResponse.Meta(items.size(), RECENT_SONG_LIMIT));
     }
 }

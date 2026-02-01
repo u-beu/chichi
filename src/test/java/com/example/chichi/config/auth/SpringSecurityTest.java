@@ -1,7 +1,7 @@
 package com.example.chichi.config.auth;
 
 import com.example.chichi.domain.user.RoleType;
-import com.example.chichi.domain.user.TokenRedisRepository;
+import com.example.chichi.domain.user.TokenRepository;
 import com.example.chichi.domain.user.User;
 import com.example.chichi.domain.user.UserRepository;
 import com.example.chichi.exception.ExceptionType;
@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -42,10 +43,10 @@ public class SpringSecurityTest {
     TokenService tokenService;
 
     @Container
-    static RedisContainer redisContainer = new RedisContainer("redis:7.2-alpine");
+    private static RedisContainer redisContainer = new RedisContainer("redis:7.2-alpine");
 
     @Container
-    static MySQLContainer<?> mySQLContainer = new MySQLContainer<>("mysql:8.0")
+    private static MySQLContainer<?> mySQLContainer = new MySQLContainer<>("mysql:8.0")
             .withDatabaseName("testDB")
             .withUsername("test")
             .withPassword("test");
@@ -62,14 +63,17 @@ public class SpringSecurityTest {
     }
 
     @Autowired
-    TokenRedisRepository tokenRedisRepository;
+    private TokenRepository tokenRepository;
 
     @Autowired
-    UserRepository userRepository;
+    private StringRedisTemplate redisTemplate;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @BeforeEach
     void clearAllRepository() {
-        tokenRedisRepository.deleteAll();
+        tokenRepository.deleteAll();
         userRepository.deleteAll();
     }
 
@@ -204,7 +208,7 @@ public class SpringSecurityTest {
         String blacklistToken = "blacklist-token";
         Cookie cookie = new Cookie("accessToken", blacklistToken);
 
-        tokenRedisRepository.save("black:" + blacklistToken, "blacklisted", 10);
+        tokenRepository.save("black:" + blacklistToken, "blacklisted", 10);
         //when, then
         mvc.perform(post("/auth/logout")
                         .cookie(cookie)

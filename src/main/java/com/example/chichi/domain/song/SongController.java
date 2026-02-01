@@ -3,6 +3,7 @@ package com.example.chichi.domain.song;
 import com.example.chichi.config.auth.customAnnotation.AuthUserId;
 import com.example.chichi.domain.song.dto.AddSongRequest;
 import com.example.chichi.domain.song.dto.CheckSongResponse;
+import com.example.chichi.domain.song.dto.SongListResponse;
 import com.example.chichi.domain.song.dto.SongResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -59,8 +60,8 @@ public class SongController {
     }
 
     @GetMapping("/users/me/recent-played-songs")
-    public ResponseEntity<String> getRecentPlayedSongList(@AuthUserId Long userId) {
-        songService.getRecentPlayedSongList(userId);
-        return ResponseEntity.ok("dummy");
+    public ResponseEntity<SongListResponse> getRecentPlayedSongList(@AuthUserId Long userId) {
+        SongListResponse response = songService.getRecentPlayedSongList(userId);
+        return ResponseEntity.ok(response);
     }
 }

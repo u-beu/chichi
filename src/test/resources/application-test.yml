@@ -3,9 +3,9 @@ spring:
     name: chichi
 
   datasource:
-    url: jdbc:mysql://${DB_HOST}:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useLegacyDatetimeCode=false
-    username: ${DB_USER}
-    password: ${DB_PWD}
+    url:
+    username:
+    password:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -20,8 +20,6 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
 
   redis:
-    host: ${REDIS_HOST}
-    port: 6379
 
   security:
     oauth2:
