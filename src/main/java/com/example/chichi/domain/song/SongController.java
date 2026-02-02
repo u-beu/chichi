@@ -46,7 +46,7 @@ public class SongController {
         );
     }
 
-    @GetMapping("/api/songs/{video-id}")
+    @GetMapping("/api/songs/{video-id}/check")
     public ResponseEntity<ApiResponse<CheckSongResponse>> isRegisteredSong(@PathVariable("video-id") Long videoId) {
         CheckSongResponse response = songService.isRegisteredSong(videoId);
         return ResponseEntity.ok(
@@ -56,19 +56,19 @@ public class SongController {
 
     @PostMapping("/api/users/me/recent-played-songs/{song-id}")
     public ResponseEntity<ApiResponse<String>> addRecentPlayedSong(@PathVariable("song-id") Long songId,
-                                                      @AuthUserId Long userId) {
-        songService.addRecentPlayedSong(songId, userId);
+                                                                   @AuthUserId Long userId) {
+        songService.addRecentPlayedSong(userId, songId);
         return ResponseEntity.ok(
-                ApiResponse.ok("최근 재생 곡 추가 완료")
+                ApiResponse.ok("최근 재생곡 추가에 성공하였습니다.")
         );
     }
 
     @DeleteMapping("/api/users/me/recent-played-songs/{song-id}")
     public ResponseEntity<ApiResponse<String>> removeRecentPlayedSong(@PathVariable("song-id") Long songId,
-                                                         @AuthUserId Long userId) {
+                                                                      @AuthUserId Long userId) {
         songService.removeRecentPlayedSong(userId, songId);
         return ResponseEntity.ok(
-                ApiResponse.ok("최근 재생 곡 삭제 완료")
+                ApiResponse.ok("최근 재생곡 삭제에 성공하였습니다.")
         );
     }
 

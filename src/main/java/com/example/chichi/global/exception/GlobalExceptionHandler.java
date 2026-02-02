@@ -15,9 +15,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.stream.Collectors;
 
-import static com.example.chichi.global.exception.ExceptionType.MISSING_COOKIE;
-import static com.example.chichi.global.exception.ExceptionType.RESOURCE_NOT_FOUND;
-import static org.springframework.http.HttpStatus.BAD_REQUEST;
+import static com.example.chichi.global.exception.ExceptionType.*;
 
 @Slf4j
 @ControllerAdvice
@@ -39,16 +37,17 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<String> handleValidException(MethodArgumentNotValidException e) {
-        log.debug("[APP] [GlobalExceptionHandler] [MethodArgumentNotValidException] {}", e.getMessage());
+    public ResponseEntity<ApiResponse<String>> handleValidException(MethodArgumentNotValidException e, HttpServletRequest request) {
         BindingResult bindingResult = e.getBindingResult();
-        String errorMessage = bindingResult.getFieldErrors()
+        String details = bindingResult.getFieldErrors()
                 .stream()
                 .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .collect(Collectors.joining("\n"));
+        log.debug("[APP] [GlobalExceptionHandler] [MethodArgumentNotValidException] url = {}, message = {}, details = {}",
+                request.getRequestURI(), e.getMessage(), details);
         return ResponseEntity
-                .status(BAD_REQUEST)
-                .body(errorMessage);
+                .status(INVALID_INPUT.getHttpStatus())
+                .body(ApiResponse.fail(INVALID_INPUT.getMessage()));
     }
 
     @ExceptionHandler(MissingRequestCookieException.class)
@@ -60,10 +59,10 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<String> handleNoResourceFound(NoResourceFoundException e) {
+    public ResponseEntity<ApiResponse<String>> handleNoResourceFound(NoResourceFoundException e) {
         log.debug("[APP] [GlobalExceptionHandler] [NoResourceFoundException] {}", e.getMessage());
         return ResponseEntity
                 .status(RESOURCE_NOT_FOUND.getHttpStatus())
-                .body(RESOURCE_NOT_FOUND.getMessage());
+                .body(ApiResponse.fail(RESOURCE_NOT_FOUND.getMessage()));
     }
 }

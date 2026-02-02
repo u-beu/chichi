@@ -7,6 +7,7 @@ public record SongListResponse(
         Meta meta
 ) {
     public record SongSimpleResponse(
+            Long songId,
             String title,
             String singer,
             String image

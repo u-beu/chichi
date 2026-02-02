@@ -85,6 +85,7 @@ public class SongService {
 
         List<SongListResponse.SongSimpleResponse> items = songs.stream()
                 .map(song -> new SongListResponse.SongSimpleResponse(
+                        song.getId(),
                         song.getTitle(),
                         song.getSinger(),
                         song.getImage()))

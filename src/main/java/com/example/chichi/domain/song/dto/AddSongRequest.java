@@ -8,7 +8,8 @@ public record AddSongRequest(
         @NotNull
         String singer,
         String image,
-        long videoId,
+        @NotNull
+        Long videoId,
         @NotNull
         String youtubeUrl
 ) {

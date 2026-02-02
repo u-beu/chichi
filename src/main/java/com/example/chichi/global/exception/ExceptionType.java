@@ -7,10 +7,10 @@ import static org.springframework.http.HttpStatus.*;
 
 @Getter
 public enum ExceptionType {
-    // front
+    // global
     SERVER_ERROR(INTERNAL_SERVER_ERROR, "서버 내부 오류입니다."),
-
-    // back server log
+    INVALID_INPUT(BAD_REQUEST, "입력값 유효성 검증에 실패하였습니다."),
+    // domain
     // user, auth
     CURRENT_PIN_MISMATCH(BAD_REQUEST, "현재 PIN이 올바르지 않습니다."),
     RESOURCE_NOT_FOUND(NOT_FOUND, "리소스를 찾을 수 없습니다."),

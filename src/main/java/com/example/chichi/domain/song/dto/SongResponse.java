@@ -3,6 +3,7 @@ package com.example.chichi.domain.song.dto;
 import com.example.chichi.domain.song.Song;
 
 public record SongResponse(
+        long songId,
         String title,
         String singer,
         String image,
@@ -10,7 +11,8 @@ public record SongResponse(
         String youtubeUrl
 ) {
     public SongResponse(Song song) {
-        this(song.getTitle(),
+        this(song.getId(),
+                song.getTitle(),
                 song.getSinger(),
                 song.getImage(),
                 song.getVideoId(),
