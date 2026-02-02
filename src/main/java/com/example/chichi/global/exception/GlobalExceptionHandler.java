@@ -1,5 +1,7 @@
-package com.example.chichi.exception;
+package com.example.chichi.global.exception;
 
+import com.example.chichi.global.ApiResponse;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.ResponseEntity;
@@ -13,8 +15,8 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.stream.Collectors;
 
-import static com.example.chichi.exception.ExceptionType.MISSING_COOKIE;
-import static com.example.chichi.exception.ExceptionType.RESOURCE_NOT_FOUND;
+import static com.example.chichi.global.exception.ExceptionType.MISSING_COOKIE;
+import static com.example.chichi.global.exception.ExceptionType.RESOURCE_NOT_FOUND;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
 
 @Slf4j
@@ -22,15 +24,16 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ApiException.class)
-    public String handleApiException(ApiException e, Model model) {
-        log.debug("[APP] [GlobalExceptionHandler] [ApiException] {}", e.getMessage());
-        model.addAttribute("status", e.getStatusCode());
-        return "error";
+    public ResponseEntity<ApiResponse<String>> handleApiException(ApiException e, HttpServletRequest request) {
+        log.debug("[APP] [GlobalExceptionHandler] [ApiException] url = {}, message = {}", request.getRequestURI(), e.getMessage());
+        return ResponseEntity
+                .status(e.getHttpStatus())
+                .body(ApiResponse.fail(e.getMessage()));
     }
 
     @ExceptionHandler(Exception.class)
-    public String handleException(Exception e, Model model) {
-        log.debug("[APP] [GlobalExceptionHandler] [Exception] [{}] : {}", e.getClass().getSimpleName(), e.getMessage());
+    public String handleException(Exception e, Model model, HttpServletRequest request) {
+        log.debug("[APP] [GlobalExceptionHandler] [Exception] [{}] url = {}, message = {}", e.getClass().getSimpleName(), request.getRequestURI(), e.getMessage());
         model.addAttribute("status", 500);
         return "error";
     }
@@ -49,11 +52,11 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(MissingRequestCookieException.class)
-    public ResponseEntity<String> handleCookieException(MissingRequestCookieException e) {
-        log.debug("[APP] [GlobalExceptionHandler] [MissingRequestCookieException] {}", e.getMessage());
+    public ResponseEntity<ApiResponse<String>> handleCookieException(MissingRequestCookieException e, HttpServletRequest request) {
+        log.debug("[APP] [GlobalExceptionHandler] [MissingRequestCookieException] url = {}, message = {}", request.getRequestURI(), e.getMessage());
         return ResponseEntity
                 .status(MISSING_COOKIE.getHttpStatus())
-                .body(MISSING_COOKIE.getMessage());
+                .body(ApiResponse.fail(MISSING_COOKIE.getMessage()));
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

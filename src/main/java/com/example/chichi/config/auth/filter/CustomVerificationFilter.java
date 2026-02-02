@@ -4,8 +4,8 @@ import com.example.chichi.config.auth.CustomOAuth2UserService;
 import com.example.chichi.config.auth.PrincipalDetails;
 import com.example.chichi.config.auth.TokenService;
 import com.example.chichi.domain.user.User;
-import com.example.chichi.exception.ExceptionType;
-import com.example.chichi.exception.CustomAuthenticationException;
+import com.example.chichi.global.exception.CustomAuthenticationException;
+import com.example.chichi.global.exception.ExceptionType;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -13,7 +13,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,7 +31,7 @@ public class CustomVerificationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         log.debug("[SECURITY] [OncePerRequestFilter]");
         Cookie[] cookies = request.getCookies();
-        if(cookies == null){
+        if (cookies == null) {
             throw new CustomAuthenticationException(ExceptionType.MISSING_COOKIE);
         }
 

@@ -5,7 +5,7 @@ import com.example.chichi.config.auth.customAnnotation.AuthUserId;
 import com.example.chichi.config.auth.customAnnotation.resolver.AuthUserIdResolver;
 import com.example.chichi.domain.user.controller.UserController;
 import com.example.chichi.domain.user.dto.ChangePinRequest;
-import com.example.chichi.exception.ApiException;
+import com.example.chichi.global.exception.ApiException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.example.chichi.exception.ExceptionType.INVALID_TOKEN;
-import static com.example.chichi.exception.ExceptionType.MISSING_COOKIE;
+import static com.example.chichi.global.exception.ExceptionType.INVALID_TOKEN;
+import static com.example.chichi.global.exception.ExceptionType.MISSING_COOKIE;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willThrow;
@@ -140,14 +140,15 @@ class UserControllerTest {
         ChangePinRequest validRequest = new ChangePinRequest(currentPin, newPin);
 
         //when, then
-        mvc.perform(patch("/users/me/pin")
+        mvc.perform(patch("/api/users/me/pin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(validRequest))
                         .with(csrf())
                         .with(authentication(createUserAuthentication()))
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().string("PIN 변경 완료"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value("PIN 번호를 변경하였습니다."))
                 .andDo(print());
 
         verify(userService, times(1)).changePin(eq(TEST_USER_ID), eq(currentPin), eq(newPin));
@@ -179,7 +180,8 @@ class UserControllerTest {
                         .with(csrf())
                         .with(authentication(createUserAuthentication())))
                 .andExpect(status().isUnauthorized())
-                .andExpect(content().string(MISSING_COOKIE.getMessage()))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.message").value(MISSING_COOKIE.getMessage()))
                 .andDo(print());
 
         verify(userService, never()).refreshToken(eq(TEST_USER_ID), anyString(), any());

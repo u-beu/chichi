@@ -4,7 +4,7 @@ import com.example.chichi.domain.user.RoleType;
 import com.example.chichi.domain.user.TokenRepository;
 import com.example.chichi.domain.user.User;
 import com.example.chichi.domain.user.UserRepository;
-import com.example.chichi.exception.ExceptionType;
+import com.example.chichi.global.exception.ExceptionType;
 import com.redis.testcontainers.RedisContainer;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
@@ -134,8 +134,9 @@ public class SpringSecurityTest {
         mvc.perform(post("/admin")
                         .cookie(cookie)
                         .with(csrf()))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/error"))
+                .andExpect(status().isOk())
+                .andExpect(forwardedUrl("/error"))
+                .andExpect(request().attribute("status", 403))
                 .andDo(print());
     }
 
@@ -144,8 +145,9 @@ public class SpringSecurityTest {
     void test_csrf() throws Exception {
         //when, then
         mvc.perform(post("/auth/logout"))
-                .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/error"))
+                .andExpect(status().isOk())
+                .andExpect(forwardedUrl("/error"))
+                .andExpect(request().attribute("status", 403))
                 .andDo(print());
     }
 

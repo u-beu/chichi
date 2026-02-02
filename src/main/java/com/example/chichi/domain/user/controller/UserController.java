@@ -5,13 +5,13 @@ import com.example.chichi.config.auth.customAnnotation.AuthUserId;
 import com.example.chichi.domain.user.User;
 import com.example.chichi.domain.user.UserService;
 import com.example.chichi.domain.user.dto.ChangePinRequest;
-import com.example.chichi.exception.ApiException;
+import com.example.chichi.global.ApiResponse;
+import com.example.chichi.global.exception.ApiException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -45,13 +45,16 @@ public class UserController {
         response.sendRedirect(redirectUrl);
     }
 
-    @PatchMapping("/users/me/pin")
-    public ResponseEntity<String> changePin(@AuthUserId Long userId,
-                                            @RequestBody @Valid ChangePinRequest request) throws Exception {
+    @PatchMapping("/api/users/me/pin")
+    public ResponseEntity<ApiResponse<String>> changePin(@AuthUserId Long userId,
+                                                         @RequestBody @Valid ChangePinRequest request) throws Exception {
         userService.changePin(userId, request.currentPin(), request.newPin());
-        return new ResponseEntity<>("PIN 변경 완료", HttpStatus.OK);
+        return ResponseEntity.ok(
+                ApiResponse.ok("PIN 번호를 변경하였습니다.")
+        );
     }
 
+    //TODO 인터셉터 형식으로 바꾸기
     @PostMapping("/auth/refresh")
     public void refreshToken(@AuthUserId Long userId,
                              @CookieValue(value = "refreshToken") String refreshToken,

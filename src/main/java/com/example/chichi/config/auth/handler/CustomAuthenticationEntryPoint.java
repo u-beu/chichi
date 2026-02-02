@@ -1,6 +1,6 @@
 package com.example.chichi.config.auth.handler;
 
-import com.example.chichi.exception.CustomAuthenticationException;
+import com.example.chichi.global.exception.CustomAuthenticationException;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

@@ -4,8 +4,8 @@ import com.example.chichi.domain.song.dto.CheckSongResponse;
 import com.example.chichi.domain.song.dto.SongListResponse;
 import com.example.chichi.domain.song.dto.SongResponse;
 import com.example.chichi.domain.song.recent.RecentPlayedSongRepository;
-import com.example.chichi.exception.ApiException;
-import com.example.chichi.exception.ExceptionType;
+import com.example.chichi.global.exception.ApiException;
+import com.example.chichi.global.exception.ExceptionType;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 
-import static com.example.chichi.exception.ExceptionType.DUPLICATE_SONG;
+import static com.example.chichi.global.exception.ExceptionType.DUPLICATE_SONG;
 
 @Slf4j
 @Service
