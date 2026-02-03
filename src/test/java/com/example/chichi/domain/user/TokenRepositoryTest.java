@@ -33,7 +33,7 @@ class TokenRepositoryTest {
     }
 
     @BeforeEach
-    void clearTokenRedisRepository() {
+    void clearRepository() {
         redisTemplate.getConnectionFactory().getConnection().flushAll();
     }
 

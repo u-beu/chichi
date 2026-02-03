@@ -79,15 +79,7 @@ public class SongService {
 
     public SongListResponse getRecentPlayedSongList(Long userId) {
         List<Long> recentSongs = recentPlayedSongRepository.findAllRecentPlayedSongByIdLatest(String.valueOf(userId));
-        List<Song> songs = songRepository.findAllById(recentSongs);
-
-        List<SongListResponse.SongSimpleResponse> items = songs.stream()
-                .map(song -> new SongListResponse.SongSimpleResponse(
-                        song.getId(),
-                        song.getTitle(),
-                        song.getSinger(),
-                        song.getImage()))
-                .toList();
+        List<SongListResponse.SongSimpleResponse> items = songRepository.findAllSongSimpleByIds(recentSongs);
         return new SongListResponse(
                 items, new SongListResponse.Meta(items.size(), RECENT_SONG_LIMIT));
     }

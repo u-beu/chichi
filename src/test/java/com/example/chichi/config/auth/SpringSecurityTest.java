@@ -73,7 +73,7 @@ public class SpringSecurityTest {
 
     @BeforeEach
     void clearAllRepository() {
-        tokenRepository.deleteAll();
+        redisTemplate.getConnectionFactory().getConnection().flushAll();
         userRepository.deleteAll();
     }
 

@@ -212,14 +212,16 @@ class SongServiceTest {
         Song song2 = Song.builder().title("title").singer("singer").videoId(3L).youtubeUrl("url").build();
         ReflectionTestUtils.setField(song2, "id", song2Id);
 
-        List<Song> songs = List.of(song1, song2);
-        given(songRepository.findAllById(eq(recentSongs))).willReturn(songs);
+        List<SongListResponse.SongSimpleResponse> simpleSongs = List.of(
+                new SongListResponse.SongSimpleResponse(song1.getId(), song1.getTitle(),song1.getSinger(), song1.getImage()),
+                new SongListResponse.SongSimpleResponse(song2.getId(), song2.getTitle(),song2.getSinger(), song2.getImage()));
+        given(songRepository.findAllSongSimpleByIds(eq(recentSongs))).willReturn(simpleSongs);
 
         //when
         SongListResponse response = songService.getRecentPlayedSongList(userId);
 
         //then
         assertThat(response.items().get(0).songId()).isEqualTo(song1Id);
-        assertThat(response.meta().count()).isEqualTo(songs.size());
+        assertThat(response.meta().count()).isEqualTo(simpleSongs.size());
     }
 }

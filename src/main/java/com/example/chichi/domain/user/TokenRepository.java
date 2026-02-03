@@ -30,16 +30,4 @@ public class TokenRepository {
     public boolean existsByKey(String key) {
         return Boolean.TRUE.equals(redisTemplate.hasKey(key));
     }
-
-    public void delete(String key) {
-        redisTemplate.delete(key);
-    }
-
-    @Profile("test")
-    public void deleteAll() {
-        Set<String> keys = redisTemplate.keys("*");
-        if (!keys.isEmpty()) {
-            redisTemplate.delete(keys);
-        }
-    }
 }
