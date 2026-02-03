@@ -4,7 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
-import com.example.chichi.domain.user.TokenRedisRepository;
+import com.example.chichi.domain.user.TokenRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
@@ -44,7 +44,7 @@ public class TokenService {
     private final String REFRESH_KEY = "refresh:";
     private final String BLACK_KEY = "black:";
 
-    private final TokenRedisRepository tokenRedisRepository;
+    private final TokenRepository tokenRepository;
 
     public String createAccessToken(long discordId, String email, String username, List<String> roles) {
         return "Bearer " + JWT.create()
@@ -117,11 +117,11 @@ public class TokenService {
     }
 
     public void saveRefreshToken(String email, String refreshToken) {
-        tokenRedisRepository.save(REFRESH_KEY + email, refreshToken, refreshTokenExpirationInSeconds);
+        tokenRepository.save(REFRESH_KEY + email, refreshToken, refreshTokenExpirationInSeconds);
     }
 
     public boolean matchRefreshToken(String discordId, String refreshToken) {
-        String savedRefreshToken = tokenRedisRepository.findTokenByKey(REFRESH_KEY + discordId);
+        String savedRefreshToken = tokenRepository.findTokenByKey(REFRESH_KEY + discordId);
         if (savedRefreshToken == null) return false;
         return savedRefreshToken.equals(refreshToken);
     }
@@ -129,15 +129,15 @@ public class TokenService {
     public void saveTokenBlackList(String accessToken) {
         long tokenExpirationInMilliSeconds = JWT.require(Algorithm.HMAC512(secret)).build().verify(accessToken)
                 .getExpiresAt().getTime();
-        tokenRedisRepository.save(BLACK_KEY + accessToken, "blacklisted",
+        tokenRepository.save(BLACK_KEY + accessToken, "blacklisted",
                 (tokenExpirationInMilliSeconds - System.currentTimeMillis()) / 1000);
     }
 
     public void deleteRefreshToken(String email) {
-        tokenRedisRepository.deleteRefreshTokenByKey(REFRESH_KEY + email);
+        tokenRepository.deleteRefreshTokenByKey(REFRESH_KEY + email);
     }
 
     public boolean checkBlackList(String accessToken) {
-        return tokenRedisRepository.existsByKey(BLACK_KEY + accessToken);
+        return tokenRepository.existsByKey(BLACK_KEY + accessToken);
     }
 }

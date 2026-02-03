@@ -1,6 +1,6 @@
 package com.example.chichi.domain.user.dto;
 
-import com.example.chichi.exception.ValidationType;
+import com.example.chichi.global.exception.ValidationType;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 

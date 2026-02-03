@@ -1,6 +1,7 @@
-package com.example.chichi.domain.user;
+package com.example.chichi.domain.song;
 
 import com.example.chichi.config.TestQuerydslConfig;
+import com.example.chichi.domain.song.dto.SongListResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,14 +13,15 @@ import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-import java.util.Optional;
+import java.util.List;
+import java.util.stream.LongStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @Import(TestQuerydslConfig.class)
 @Testcontainers
-class UserRepositoryTest {
+class SongRepositoryTest {
     @Container
     static MySQLContainer<?> mySQLContainer = new MySQLContainer<>("mysql:8.0")
             .withDatabaseName("testDB")
@@ -34,44 +36,29 @@ class UserRepositoryTest {
     }
 
     @Autowired
-    private UserRepository userRepository;
-
-    private final long TEST_DISCORD_ID = 12345678910L;
-    private final String TEST_PIN = "123456";
+    private SongRepository songRepository;
 
     @Test
-    @DisplayName("회원이 존재할 시 디스코드id로 회원 데이터를 가져온다.")
-    void findByDiscordId() {
+    @DisplayName("")
+    void findAllSongSimpleById() {
         //given
-        User user = User.builder()
-                .discordId(TEST_DISCORD_ID)
-                .pin(TEST_PIN)
-                .build();
-        userRepository.save(user);
+        LongStream.rangeClosed(1, 3)
+                .forEach(e -> songRepository.save(
+                        Song.builder()
+                                .title("test-title")
+                                .singer("test-singer")
+                                .videoId(e)
+                                .youtubeUrl("test-url")
+                                .build()
+                ));
 
         //when
-        Optional<User> foundUser = userRepository.findByDiscordId(TEST_DISCORD_ID);
+        List<SongListResponse.SongSimpleResponse> response = songRepository.findAllSongSimpleByIds(List.of(1L, 2L, 3L));
 
         //then
-        assertThat(foundUser).isPresent();
-        assertThat(foundUser.get().getDiscordId()).isEqualTo(TEST_DISCORD_ID);
-        assertThat(foundUser.get().getPin()).isEqualTo(TEST_PIN);
-    }
+        assertThat(response.get(0).songId()).isEqualTo(1L);
+        assertThat(response.get(1).songId()).isEqualTo(2L);
+        assertThat(response.get(2).songId()).isEqualTo(3L);
 
-    @Test
-    @DisplayName("회원이 존재할 시 디스코드id로 검색해 있다면 True를 반환한다.")
-    void existsByDiscordId() {
-        //given
-        User user = User.builder()
-                .discordId(TEST_DISCORD_ID)
-                .pin(TEST_PIN)
-                .build();
-        userRepository.save(user);
-
-        //when
-        boolean exists = userRepository.existsByDiscordId(TEST_DISCORD_ID);
-
-        //then
-        assertThat(exists).isTrue();
     }
 }

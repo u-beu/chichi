@@ -2,7 +2,7 @@ package com.example.chichi.domain.user;
 
 import com.example.chichi.config.auth.CookieUtils;
 import com.example.chichi.config.auth.TokenService;
-import com.example.chichi.exception.ApiException;
+import com.example.chichi.global.exception.ApiException;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Map;
 
-import static com.example.chichi.exception.ExceptionType.*;
+import static com.example.chichi.global.exception.ExceptionType.*;
 
 @Slf4j
 @Service

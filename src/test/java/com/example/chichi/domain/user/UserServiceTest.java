@@ -1,7 +1,7 @@
 package com.example.chichi.domain.user;
 
 import com.example.chichi.config.auth.TokenService;
-import com.example.chichi.exception.ApiException;
+import com.example.chichi.global.exception.ApiException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -13,7 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.*;
 
-import static com.example.chichi.exception.ExceptionType.*;
+import static com.example.chichi.global.exception.ExceptionType.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.eq;

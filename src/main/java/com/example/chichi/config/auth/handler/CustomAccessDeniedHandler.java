@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 
@@ -16,10 +15,8 @@ import java.io.IOException;
 public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException accessDeniedException) throws IOException, ServletException {
-        log.debug("[SECURITY] [AccessDeniedHandler] 경로 : {}", request.getRequestURI());
-        String redirectUrl = UriComponentsBuilder.fromPath("/error")
-                .build()
-                .toString();
-        response.sendRedirect(redirectUrl);
+        log.debug("[SECURITY] [AccessDeniedHandler] url = {}", request.getRequestURI());
+        request.setAttribute("status", 403);
+        request.getRequestDispatcher("/error").forward(request, response);
     }
 }

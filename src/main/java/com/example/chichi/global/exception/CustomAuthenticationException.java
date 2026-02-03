@@ -1,4 +1,4 @@
-package com.example.chichi.exception;
+package com.example.chichi.global.exception;
 
 import lombok.Getter;
 import org.springframework.security.core.AuthenticationException;

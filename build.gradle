@@ -60,6 +60,12 @@ dependencies {
 
 	//oauth
 	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+
+	//query dsl
+	implementation "io.github.openfeign.querydsl:querydsl-jpa:7.0"
+	annotationProcessor "io.github.openfeign.querydsl:querydsl-apt:7.0:jpa"
+	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+	annotationProcessor "jakarta.annotation:jakarta.annotation-api"
 }
 
 jar {
