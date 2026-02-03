@@ -57,11 +57,9 @@ public class SongService {
 
     public CheckSongResponse isRegisteredSong(Long videoId) {
         Optional<Song> optionalSong = songRepository.findByVideoId(videoId);
-        if (optionalSong.isPresent()) {
-            return new CheckSongResponse(true, optionalSong.get().getId());
-        } else {
-            return new CheckSongResponse(false, null);
-        }
+        return new CheckSongResponse(
+                optionalSong.isPresent(),
+                optionalSong.map(Song::getId).orElse(null));
     }
 
     @Transactional
