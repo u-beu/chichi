@@ -48,14 +48,14 @@ class RecentPlayedSongRepositoryTest {
     @DisplayName("최근 재생곡 35개를 저장한 후 30개로 제한하면 가장 오래된 곡 5개가 없어진다.")
     void save_deleteOverLimit() {
         //given
-        long userId = 123L;
+        long discordId = 123L;
         List<Long> songIds = LongStream.rangeClosed(1, 35)
                 .boxed()
                 .toList();
 
         //when : 1(과거, score 낮다) ~ 35(최신, score 높다)
         songIds.forEach(e -> recentPlayedSongRepository.save(
-                String.valueOf(userId),
+                String.valueOf(discordId),
                 String.valueOf(e),
                 LocalDateTime.now()
                         .plusMinutes(e)
@@ -63,14 +63,14 @@ class RecentPlayedSongRepositoryTest {
                         .toInstant()
                         .toEpochMilli()));
         //then
-        List<String> allValues = redisTemplate.opsForZSet().range("recent:" + userId, 0, -1).stream().toList();
+        List<String> allValues = redisTemplate.opsForZSet().range("recent:" + discordId, 0, -1).stream().toList();
         assertThat(allValues.get(0)).isEqualTo(String.valueOf(1L));
 
         //when
-        recentPlayedSongRepository.deleteOverLimit(String.valueOf(userId), 30);
+        recentPlayedSongRepository.deleteOverLimit(String.valueOf(discordId), 30);
 
         //then
-        List<String> limitValues = redisTemplate.opsForZSet().range("recent:" + userId, 0, -1).stream().toList();
+        List<String> limitValues = redisTemplate.opsForZSet().range("recent:" + discordId, 0, -1).stream().toList();
         assertThat(limitValues.get(0)).isEqualTo(String.valueOf(6L));
     }
 
@@ -78,13 +78,13 @@ class RecentPlayedSongRepositoryTest {
     @DisplayName("")
     void get() {
         //given
-        long userId = 123L;
+        long discordId = 123L;
         List<Long> songIds = LongStream.rangeClosed(1, 15)
                 .boxed()
                 .toList();
         //1(과거, score 낮다) ~ 15(최신, score 높다)
         songIds.forEach(e -> recentPlayedSongRepository.save(
-                String.valueOf(userId),
+                String.valueOf(discordId),
                 String.valueOf(e),
                 LocalDateTime.now()
                         .plusMinutes(e)
@@ -93,7 +93,7 @@ class RecentPlayedSongRepositoryTest {
                         .toEpochMilli()));
 
         //when
-        List<Long> values = recentPlayedSongRepository.findAllRecentPlayedSongByIdLatest(String.valueOf(userId));
+        List<Long> values = recentPlayedSongRepository.findAllRecentPlayedSongByDiscordIdLatest(String.valueOf(discordId));
 
         //then
         assertThat(values.size()).isEqualTo(15);

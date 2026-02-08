@@ -21,7 +21,6 @@ public class BotApiController {
 
     @PostMapping("/api/bot/recent-played-song")
     public ResponseEntity<ApiResponse<String>> updateRecentSongList(@RequestBody @Valid UpdateRecentSongRequest request) {
-        log.debug("^^^ 리스트 갱신!");
         SongResponse recentPlayedSong = songService.addSong(
                 request.title(),
                 request.singer(),
