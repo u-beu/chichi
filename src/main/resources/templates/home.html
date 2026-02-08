@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>메인 페이지</title>
     <style>
         body {
@@ -169,14 +169,14 @@
     </div>
 </div>
 
-<div class="content">
-    <h2>노래 목록</h2>
-    <div th:each="record : ${records}" class="record">
+<div class="content" id="song-list">
+    <h2>최신 재생곡 목록</h2>
+    <div th:each="record : ${records.items}" class="record">
         <div class="record-left">
-            <img th:src="@{/images/basicProfileCat.png}" alt="앨범" class="album-cover" />
+            <img th:src="@{/images/basicProfileCat.png}" alt="앨범" class="album-cover"/>
             <div class="song-info">
                 <div class="song-title" th:text="${record.title}">노래 제목</div>
-                <div class="song-artist" th:text="${record.artist}">가수 이름</div>
+                <div class="song-singer" th:text="${record.singer}">가수 이름</div>
             </div>
         </div>
 
@@ -187,7 +187,48 @@
     </div>
 </div>
 
-<script>
+<script th:inline="javascript">
+    const eventSource=new EventSource('/connect');
+    eventSource.addEventListener("recentSongUpdate", (event) => {
+        const song = JSON.parse(event.data);
+        const songList=document.getElementById('song-list');
+
+        const existingRecord = songList.querySelector(`[song-id="${song.songId}"]`);
+        if(existingRecord){
+            existingRecord.remove();
+        }
+
+        const newRecord=document.createElement('div');
+        newRecord.className='record';
+        newRecord.setAttribute('song-id', song.songId);
+
+        const songImage=song.image ? song.image : '/images/basicProfileCat.png';
+
+        newRecord.innerHTML=`
+        <div class="record-left">
+            <img src="${songImage}" alt="앨범" class="album-cover" />
+            <div class="song-info">
+                <div class="song-title">${song.title}</div>
+                <div class="song-artist">${song.singer}</div>
+            </div>
+        </div>
+
+        <button class="like-btn" onclick="toggleLike(this)"></button>
+        `;
+
+        const titleElement=songList.querySelector('h2');
+        titleElement.insertAdjacentElement('afterend', newRecord);
+
+        const records = songList.getElementsByClassName('record');
+        if(records.length>30){
+            songList.removeChild(records[records.length-1]);
+        }
+    });
+
+    eventSource.onerror=function(){
+    console.log("SSE 연결 끊겼습니다. 재연결을 시도합니다.");
+    };
+
     function toggleLike(btn) {
       btn.classList.toggle('liked');
     }

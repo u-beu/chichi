@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface SongRepository extends JpaRepository<Song, Long>, SongRepositoryCustom {
-    boolean existsByVideoId(long videoId);
+    boolean existsByVideoId(Long videoId);
 
     Optional<Song> findByVideoId(Long videoId);
 }

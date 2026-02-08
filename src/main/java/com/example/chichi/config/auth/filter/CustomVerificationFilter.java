@@ -61,9 +61,9 @@ public class CustomVerificationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path.equals("/register") ||
-                path.equals("/login") ||
+        return path.equals("/login") ||
                 path.startsWith("/error") ||
-                path.startsWith("/images");
+                path.startsWith("/images") ||
+                path.startsWith("/api/bot/recent-played-song");
     }
 }
