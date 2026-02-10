@@ -75,7 +75,7 @@ class RecentPlayedSongRepositoryTest {
     }
 
     @Test
-    @DisplayName("")
+    @DisplayName("최근 재생곡을 최신~과거순으로 가져오는데 성공한다.")
     void get() {
         //given
         long discordId = 123L;

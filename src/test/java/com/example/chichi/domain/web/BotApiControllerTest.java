@@ -40,7 +40,7 @@ class BotApiControllerTest {
     private SongService songService;
 
     @Test
-    @DisplayName("")
+    @DisplayName("최신 재생곡 리스트를 갱신하도록 만드는 이벤트 발생 API 호출에 성공한다.")
     @WithMockUser
     void updateRecentSongList() throws Exception {
         //given

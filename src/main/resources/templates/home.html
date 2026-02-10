@@ -171,19 +171,21 @@
 
 <div class="content" id="song-list">
     <h2>최신 재생곡 목록</h2>
-    <div th:each="record : ${records.items}" class="record" th:data-id="${record.songId}">
-        <div class="record-left">
-            <img th:src="@{/images/basicProfileCat.png}" alt="앨범" class="album-cover"/>
-            <div class="song-info">
-                <div class="song-title" th:text="${record.title}">노래 제목</div>
-                <div class="song-singer" th:text="${record.singer}">가수 이름</div>
+    <div id="song-list-container">
+        <div th:each="record : ${records.items}" class="record" th:data-id="${record.songId}">
+            <div class="record-left">
+                <img th:src="@{/images/basicProfileCat.png}" alt="앨범" class="album-cover"/>
+                <div class="song-info">
+                    <div class="song-title" th:text="${record.title}">노래 제목</div>
+                    <div class="song-singer" th:text="${record.singer}">가수 이름</div>
+                </div>
             </div>
-        </div>
 
-        <button class="like-btn"
-                th:classappend="${record.liked} ? ' liked' : ''"
-                onclick="toggleLike(this)">
-        </button>
+            <button class="like-btn"
+                    th:classappend="${record.liked} ? ' liked' : ''"
+                    onclick="toggleLike(this)">
+            </button>
+        </div>
     </div>
 </div>
 
@@ -191,16 +193,16 @@
     const eventSource=new EventSource('/connect');
     eventSource.addEventListener("recentSongUpdate", (event) => {
         const song = JSON.parse(event.data);
-        const songList=document.getElementById('song-list');
+        const container=document.getElementById('song-list-container');
 
-        const existingRecord = songList.querySelector(`[song-id="${song.songId}"]`);
+        const existingRecord = container.querySelector(`[data-id="${song.songId}"]`);
         if(existingRecord){
             existingRecord.remove();
         }
 
         const newRecord=document.createElement('div');
         newRecord.className='record';
-        newRecord.setAttribute('song-id', song.songId);
+        newRecord.setAttribute('data-id', song.songId);
 
         const songImage=song.image ? song.image : '/images/basicProfileCat.png';
 
@@ -216,8 +218,7 @@
         <button class="like-btn" onclick="toggleLike(this)"></button>
         `;
 
-        const titleElement=songList.querySelector('h2');
-        titleElement.insertAdjacentElement('afterend', newRecord);
+        container.prepend(newRecord);
 
         const records = songList.getElementsByClassName('record');
         if(records.length>30){
