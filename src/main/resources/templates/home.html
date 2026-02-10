@@ -220,9 +220,9 @@
 
         container.prepend(newRecord);
 
-        const records = songList.getElementsByClassName('record');
+        const records = container.getElementsByClassName('record');
         if(records.length>30){
-            songList.removeChild(records[records.length-1]);
+            container.removeChild(records[records.length-1]);
         }
     });
 
