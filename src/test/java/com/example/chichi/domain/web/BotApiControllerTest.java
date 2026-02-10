@@ -3,7 +3,9 @@ package com.example.chichi.domain.web;
 import com.example.chichi.domain.song.Song;
 import com.example.chichi.domain.song.SongService;
 import com.example.chichi.domain.song.dto.SongResponse;
+import com.example.chichi.domain.user.UserService;
 import com.example.chichi.domain.web.dto.UpdateRecentSongRequest;
+import com.example.chichi.global.exception.ApiException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,12 +17,13 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static com.example.chichi.global.exception.ExceptionType.USER_NOT_FOUND;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -38,6 +41,9 @@ class BotApiControllerTest {
 
     @MockitoBean
     private SongService songService;
+
+    @MockitoBean
+    private UserService userService;
 
     @Test
     @DisplayName("최신 재생곡 리스트를 갱신하도록 만드는 이벤트 발생 API 호출에 성공한다.")
@@ -74,5 +80,38 @@ class BotApiControllerTest {
 
         verify(songService).addRecentPlayedSong(eq(discordId), eq(recentSong.songId()));
         verify(sseService).broadcast(eq(discordId), eq(recentSong));
+        verify(userService).checkUserByDiscordId(eq(discordId));
+    }
+
+    @Test
+    @DisplayName("사용자의 discord id가 아니라면 비회원이므로 401 예외가 발생한다.")
+    @WithMockUser
+    void updateRecentSongList_not_user_fail() throws Exception {
+        //given
+        String title = "test-title";
+        String singer = "test-singer";
+        long videoId = 1L;
+        String url = "test-url";
+        long discordId = 2L;
+        Song song = Song.builder()
+                .title(title)
+                .singer(singer)
+                .videoId(videoId)
+                .youtubeUrl(url)
+                .build();
+        ReflectionTestUtils.setField(song, "id", 3L);
+        UpdateRecentSongRequest request = new UpdateRecentSongRequest(title, singer, null, videoId, url, discordId);
+
+        doThrow(new ApiException(USER_NOT_FOUND)).when(userService).checkUserByDiscordId(eq(discordId));
+
+        //when, then
+        mvc.perform(post("/api/bot/recent-played-song")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonMapper.writeValueAsString(request))
+                        .accept(MediaType.APPLICATION_JSON)
+                        .with(csrf()))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value("fail"))
+                .andExpect(jsonPath("$.message").value(USER_NOT_FOUND.getMessage()));
     }
 }

@@ -2,6 +2,7 @@ package com.example.chichi.domain.web;
 
 import com.example.chichi.domain.song.SongService;
 import com.example.chichi.domain.song.dto.SongResponse;
+import com.example.chichi.domain.user.UserService;
 import com.example.chichi.domain.web.dto.UpdateRecentSongRequest;
 import com.example.chichi.global.ApiResponse;
 import jakarta.validation.Valid;
@@ -18,9 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class BotApiController {
     private final SseService sseService;
     private final SongService songService;
+    private final UserService userService;
 
     @PostMapping("/api/bot/recent-played-song")
     public ResponseEntity<ApiResponse<String>> updateRecentSongList(@RequestBody @Valid UpdateRecentSongRequest request) {
+        userService.checkUserByDiscordId(request.discordId());
         SongResponse recentPlayedSong = songService.addSong(
                 request.title(),
                 request.singer(),
