@@ -1,10 +1,10 @@
-package com.example.chichi.domain.user.controller;
+package com.example.chichi.domain.web;
 
 import com.example.chichi.config.auth.PrincipalDetails;
-import com.example.chichi.config.auth.TokenService;
 import com.example.chichi.config.auth.customAnnotation.AuthUsername;
+import com.example.chichi.domain.song.SongService;
+import com.example.chichi.domain.song.dto.SongListResponse;
 import com.example.chichi.domain.user.RoleType;
-import com.example.chichi.domain.user.dto.MusicRecord;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +21,7 @@ import java.util.UUID;
 @Controller
 @RequiredArgsConstructor
 public class PageController {
-    private final TokenService tokenService;
+    private final SongService songService;
 
     @Value("${spring.security.oauth2.client.registration.discord.client-id}")
     private String clientId;
@@ -57,12 +57,8 @@ public class PageController {
                 return "register";
             } else {
                 String username = ((PrincipalDetails) authentication.getPrincipal()).getUsername();
-                //todo 임시 데이터
-                List<MusicRecord> records = List.of(
-                        new MusicRecord("노래1", "가수1", true),
-                        new MusicRecord("노래2", "가수2", true),
-                        new MusicRecord("노래3", "가수3", false)
-                );
+                Long discordId = Long.valueOf(((PrincipalDetails) authentication.getPrincipal()).getDiscordId());
+                SongListResponse records = songService.getRecentPlayedSongList(discordId);
                 model.addAttribute("username", username);
                 model.addAttribute("records", records);
                 return "home";

@@ -206,9 +206,9 @@ class SongControllerTest {
     void getRecentPlayedSongList() throws Exception {
         //given
         List<SongListResponse.SongSimpleResponse> list =
-                List.of(new SongListResponse.SongSimpleResponse(1L, "test-title1", "test-singer1", "test-image1"),
-                        new SongListResponse.SongSimpleResponse(2L, "test-title2", "test-singer2", "test-image2"),
-                        new SongListResponse.SongSimpleResponse(3L, "test-title3", "test-singer3", "test-image3"));
+                List.of(new SongListResponse.SongSimpleResponse(1L, "test-title1", "test-singer1", "test-image1", false),
+                        new SongListResponse.SongSimpleResponse(2L, "test-title2", "test-singer2", "test-image2", false),
+                        new SongListResponse.SongSimpleResponse(3L, "test-title3", "test-singer3", "test-image3", false));
         SongListResponse response = new SongListResponse(list, new SongListResponse.Meta(3, 30));
         given(songService.getRecentPlayedSongList(eq(TEST_AUTH_USER_ID))).willReturn(response);
         //when, then

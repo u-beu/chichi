@@ -2,6 +2,7 @@ package com.example.chichi.domain.song;
 
 import com.example.chichi.domain.song.dto.SongListResponse;
 import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
@@ -21,7 +22,8 @@ public class SongRepositoryImpl implements SongRepositoryCustom {
                         song.id,
                         song.title,
                         song.singer,
-                        song.image
+                        song.image,
+                        Expressions.constant(false)
                 ))
                 .from(song)
                 .where(song.id.in(songIds))

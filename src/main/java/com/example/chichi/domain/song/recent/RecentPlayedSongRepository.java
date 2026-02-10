@@ -15,24 +15,24 @@ public class RecentPlayedSongRepository {
     private final StringRedisTemplate redisTemplate;
     private final String KEY_PREFIX = "recent:";
 
-    public void save(String userId, String songId, long lastPlayedAt) {
+    public void save(String discordId, String songId, long lastPlayedAt) {
         redisTemplate.opsForZSet()
-                .add(KEY_PREFIX + userId, songId, lastPlayedAt);
+                .add(KEY_PREFIX + discordId, songId, lastPlayedAt);
     }
 
-    public void deleteByUserIdAndSongId(String userId, String songId) {
+    public void deleteByDiscordIdAndSongId(String discordId, String songId) {
         redisTemplate.opsForZSet()
-                .remove(KEY_PREFIX + userId, songId);
+                .remove(KEY_PREFIX + discordId, songId);
     }
 
-    public void deleteOverLimit(String userId, int limit) {
+    public void deleteOverLimit(String discordId, int limit) {
         redisTemplate.opsForZSet()
-                .removeRange(KEY_PREFIX + userId, 0, -(limit + 1));
+                .removeRange(KEY_PREFIX + discordId, 0, -(limit + 1));
     }
 
-    public List<Long> findAllRecentPlayedSongByIdLatest(String userId) {
+    public List<Long> findAllRecentPlayedSongByDiscordIdLatest(String discordId) {
         Set<String> values = redisTemplate.opsForZSet()
-                .reverseRange(KEY_PREFIX + userId, 0, -1);
+                .reverseRange(KEY_PREFIX + discordId, 0, -1);
         if (values == null || values.isEmpty()) {
             return List.of();
         }

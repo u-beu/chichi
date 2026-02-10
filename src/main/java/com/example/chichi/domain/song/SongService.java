@@ -13,10 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
-import java.util.Optional;
-
-import static com.example.chichi.global.exception.ExceptionType.DUPLICATE_SONG;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -30,18 +28,20 @@ public class SongService {
     @Transactional
     public SongResponse addSong(String title, String singer, String image,
                                 Long videoId, String youtubeUrl) {
-        if (songRepository.existsByVideoId(videoId)) {
-            throw new ApiException(DUPLICATE_SONG);
+        Optional<Song> optionalSong = songRepository.findByVideoId(videoId);
+        if (optionalSong.isPresent()) {
+            return new SongResponse(optionalSong.get());
+        } else {
+            Song saved = songRepository.save(Song.builder()
+                    .title(title)
+                    .singer(singer)
+                    .image(image)
+                    .videoId(videoId)
+                    .youtubeUrl(youtubeUrl)
+                    .build()
+            );
+            return new SongResponse(saved);
         }
-        Song saved = songRepository.save(Song.builder()
-                .title(title)
-                .singer(singer)
-                .image(image)
-                .videoId(videoId)
-                .youtubeUrl(youtubeUrl)
-                .build()
-        );
-        return new SongResponse(saved);
     }
 
     @Transactional
@@ -63,24 +63,34 @@ public class SongService {
     }
 
     @Transactional
-    public void addRecentPlayedSong(Long userId, Long songId) {
+    public void addRecentPlayedSong(Long discordId, Long songId) {
         long score = LocalDateTime.now()
                 .atZone(ZoneId.systemDefault())
                 .toInstant()
                 .toEpochMilli();
-        recentPlayedSongRepository.save(String.valueOf(userId), String.valueOf(songId), score);
-        recentPlayedSongRepository.deleteOverLimit(String.valueOf(userId), RECENT_SONG_LIMIT);
+        recentPlayedSongRepository.save(String.valueOf(discordId), String.valueOf(songId), score);
+        recentPlayedSongRepository.deleteOverLimit(String.valueOf(discordId), RECENT_SONG_LIMIT);
     }
 
     @Transactional
-    public void removeRecentPlayedSong(Long userId, Long songId) {
-        recentPlayedSongRepository.deleteByUserIdAndSongId(String.valueOf(userId), String.valueOf(songId));
+    public void removeRecentPlayedSong(Long discordId, Long songId) {
+        recentPlayedSongRepository.deleteByDiscordIdAndSongId(String.valueOf(discordId), String.valueOf(songId));
     }
 
-    public SongListResponse getRecentPlayedSongList(Long userId) {
-        List<Long> recentSongs = recentPlayedSongRepository.findAllRecentPlayedSongByIdLatest(String.valueOf(userId));
+    public SongListResponse getRecentPlayedSongList(Long discordId) {
+        List<Long> recentSongs = recentPlayedSongRepository.findAllRecentPlayedSongByDiscordIdLatest(String.valueOf(discordId));
         List<SongListResponse.SongSimpleResponse> items = songRepository.findAllSongSimpleByIds(recentSongs);
+
+        Map<Long, SongListResponse.SongSimpleResponse> itemMap = items.stream()
+                .collect(Collectors.toMap(SongListResponse.SongSimpleResponse::songId,
+                        item -> item));
+
+        List<SongListResponse.SongSimpleResponse> sortedItems = recentSongs.stream()
+                .map(itemMap::get)
+                .filter(Objects::nonNull)
+                .toList();
+
         return new SongListResponse(
-                items, new SongListResponse.Meta(items.size(), RECENT_SONG_LIMIT));
+                sortedItems, new SongListResponse.Meta(sortedItems.size(), RECENT_SONG_LIMIT));
     }
 }

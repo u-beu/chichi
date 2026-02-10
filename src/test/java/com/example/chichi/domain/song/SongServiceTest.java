@@ -38,42 +38,44 @@ class SongServiceTest {
     SongService songService;
 
     @Test
-    @DisplayName("중복된 곡이 아니면 곡 추가에 성공한다.")
+    @DisplayName("중복된 곡일 경우 ")
     void addSong_success() {
         //given
-        String title = "test-title";
-        String singer = "test-singer";
         long videoId = 1L;
-        String url = "test-url";
-
-        given(songRepository.existsByVideoId(eq(videoId))).willReturn(false);
         Song savedSong = Song.builder()
-                .title(title)
-                .singer(singer)
+                .title("test-title")
+                .singer("test-singer")
                 .videoId(videoId)
-                .youtubeUrl(url)
+                .youtubeUrl("test-url")
                 .build();
         ReflectionTestUtils.setField(savedSong, "id", 2L);
-        given(songRepository.save(any())).willReturn(savedSong);
+        given(songRepository.findByVideoId(eq(videoId))).willReturn(Optional.of(savedSong));
 
         //when
-        SongResponse response = songService.addSong(title, singer, null, videoId, url);
+        SongResponse response = songService.addSong("test-title", "test-singer", null, videoId, "test-url");
 
         //then
         assertThat(response.videoId()).isEqualTo(videoId);
-        assertThat(response.youtubeUrl()).isEqualTo(url);
     }
 
     @Test
-    @DisplayName("중복된 곡일 경우 예외가 발생한다.")
-    void addSong_fail() {
+    @DisplayName("중복된 곡이 아닐 경우 등록에 성공한다.")
+    void addSong() {
         //given
         long videoId = 1L;
-        given(songRepository.existsByVideoId(eq(videoId))).willReturn(true);
+        Song savedSong = Song.builder()
+                .title("test-title")
+                .singer("test-singer")
+                .videoId(videoId)
+                .youtubeUrl("test-url")
+                .build();
+        ReflectionTestUtils.setField(savedSong, "id", 2L);
+        given(songRepository.findByVideoId(eq(videoId))).willReturn(Optional.empty());
+        given(songRepository.save(any())).willReturn(savedSong);
         //when, then
-        assertThatExceptionOfType(ApiException.class)
-                .isThrownBy(() -> songService.addSong("test-title", "test-singer", null, videoId, "test-url"))
-                .withMessage(DUPLICATE_SONG.getMessage());
+        SongResponse response = songService.addSong("test-title", "test-singer", null, videoId, "test-url");
+
+        assertThat(response.videoId()).isEqualTo(videoId);
     }
 
     @Test
@@ -169,43 +171,43 @@ class SongServiceTest {
     @DisplayName("최근 재생곡 추가에 성공한다.")
     void addRecentPlayedSong() {
         //given
-        long userId = 1L;
+        long discordId = 1L;
         long songId = 2L;
 
         //when
-        songService.addRecentPlayedSong(userId, songId);
+        songService.addRecentPlayedSong(discordId, songId);
 
         //then
         verify(recentPlayedSongRepository, times(1))
-                .save(eq(String.valueOf(userId)), eq(String.valueOf(songId)), anyLong());
+                .save(eq(String.valueOf(discordId)), eq(String.valueOf(songId)), anyLong());
         verify(recentPlayedSongRepository, times(1))
-                .deleteOverLimit(eq(String.valueOf(userId)), anyInt());
+                .deleteOverLimit(eq(String.valueOf(discordId)), anyInt());
     }
 
     @Test
     @DisplayName("최근 재생곡 삭제에 성공한다.")
     void removeRecentPlayedSong() {
         //given
-        long userId = 1L;
+        long discordId = 1L;
         long songId = 2L;
 
         //when
-        songService.removeRecentPlayedSong(userId, songId);
+        songService.removeRecentPlayedSong(discordId, songId);
 
         //then
         verify(recentPlayedSongRepository, times(1))
-                .deleteByUserIdAndSongId(eq(String.valueOf(userId)), eq(String.valueOf(songId)));
+                .deleteByDiscordIdAndSongId(eq(String.valueOf(discordId)), eq(String.valueOf(songId)));
     }
 
     @Test
     void getRecentPlayedSongList() {
         //given
-        long userId = 1L;
+        long discordId = 1L;
         long song1Id = 222L;
         long song2Id = 333L;
 
         List<Long> recentSongs = List.of(song1Id, song2Id);
-        given(recentPlayedSongRepository.findAllRecentPlayedSongByIdLatest(eq(String.valueOf(userId)))).willReturn(recentSongs);
+        given(recentPlayedSongRepository.findAllRecentPlayedSongByDiscordIdLatest(eq(String.valueOf(discordId)))).willReturn(recentSongs);
 
         Song song1 = Song.builder().title("title").singer("singer").videoId(2L).youtubeUrl("url").build();
         ReflectionTestUtils.setField(song1, "id", song1Id);
@@ -213,12 +215,12 @@ class SongServiceTest {
         ReflectionTestUtils.setField(song2, "id", song2Id);
 
         List<SongListResponse.SongSimpleResponse> simpleSongs = List.of(
-                new SongListResponse.SongSimpleResponse(song1.getId(), song1.getTitle(),song1.getSinger(), song1.getImage()),
-                new SongListResponse.SongSimpleResponse(song2.getId(), song2.getTitle(),song2.getSinger(), song2.getImage()));
+                new SongListResponse.SongSimpleResponse(song1.getId(), song1.getTitle(),song1.getSinger(), song1.getImage(), false),
+                new SongListResponse.SongSimpleResponse(song2.getId(), song2.getTitle(),song2.getSinger(), song2.getImage(), false));
         given(songRepository.findAllSongSimpleByIds(eq(recentSongs))).willReturn(simpleSongs);
 
         //when
-        SongListResponse response = songService.getRecentPlayedSongList(userId);
+        SongListResponse response = songService.getRecentPlayedSongList(discordId);
 
         //then
         assertThat(response.items().get(0).songId()).isEqualTo(song1Id);

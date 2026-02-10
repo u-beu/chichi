@@ -11,6 +11,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestCookieException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.async.AsyncRequestTimeoutException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.stream.Collectors;
@@ -27,6 +28,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(e.getHttpStatus())
                 .body(ApiResponse.fail(e.getMessage()));
+    }
+
+    @ExceptionHandler(AsyncRequestTimeoutException.class)
+    public Object handleException(AsyncRequestTimeoutException e){
+        return null;
     }
 
     @ExceptionHandler(Exception.class)

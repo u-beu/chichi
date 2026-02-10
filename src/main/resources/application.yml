@@ -9,6 +9,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
+    open-in-view: false
     hibernate:
       ddl-auto: create
     show-sql: true
@@ -47,12 +48,17 @@ logging:
     org.springframework.security.oauth2.client.endpoint: DEBUG
     org.springframework.security.web.FilterChainProxy: TRACE
     org.springframework.security.web.access.ExceptionTranslationFilter: TRACE
+    org.apache.coyote.http11.Http11Processor: ERROR
+    org.springframework.security.web.csrf.CsrfFilter: DEBUG
 
 jwt:
   secret: ${JWT_SECRET}
   access:
-    expiration: 800
+    expiration: 1800 #30분
     header: Authorization
 
   refresh:
-    expiration: 900
+    expiration: 604800 #7일
+
+server:
+  forward-headers-strategy: native

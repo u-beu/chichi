@@ -10,7 +10,8 @@ public record SongListResponse(
             Long songId,
             String title,
             String singer,
-            String image
+            String image,
+            boolean liked
     ) {
     }
 

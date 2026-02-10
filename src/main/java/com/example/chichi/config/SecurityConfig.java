@@ -23,6 +23,7 @@ import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserServ
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.ExceptionTranslationFilter;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -39,14 +40,16 @@ public class SecurityConfig {
             "/images/**",
             "/register",
             "/home",
-            "/auth/refresh"
+            "/auth/refresh",
+            "/api/bot/**"
     };
     private final String[] GUEST_LIST = {
             "/register/pin"
     };
     private final String[] USER_LIST = {
             "/users/**",
-            "/auth/logout"
+            "/auth/logout",
+            "/connect"
     };
     private final String[] ADMIN_LIST = {
             "/admin/**"
@@ -61,7 +64,10 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf
-                        .csrfTokenRepository(new HttpSessionCsrfTokenRepository()))
+                        .csrfTokenRepository(new HttpSessionCsrfTokenRepository())
+                        .ignoringRequestMatchers(
+                                new AntPathRequestMatcher("/api/bot/recent-played-song"),
+                                new AntPathRequestMatcher("/connect")))
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize
