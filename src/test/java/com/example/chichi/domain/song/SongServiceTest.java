@@ -38,42 +38,44 @@ class SongServiceTest {
     SongService songService;
 
     @Test
-    @DisplayName("중복된 곡이 아니면 곡 추가에 성공한다.")
+    @DisplayName("중복된 곡일 경우 ")
     void addSong_success() {
         //given
-        String title = "test-title";
-        String singer = "test-singer";
         long videoId = 1L;
-        String url = "test-url";
-
-        given(songRepository.existsByVideoId(eq(videoId))).willReturn(false);
         Song savedSong = Song.builder()
-                .title(title)
-                .singer(singer)
+                .title("test-title")
+                .singer("test-singer")
                 .videoId(videoId)
-                .youtubeUrl(url)
+                .youtubeUrl("test-url")
                 .build();
         ReflectionTestUtils.setField(savedSong, "id", 2L);
-        given(songRepository.save(any())).willReturn(savedSong);
+        given(songRepository.findByVideoId(eq(videoId))).willReturn(Optional.of(savedSong));
 
         //when
-        SongResponse response = songService.addSong(title, singer, null, videoId, url);
+        SongResponse response = songService.addSong("test-title", "test-singer", null, videoId, "test-url");
 
         //then
         assertThat(response.videoId()).isEqualTo(videoId);
-        assertThat(response.youtubeUrl()).isEqualTo(url);
     }
 
     @Test
-    @DisplayName("중복된 곡일 경우 예외가 발생한다.")
-    void addSong_fail() {
+    @DisplayName("중복된 곡이 아닐 경우 등록에 성공한다.")
+    void addSong() {
         //given
         long videoId = 1L;
-        given(songRepository.existsByVideoId(eq(videoId))).willReturn(true);
+        Song savedSong = Song.builder()
+                .title("test-title")
+                .singer("test-singer")
+                .videoId(videoId)
+                .youtubeUrl("test-url")
+                .build();
+        ReflectionTestUtils.setField(savedSong, "id", 2L);
+        given(songRepository.findByVideoId(eq(videoId))).willReturn(Optional.empty());
+        given(songRepository.save(any())).willReturn(savedSong);
         //when, then
-        assertThatExceptionOfType(ApiException.class)
-                .isThrownBy(() -> songService.addSong("test-title", "test-singer", null, videoId, "test-url"))
-                .withMessage(DUPLICATE_SONG.getMessage());
+        SongResponse response = songService.addSong("test-title", "test-singer", null, videoId, "test-url");
+
+        assertThat(response.videoId()).isEqualTo(videoId);
     }
 
     @Test

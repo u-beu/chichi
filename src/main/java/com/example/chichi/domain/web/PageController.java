@@ -1,7 +1,6 @@
 package com.example.chichi.domain.web;
 
 import com.example.chichi.config.auth.PrincipalDetails;
-import com.example.chichi.config.auth.TokenService;
 import com.example.chichi.config.auth.customAnnotation.AuthUsername;
 import com.example.chichi.domain.song.SongService;
 import com.example.chichi.domain.song.dto.SongListResponse;
@@ -22,7 +21,6 @@ import java.util.UUID;
 @Controller
 @RequiredArgsConstructor
 public class PageController {
-    private final TokenService tokenService;
     private final SongService songService;
 
     @Value("${spring.security.oauth2.client.registration.discord.client-id}")

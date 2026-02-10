@@ -125,7 +125,7 @@
           color: #474747;
         }
 
-        .song-artist {
+        .song-singer {
           font-size: 14px;
           color: #D8C2B5;
         }
@@ -171,7 +171,7 @@
 
 <div class="content" id="song-list">
     <h2>최신 재생곡 목록</h2>
-    <div th:each="record : ${records.items}" class="record">
+    <div th:each="record : ${records.items}" class="record" th:data-id="${record.songId}">
         <div class="record-left">
             <img th:src="@{/images/basicProfileCat.png}" alt="앨범" class="album-cover"/>
             <div class="song-info">
@@ -209,7 +209,7 @@
             <img src="${songImage}" alt="앨범" class="album-cover" />
             <div class="song-info">
                 <div class="song-title">${song.title}</div>
-                <div class="song-artist">${song.singer}</div>
+                <div class="song-singer">${song.singer}</div>
             </div>
         </div>
 
