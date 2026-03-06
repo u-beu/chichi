@@ -6,11 +6,13 @@ on:
       env:
         description: "배포 옵션 선택"
         required: true
-        default: 'prod'
+        default: 'prod_none'
         type: choice
         options:
           - init
-          - prod
+          - prod_create
+          - prod_none
+          - prod_update
           - config
 
 jobs:
@@ -71,11 +73,12 @@ jobs:
 
     - name: Set ddl-auto based on env
       run: |
-        if [ "${{ github.event.inputs.env }}" = "init" ]; then
+        if [ "${{ github.event.inputs.env }}" = "init" ] || [ "${{ github.event.inputs.env }}" = "prod_create" ];then
           sed -i 's/ddl-auto:.*$/ddl-auto: create/' ./src/main/resources/application.yml
-        else
+        if [ "${{ github.event.inputs.env }}" = "prod_none" ]; then
           sed -i 's/ddl-auto:.*$/ddl-auto: none/' ./src/main/resources/application.yml
-        fi
+        if [ "${{ github.event.inputs.env }}" = "prod_update" ]; then
+          sed -i 's/ddl-auto:.*$/ddl-auto: update/' ./src/main/resources/application.yml
 
     - name: Build Docker image with Buildx and push Docker image to DockerHub
       run: |
@@ -140,7 +143,7 @@ jobs:
 
   deploy-prod:
     needs: build
-    if: ${{ github.event.inputs.env == 'prod' }}
+    if: ${{ startsWith(github.event.inputs.env, 'prod') }}
     runs-on: ubuntu-latest
 
     steps:
