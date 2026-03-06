@@ -190,6 +190,10 @@ jobs:
               ./nginx/conf.d \
               ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/chichi
 
+      - name: 테스트용
+        run: |
+          cat /home/ubuntu/chichi/nginx/conf.d/nginx.blue.conf
+
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
@@ -197,8 +201,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
-            cat /home/ubuntu/chichi/nginx/conf.d/nginx.blue.conf
-            sudo cp -rf /home/ubuntu/chichi/nginx/conf.d/* /home/ubuntu/nginx/conf.d
+            # sudo cp -rf /home/ubuntu/chichi/nginx/conf.d/* /home/ubuntu/nginx/conf.d
             cd /home/ubuntu/chichi
             EXISTING_ACTIVE_COLOR=$(grep '^ACTIVE_COLOR=' .env | cut -d '=' -f2)
             echo "ACTIVE_COLOR=$EXISTING_ACTIVE_COLOR" >> .env.new
