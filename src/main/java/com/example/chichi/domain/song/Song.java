@@ -32,14 +32,11 @@ public class Song {
     @Column(nullable = false, name = "video_id")
     private long videoId;
 
-    @Column(nullable = false, name = "youtube_url")
-    private String youtubeUrl;
-
     @CreatedDate
     private LocalDateTime createdDate;
 
     @Builder
-    public Song(String title, String uploader, String image, long videoId, String youtubeUrl) {
+    public Song(String title, String uploader, String image, long videoId) {
         if (!StringUtils.hasText(title)) {
             throw new IllegalArgumentException("invalid title");
         }
@@ -57,10 +54,5 @@ public class Song {
             throw new IllegalArgumentException("invalid videoId");
         }
         this.videoId = videoId;
-
-        if (!StringUtils.hasText(youtubeUrl)) {
-            throw new IllegalArgumentException("invalid youtubeUrl");
-        }
-        this.youtubeUrl = youtubeUrl;
     }
 }

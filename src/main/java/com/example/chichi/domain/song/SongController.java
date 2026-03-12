@@ -23,8 +23,7 @@ public class SongController {
                 request.title(),
                 request.uploader(),
                 request.image(),
-                request.videoId(),
-                request.youtubeUrl());
+                request.videoId());
         return ResponseEntity.ok(
                 ApiResponse.ok("곡 등록에 성공하였습니다.", response)
         );

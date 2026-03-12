@@ -7,15 +7,13 @@ public record SongResponse(
         String title,
         String uploader,
         String image,
-        long videoId,
-        String youtubeUrl
+        long videoId
 ) {
     public SongResponse(Song song) {
         this(song.getId(),
                 song.getTitle(),
                 song.getUploader(),
                 song.getImage(),
-                song.getVideoId(),
-                song.getYoutubeUrl());
+                song.getVideoId());
     }
 }

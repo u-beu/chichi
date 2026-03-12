@@ -68,11 +68,10 @@ class SongControllerTest {
         String uploader = "test-uploader";
         String image = "test-image";
         long videoId = 1L;
-        String url = "test-url";
-        AddSongRequest validRequest = new AddSongRequest(title, uploader, image, videoId, url);
+        AddSongRequest validRequest = new AddSongRequest(title, uploader, image, videoId);
         long songId = 2L;
-        SongResponse response = new SongResponse(songId, title, uploader, image, videoId, url);
-        given(songService.addSong(eq(title), eq(uploader), eq(image), eq(videoId), eq(url))).willReturn(response);
+        SongResponse response = new SongResponse(songId, title, uploader, image, videoId);
+        given(songService.addSong(eq(title), eq(uploader), eq(image), eq(videoId))).willReturn(response);
 
         //when, then
         mvc.perform(post("/api/songs")
@@ -94,8 +93,7 @@ class SongControllerTest {
         //given
         String title = "test-title";
         String uploader = "test-uploader";
-        String url = "test-url";
-        AddSongRequest validRequest = new AddSongRequest(title, uploader, null, null, url);
+        AddSongRequest validRequest = new AddSongRequest(title, uploader, null, null);
 
         //when, then
         mvc.perform(post("/api/songs")
@@ -131,7 +129,7 @@ class SongControllerTest {
     void getSong() throws Exception {
         //given
         long songId = 1L;
-        SongResponse response = new SongResponse(songId, "test-title", "test-uploader", null, 2L, "test-url");
+        SongResponse response = new SongResponse(songId, "test-title", "test-uploader", null, 2L);
         given(songService.getSong(eq(songId))).willReturn(response);
         //when, then
         mvc.perform(get("/api/songs/{song-id}", songId)

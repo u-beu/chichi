@@ -11,8 +11,6 @@ public record UpdateRecentSongRequest(
         @NotNull
         Long videoId,
         @NotNull
-        String youtubeUrl,
-        @NotNull
         Long discordId
 ) {
 }
