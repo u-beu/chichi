@@ -5,6 +5,7 @@ import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import static com.example.chichi.domain.song.QSong.song;
 
 import java.util.List;
 
@@ -14,21 +15,18 @@ public class SongRepositoryImpl implements SongRepositoryCustom {
 
     @Override
     public List<SongListResponse.SongSimpleResponse> findAllSongSimpleByIds(List<Long> songIds) {
-        QSong song = QSong.song;
-
         List<SongListResponse.SongSimpleResponse> result = jpaQueryFactory
                 .select(Projections.constructor(
                         SongListResponse.SongSimpleResponse.class,
                         song.id,
                         song.title,
-                        song.singer,
+                        song.uploader,
                         song.image,
-                        Expressions.constant(false)
+                        Expressions.asBoolean(false)
                 ))
                 .from(song)
                 .where(song.id.in(songIds))
                 .fetch();
-
         return result;
     }
 }

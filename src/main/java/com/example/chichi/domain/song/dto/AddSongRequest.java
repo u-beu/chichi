@@ -6,7 +6,7 @@ public record AddSongRequest(
         @NotNull
         String title,
         @NotNull
-        String singer,
+        String uploader,
         String image,
         @NotNull
         Long videoId,

@@ -16,7 +16,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.List;
 import java.util.Optional;
 
-import static com.example.chichi.global.exception.ExceptionType.DUPLICATE_SONG;
 import static com.example.chichi.global.exception.ExceptionType.SONG_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -44,7 +43,7 @@ class SongServiceTest {
         long videoId = 1L;
         Song savedSong = Song.builder()
                 .title("test-title")
-                .singer("test-singer")
+                .uploader("test-uploader")
                 .videoId(videoId)
                 .youtubeUrl("test-url")
                 .build();
@@ -52,7 +51,7 @@ class SongServiceTest {
         given(songRepository.findByVideoId(eq(videoId))).willReturn(Optional.of(savedSong));
 
         //when
-        SongResponse response = songService.addSong("test-title", "test-singer", null, videoId, "test-url");
+        SongResponse response = songService.addSong("test-title", "test-uploader", null, videoId, "test-url");
 
         //then
         assertThat(response.videoId()).isEqualTo(videoId);
@@ -65,7 +64,7 @@ class SongServiceTest {
         long videoId = 1L;
         Song savedSong = Song.builder()
                 .title("test-title")
-                .singer("test-singer")
+                .uploader("test-uploader")
                 .videoId(videoId)
                 .youtubeUrl("test-url")
                 .build();
@@ -73,7 +72,7 @@ class SongServiceTest {
         given(songRepository.findByVideoId(eq(videoId))).willReturn(Optional.empty());
         given(songRepository.save(any())).willReturn(savedSong);
         //when, then
-        SongResponse response = songService.addSong("test-title", "test-singer", null, videoId, "test-url");
+        SongResponse response = songService.addSong("test-title", "test-uploader", null, videoId, "test-url");
 
         assertThat(response.videoId()).isEqualTo(videoId);
     }
@@ -101,7 +100,7 @@ class SongServiceTest {
 
         Song song = Song.builder()
                 .title("test-title")
-                .singer("test-singer")
+                .uploader("test-uploader")
                 .videoId(videoId)
                 .youtubeUrl(url)
                 .build();
@@ -138,7 +137,7 @@ class SongServiceTest {
         long songId = 2L;
         Song song = Song.builder()
                 .title("test-title")
-                .singer("test-singer")
+                .uploader("test-uploader")
                 .videoId(videoId)
                 .youtubeUrl("test-url").build();
         ReflectionTestUtils.setField(song, "id", songId);
@@ -209,14 +208,14 @@ class SongServiceTest {
         List<Long> recentSongs = List.of(song1Id, song2Id);
         given(recentPlayedSongRepository.findAllRecentPlayedSongByDiscordIdLatest(eq(String.valueOf(discordId)))).willReturn(recentSongs);
 
-        Song song1 = Song.builder().title("title").singer("singer").videoId(2L).youtubeUrl("url").build();
+        Song song1 = Song.builder().title("title").uploader("uploader").videoId(2L).youtubeUrl("url").build();
         ReflectionTestUtils.setField(song1, "id", song1Id);
-        Song song2 = Song.builder().title("title").singer("singer").videoId(3L).youtubeUrl("url").build();
+        Song song2 = Song.builder().title("title").uploader("uploader").videoId(3L).youtubeUrl("url").build();
         ReflectionTestUtils.setField(song2, "id", song2Id);
 
         List<SongListResponse.SongSimpleResponse> simpleSongs = List.of(
-                new SongListResponse.SongSimpleResponse(song1.getId(), song1.getTitle(),song1.getSinger(), song1.getImage(), false),
-                new SongListResponse.SongSimpleResponse(song2.getId(), song2.getTitle(),song2.getSinger(), song2.getImage(), false));
+                new SongListResponse.SongSimpleResponse(song1.getId(), song1.getTitle(), song1.getUploader(), song1.getImage(), false),
+                new SongListResponse.SongSimpleResponse(song2.getId(), song2.getTitle(), song2.getUploader(), song2.getImage(), false));
         given(songRepository.findAllSongSimpleByIds(eq(recentSongs))).willReturn(simpleSongs);
 
         //when

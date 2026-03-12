@@ -65,14 +65,14 @@ class SongControllerTest {
     void addSong_success() throws Exception {
         //given
         String title = "test-title";
-        String singer = "test-singer";
+        String uploader = "test-uploader";
         String image = "test-image";
         long videoId = 1L;
         String url = "test-url";
-        AddSongRequest validRequest = new AddSongRequest(title, singer, image, videoId, url);
+        AddSongRequest validRequest = new AddSongRequest(title, uploader, image, videoId, url);
         long songId = 2L;
-        SongResponse response = new SongResponse(songId, title, singer, image, videoId, url);
-        given(songService.addSong(eq(title), eq(singer), eq(image), eq(videoId), eq(url))).willReturn(response);
+        SongResponse response = new SongResponse(songId, title, uploader, image, videoId, url);
+        given(songService.addSong(eq(title), eq(uploader), eq(image), eq(videoId), eq(url))).willReturn(response);
 
         //when, then
         mvc.perform(post("/api/songs")
@@ -93,9 +93,9 @@ class SongControllerTest {
     void addSong_fail() throws Exception {
         //given
         String title = "test-title";
-        String singer = "test-singer";
+        String uploader = "test-uploader";
         String url = "test-url";
-        AddSongRequest validRequest = new AddSongRequest(title, singer, null, null, url);
+        AddSongRequest validRequest = new AddSongRequest(title, uploader, null, null, url);
 
         //when, then
         mvc.perform(post("/api/songs")
@@ -131,7 +131,7 @@ class SongControllerTest {
     void getSong() throws Exception {
         //given
         long songId = 1L;
-        SongResponse response = new SongResponse(songId, "test-title", "test-singer", null, 2L, "test-url");
+        SongResponse response = new SongResponse(songId, "test-title", "test-uploader", null, 2L, "test-url");
         given(songService.getSong(eq(songId))).willReturn(response);
         //when, then
         mvc.perform(get("/api/songs/{song-id}", songId)
@@ -206,9 +206,9 @@ class SongControllerTest {
     void getRecentPlayedSongList() throws Exception {
         //given
         List<SongListResponse.SongSimpleResponse> list =
-                List.of(new SongListResponse.SongSimpleResponse(1L, "test-title1", "test-singer1", "test-image1", false),
-                        new SongListResponse.SongSimpleResponse(2L, "test-title2", "test-singer2", "test-image2", false),
-                        new SongListResponse.SongSimpleResponse(3L, "test-title3", "test-singer3", "test-image3", false));
+                List.of(new SongListResponse.SongSimpleResponse(1L, "test-title1", "test-uploader1", "test-image1", false),
+                        new SongListResponse.SongSimpleResponse(2L, "test-title2", "test-uploader2", "test-image2", false),
+                        new SongListResponse.SongSimpleResponse(3L, "test-title3", "test-uploader3", "test-image3", false));
         SongListResponse response = new SongListResponse(list, new SongListResponse.Meta(3, 30));
         given(songService.getRecentPlayedSongList(eq(TEST_AUTH_USER_ID))).willReturn(response);
         //when, then

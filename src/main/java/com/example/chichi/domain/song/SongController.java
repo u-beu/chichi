@@ -21,7 +21,7 @@ public class SongController {
     public ResponseEntity<ApiResponse<SongResponse>> addSong(@RequestBody @Valid AddSongRequest request) {
         SongResponse response = songService.addSong(
                 request.title(),
-                request.singer(),
+                request.uploader(),
                 request.image(),
                 request.videoId(),
                 request.youtubeUrl());

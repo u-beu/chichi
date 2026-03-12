@@ -33,7 +33,7 @@ public class SseService {
     public void broadcast(long discordId, SongResponse song) {
         SseEmitter emitter = emitters.get(discordId);
         SongListResponse.SongSimpleResponse data =
-                new SongListResponse.SongSimpleResponse(song.songId(), song.title(), song.singer(), song.image(),false);
+                new SongListResponse.SongSimpleResponse(song.songId(), song.title(), song.uploader(), song.image(),false);
 
         if (emitter != null) {
             try {

@@ -6,7 +6,7 @@ public record UpdateRecentSongRequest(
         @NotNull
         String title,
         @NotNull
-        String singer,
+        String uploader,
         String image,
         @NotNull
         Long videoId,

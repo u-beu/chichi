@@ -5,7 +5,7 @@ import com.example.chichi.domain.song.Song;
 public record SongResponse(
         long songId,
         String title,
-        String singer,
+        String uploader,
         String image,
         long videoId,
         String youtubeUrl
@@ -13,7 +13,7 @@ public record SongResponse(
     public SongResponse(Song song) {
         this(song.getId(),
                 song.getTitle(),
-                song.getSinger(),
+                song.getUploader(),
                 song.getImage(),
                 song.getVideoId(),
                 song.getYoutubeUrl());

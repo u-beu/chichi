@@ -9,9 +9,9 @@ public record SongListResponse(
     public record SongSimpleResponse(
             Long songId,
             String title,
-            String singer,
+            String uploader,
             String image,
-            boolean liked
+            Boolean liked
     ) {
     }
 

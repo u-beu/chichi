@@ -46,7 +46,7 @@ class SongRepositoryTest {
                 .forEach(e -> songRepository.save(
                         Song.builder()
                                 .title("test-title")
-                                .singer("test-singer")
+                                .uploader("test-uploader")
                                 .videoId(e)
                                 .youtubeUrl("test-url")
                                 .build()

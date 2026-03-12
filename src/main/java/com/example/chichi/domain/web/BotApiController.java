@@ -26,7 +26,7 @@ public class BotApiController {
         userService.checkUserByDiscordId(request.discordId());
         SongResponse recentPlayedSong = songService.addSong(
                 request.title(),
-                request.singer(),
+                request.uploader(),
                 request.image(),
                 request.videoId(),
                 request.youtubeUrl());
