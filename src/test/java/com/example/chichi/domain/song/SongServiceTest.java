@@ -45,13 +45,12 @@ class SongServiceTest {
                 .title("test-title")
                 .uploader("test-uploader")
                 .videoId(videoId)
-                .youtubeUrl("test-url")
                 .build();
         ReflectionTestUtils.setField(savedSong, "id", 2L);
         given(songRepository.findByVideoId(eq(videoId))).willReturn(Optional.of(savedSong));
 
         //when
-        SongResponse response = songService.addSong("test-title", "test-uploader", null, videoId, "test-url");
+        SongResponse response = songService.addSong("test-title", "test-uploader", null, videoId);
 
         //then
         assertThat(response.videoId()).isEqualTo(videoId);
@@ -66,13 +65,12 @@ class SongServiceTest {
                 .title("test-title")
                 .uploader("test-uploader")
                 .videoId(videoId)
-                .youtubeUrl("test-url")
                 .build();
         ReflectionTestUtils.setField(savedSong, "id", 2L);
         given(songRepository.findByVideoId(eq(videoId))).willReturn(Optional.empty());
         given(songRepository.save(any())).willReturn(savedSong);
         //when, then
-        SongResponse response = songService.addSong("test-title", "test-uploader", null, videoId, "test-url");
+        SongResponse response = songService.addSong("test-title", "test-uploader", null, videoId);
 
         assertThat(response.videoId()).isEqualTo(videoId);
     }
@@ -102,7 +100,6 @@ class SongServiceTest {
                 .title("test-title")
                 .uploader("test-uploader")
                 .videoId(videoId)
-                .youtubeUrl(url)
                 .build();
         ReflectionTestUtils.setField(song, "id", songId);
         given(songRepository.findById(eq(songId))).willReturn(Optional.of(song));
@@ -113,7 +110,6 @@ class SongServiceTest {
         //then
         assertThat(response.songId()).isEqualTo(songId);
         assertThat(response.videoId()).isEqualTo(videoId);
-        assertThat(response.youtubeUrl()).isEqualTo(url);
     }
 
     @Test
@@ -139,7 +135,7 @@ class SongServiceTest {
                 .title("test-title")
                 .uploader("test-uploader")
                 .videoId(videoId)
-                .youtubeUrl("test-url").build();
+                .build();
         ReflectionTestUtils.setField(song, "id", songId);
         given(songRepository.findByVideoId(eq(videoId))).willReturn(Optional.of(song));
 
@@ -208,9 +204,9 @@ class SongServiceTest {
         List<Long> recentSongs = List.of(song1Id, song2Id);
         given(recentPlayedSongRepository.findAllRecentPlayedSongByDiscordIdLatest(eq(String.valueOf(discordId)))).willReturn(recentSongs);
 
-        Song song1 = Song.builder().title("title").uploader("uploader").videoId(2L).youtubeUrl("url").build();
+        Song song1 = Song.builder().title("title").uploader("uploader").videoId(2L).build();
         ReflectionTestUtils.setField(song1, "id", song1Id);
-        Song song2 = Song.builder().title("title").uploader("uploader").videoId(3L).youtubeUrl("url").build();
+        Song song2 = Song.builder().title("title").uploader("uploader").videoId(3L).build();
         ReflectionTestUtils.setField(song2, "id", song2Id);
 
         List<SongListResponse.SongSimpleResponse> simpleSongs = List.of(

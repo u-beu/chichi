@@ -48,7 +48,6 @@ class SongRepositoryTest {
                                 .title("test-title")
                                 .uploader("test-uploader")
                                 .videoId(e)
-                                .youtubeUrl("test-url")
                                 .build()
                 ));
 

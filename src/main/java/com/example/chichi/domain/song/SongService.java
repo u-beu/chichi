@@ -27,7 +27,7 @@ public class SongService {
 
     @Transactional
     public SongResponse addSong(String title, String uploader, String image,
-                                Long videoId, String youtubeUrl) {
+                                Long videoId) {
         Optional<Song> optionalSong = songRepository.findByVideoId(videoId);
         if (optionalSong.isPresent()) {
             return new SongResponse(optionalSong.get());
@@ -37,7 +37,6 @@ public class SongService {
                     .uploader(uploader)
                     .image(image)
                     .videoId(videoId)
-                    .youtubeUrl(youtubeUrl)
                     .build()
             );
             return new SongResponse(saved);

@@ -28,8 +28,7 @@ public class BotApiController {
                 request.title(),
                 request.uploader(),
                 request.image(),
-                request.videoId(),
-                request.youtubeUrl());
+                request.videoId());
         songService.addRecentPlayedSong(request.discordId(), recentPlayedSong.songId());
         sseService.broadcast(request.discordId(), recentPlayedSong);
         return ResponseEntity.ok(
