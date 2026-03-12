@@ -125,7 +125,7 @@
           color: #474747;
         }
 
-        .song-singer {
+        .song-uploader {
           font-size: 14px;
           color: #D8C2B5;
         }
@@ -177,7 +177,7 @@
                 <img th:src="@{/images/basicProfileCat.png}" alt="앨범" class="album-cover"/>
                 <div class="song-info">
                     <div class="song-title" th:text="${record.title}">노래 제목</div>
-                    <div class="song-singer" th:text="${record.singer}">가수 이름</div>
+                    <div class="song-uploader" th:text="${record.uploader}">가수 이름</div>
                 </div>
             </div>
 
@@ -211,7 +211,7 @@
             <img src="${songImage}" alt="앨범" class="album-cover" />
             <div class="song-info">
                 <div class="song-title">${song.title}</div>
-                <div class="song-singer">${song.singer}</div>
+                <div class="song-uploader">${song.uploader}</div>
             </div>
         </div>
 

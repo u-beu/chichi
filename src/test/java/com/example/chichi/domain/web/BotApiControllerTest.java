@@ -51,21 +51,21 @@ class BotApiControllerTest {
     void updateRecentSongList() throws Exception {
         //given
         String title = "test-title";
-        String singer = "test-singer";
+        String uploader = "test-uploader";
         long videoId = 1L;
         String url = "test-url";
         long discordId = 2L;
         Song song = Song.builder()
                 .title(title)
-                .singer(singer)
+                .uploader(uploader)
                 .videoId(videoId)
                 .youtubeUrl(url)
                 .build();
         ReflectionTestUtils.setField(song, "id", 3L);
-        UpdateRecentSongRequest request = new UpdateRecentSongRequest(title, singer, null, videoId, url, discordId);
+        UpdateRecentSongRequest request = new UpdateRecentSongRequest(title, uploader, null, videoId, url, discordId);
 
         SongResponse recentSong = new SongResponse(song);
-        given(songService.addSong(eq(title), eq(singer), eq(null), eq(videoId), eq(url))).willReturn(recentSong);
+        given(songService.addSong(eq(title), eq(uploader), eq(null), eq(videoId), eq(url))).willReturn(recentSong);
 
         //when, then
         mvc.perform(post("/api/bot/recent-played-song")
@@ -89,18 +89,18 @@ class BotApiControllerTest {
     void updateRecentSongList_not_user_fail() throws Exception {
         //given
         String title = "test-title";
-        String singer = "test-singer";
+        String uploader = "test-uploader";
         long videoId = 1L;
         String url = "test-url";
         long discordId = 2L;
         Song song = Song.builder()
                 .title(title)
-                .singer(singer)
+                .uploader(uploader)
                 .videoId(videoId)
                 .youtubeUrl(url)
                 .build();
         ReflectionTestUtils.setField(song, "id", 3L);
-        UpdateRecentSongRequest request = new UpdateRecentSongRequest(title, singer, null, videoId, url, discordId);
+        UpdateRecentSongRequest request = new UpdateRecentSongRequest(title, uploader, null, videoId, url, discordId);
 
         doThrow(new ApiException(USER_NOT_FOUND)).when(userService).checkUserByDiscordId(eq(discordId));
 

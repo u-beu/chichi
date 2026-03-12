@@ -26,7 +26,7 @@ public class SongService {
     private final int RECENT_SONG_LIMIT = 30;
 
     @Transactional
-    public SongResponse addSong(String title, String singer, String image,
+    public SongResponse addSong(String title, String uploader, String image,
                                 Long videoId, String youtubeUrl) {
         Optional<Song> optionalSong = songRepository.findByVideoId(videoId);
         if (optionalSong.isPresent()) {
@@ -34,7 +34,7 @@ public class SongService {
         } else {
             Song saved = songRepository.save(Song.builder()
                     .title(title)
-                    .singer(singer)
+                    .uploader(uploader)
                     .image(image)
                     .videoId(videoId)
                     .youtubeUrl(youtubeUrl)

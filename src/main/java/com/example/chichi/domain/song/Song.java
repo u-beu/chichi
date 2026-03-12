@@ -25,7 +25,7 @@ public class Song {
     private String title;
 
     @Column(nullable = false)
-    private String singer;
+    private String uploader;
 
     private String image;
 
@@ -39,16 +39,16 @@ public class Song {
     private LocalDateTime createdDate;
 
     @Builder
-    public Song(String title, String singer, String image, long videoId, String youtubeUrl) {
+    public Song(String title, String uploader, String image, long videoId, String youtubeUrl) {
         if (!StringUtils.hasText(title)) {
             throw new IllegalArgumentException("invalid title");
         }
         this.title = title;
 
-        if (!StringUtils.hasText(singer)) {
+        if (!StringUtils.hasText(uploader)) {
             throw new IllegalArgumentException("invalid singer");
         }
-        this.singer = singer;
+        this.uploader = uploader;
 
         // todo 기본 이미지 준비하기
         this.image = StringUtils.hasText(image) ? image : null;
