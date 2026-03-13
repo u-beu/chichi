@@ -47,7 +47,7 @@ class SongRepositoryTest {
                         Song.builder()
                                 .title("test-title")
                                 .uploader("test-uploader")
-                                .videoId(e)
+                                .videoId(String.valueOf(e))
                                 .build()
                 ));
 

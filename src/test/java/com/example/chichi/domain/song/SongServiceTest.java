@@ -40,7 +40,7 @@ class SongServiceTest {
     @DisplayName("중복된 곡일 경우 ")
     void addSong_success() {
         //given
-        long videoId = 1L;
+        String videoId = "test-videoId";
         Song savedSong = Song.builder()
                 .title("test-title")
                 .uploader("test-uploader")
@@ -60,7 +60,7 @@ class SongServiceTest {
     @DisplayName("중복된 곡이 아닐 경우 등록에 성공한다.")
     void addSong() {
         //given
-        long videoId = 1L;
+        String videoId = "test-videoId";
         Song savedSong = Song.builder()
                 .title("test-title")
                 .uploader("test-uploader")
@@ -92,8 +92,7 @@ class SongServiceTest {
     @DisplayName("곡 조회에 성공한다.")
     void getSong() {
         //given
-        long videoId = 1L;
-        String url = "test-url";
+        String videoId = "test-videoId";
         long songId = 2L;
 
         Song song = Song.builder()
@@ -129,7 +128,7 @@ class SongServiceTest {
     @DisplayName("등록된 곡이면 song id를 반환한다.")
     void isRegisteredSong_return_songId() {
         //given
-        long videoId = 1L;
+        String videoId = "test-videoId";
         long songId = 2L;
         Song song = Song.builder()
                 .title("test-title")
@@ -151,7 +150,7 @@ class SongServiceTest {
     @DisplayName("등록된 곡이 아니면 song id를 반환하지 않는다.")
     void isRegisteredSong_return_null() {
         //given
-        long videoId = 1L;
+        String videoId = "test-videoId";
         given(songRepository.findByVideoId(eq(videoId))).willReturn(Optional.empty());
 
         //when
@@ -204,9 +203,9 @@ class SongServiceTest {
         List<Long> recentSongs = List.of(song1Id, song2Id);
         given(recentPlayedSongRepository.findAllRecentPlayedSongByDiscordIdLatest(eq(String.valueOf(discordId)))).willReturn(recentSongs);
 
-        Song song1 = Song.builder().title("title").uploader("uploader").videoId(2L).build();
+        Song song1 = Song.builder().title("title").uploader("uploader").videoId("test-videoId").build();
         ReflectionTestUtils.setField(song1, "id", song1Id);
-        Song song2 = Song.builder().title("title").uploader("uploader").videoId(3L).build();
+        Song song2 = Song.builder().title("title").uploader("uploader").videoId("test-videoId").build();
         ReflectionTestUtils.setField(song2, "id", song2Id);
 
         List<SongListResponse.SongSimpleResponse> simpleSongs = List.of(

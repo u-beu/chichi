@@ -46,7 +46,7 @@ public class SongController {
     }
 
     @GetMapping("/api/songs/{video-id}/check")
-    public ResponseEntity<ApiResponse<CheckSongResponse>> isRegisteredSong(@PathVariable("video-id") Long videoId) {
+    public ResponseEntity<ApiResponse<CheckSongResponse>> isRegisteredSong(@PathVariable("video-id") String videoId) {
         CheckSongResponse response = songService.isRegisteredSong(videoId);
         return ResponseEntity.ok(
                 ApiResponse.ok("등록된 곡 여부 조회에 성공하였습니다", response)

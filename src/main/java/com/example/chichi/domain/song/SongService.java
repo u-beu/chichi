@@ -27,7 +27,7 @@ public class SongService {
 
     @Transactional
     public SongResponse addSong(String title, String uploader, String image,
-                                Long videoId) {
+                                String videoId) {
         Optional<Song> optionalSong = songRepository.findByVideoId(videoId);
         if (optionalSong.isPresent()) {
             return new SongResponse(optionalSong.get());
@@ -54,7 +54,7 @@ public class SongService {
         return new SongResponse(song);
     }
 
-    public CheckSongResponse isRegisteredSong(Long videoId) {
+    public CheckSongResponse isRegisteredSong(String videoId) {
         Optional<Song> optionalSong = songRepository.findByVideoId(videoId);
         return new CheckSongResponse(
                 optionalSong.isPresent(),

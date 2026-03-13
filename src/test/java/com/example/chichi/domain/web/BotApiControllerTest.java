@@ -52,7 +52,7 @@ class BotApiControllerTest {
         //given
         String title = "test-title";
         String uploader = "test-uploader";
-        long videoId = 1L;
+        String videoId = "test-videoId";
         long discordId = 2L;
         Song song = Song.builder()
                 .title(title)
@@ -88,7 +88,7 @@ class BotApiControllerTest {
         //given
         String title = "test-title";
         String uploader = "test-uploader";
-        long videoId = 1L;
+        String videoId = "test-videoId";
         long discordId = 2L;
         Song song = Song.builder()
                 .title(title)

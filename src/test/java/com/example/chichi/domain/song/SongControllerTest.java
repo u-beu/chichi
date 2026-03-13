@@ -67,7 +67,7 @@ class SongControllerTest {
         String title = "test-title";
         String uploader = "test-uploader";
         String image = "test-image";
-        long videoId = 1L;
+        String videoId = "test-videoId";
         AddSongRequest validRequest = new AddSongRequest(title, uploader, image, videoId);
         long songId = 2L;
         SongResponse response = new SongResponse(songId, title, uploader, image, videoId);
@@ -129,7 +129,7 @@ class SongControllerTest {
     void getSong() throws Exception {
         //given
         long songId = 1L;
-        SongResponse response = new SongResponse(songId, "test-title", "test-uploader", null, 2L);
+        SongResponse response = new SongResponse(songId, "test-title", "test-uploader", null, "test-videoId");
         given(songService.getSong(eq(songId))).willReturn(response);
         //when, then
         mvc.perform(get("/api/songs/{song-id}", songId)
@@ -148,7 +148,7 @@ class SongControllerTest {
     void isRegisteredSong() throws Exception {
         //given
         long songId = 1L;
-        long videoId = 2L;
+        String videoId = "test-videoId";
         CheckSongResponse response = new CheckSongResponse(true, songId);
         given(songService.isRegisteredSong(eq(videoId))).willReturn(response);
         //when, then
