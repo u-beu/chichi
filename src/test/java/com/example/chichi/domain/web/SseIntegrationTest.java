@@ -94,7 +94,7 @@ public class SseIntegrationTest {
                 .then(() -> {
                     sseService.broadcast(
                             discordId,
-                            new SongResponse(3L, title, "singer", null, 4L));
+                            new SongResponse(3L, title, "singer", null, "test-videoId"));
                 })
                 .expectNextMatches(event ->
                         event.event().equals("recentSongUpdate") && event.data().contains(title))
@@ -129,7 +129,7 @@ public class SseIntegrationTest {
                 .then(() -> {
                     sseService.broadcast(
                             different_discordId,
-                            new SongResponse(3L, title, "singer", null, 4L));
+                            new SongResponse(3L, title, "singer", null, "test-videoId"));
                 })
                 .expectNoEvent(Duration.ofSeconds(3))
                 .thenCancel()

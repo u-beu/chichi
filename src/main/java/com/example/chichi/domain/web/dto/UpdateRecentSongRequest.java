@@ -9,7 +9,7 @@ public record UpdateRecentSongRequest(
         String uploader,
         String image,
         @NotNull
-        Long videoId,
+        String videoId,
         @NotNull
         Long discordId
 ) {

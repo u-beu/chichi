@@ -7,7 +7,7 @@ public record SongResponse(
         String title,
         String uploader,
         String image,
-        long videoId
+        String videoId
 ) {
     public SongResponse(Song song) {
         this(song.getId(),

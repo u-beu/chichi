@@ -9,6 +9,6 @@ public record AddSongRequest(
         String uploader,
         String image,
         @NotNull
-        Long videoId
+        String videoId
 ) {
 }
