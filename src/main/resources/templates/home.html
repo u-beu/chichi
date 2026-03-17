@@ -174,7 +174,9 @@
     <div id="song-list-container">
         <div th:each="record : ${records.items}" class="record" th:data-id="${record.songId}">
             <div class="record-left">
-                <img th:src="@{/images/basicProfileCat.png}" alt="앨범" class="album-cover"/>
+                <img th:src="${record.image!=null && record.image!='null'}
+                            ?${record.image}
+                            : @{/images/basicProfileCat.jpg}" alt="앨범" class="album-cover"/>
                 <div class="song-info">
                     <div class="song-title" th:text="${record.title}">노래 제목</div>
                     <div class="song-uploader" th:text="${record.uploader}">가수 이름</div>
@@ -204,7 +206,7 @@
         newRecord.className='record';
         newRecord.setAttribute('data-id', song.songId);
 
-        const songImage=song.image ? song.image : '/images/basicProfileCat.png';
+        const songImage=song.image!=null && song.image!='null' ? song.image : '/images/basicProfileCat.png';
 
         newRecord.innerHTML=`
         <div class="record-left">
