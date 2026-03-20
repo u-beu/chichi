@@ -1,10 +1,7 @@
 package com.example.chichi.domain.song;
 
 import com.example.chichi.config.auth.customAnnotation.AuthUserId;
-import com.example.chichi.domain.song.dto.AddSongRequest;
-import com.example.chichi.domain.song.dto.CheckSongResponse;
-import com.example.chichi.domain.song.dto.SongListResponse;
-import com.example.chichi.domain.song.dto.SongResponse;
+import com.example.chichi.domain.song.dto.*;
 import com.example.chichi.global.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -76,6 +73,15 @@ public class SongController {
         SongListResponse response = songService.getRecentPlayedSongList(userId);
         return ResponseEntity.ok(
                 ApiResponse.ok("최근 재생곡 리스트 조회에 성공하였습니다", response)
+        );
+    }
+
+    @PostMapping("/api/songs/{song-id}/like")
+    public ResponseEntity<ApiResponse<SongLikeResponse>> toggleSongLikeButton(@PathVariable("song-id") Long songId,
+                                                                              @AuthUserId Long userId) {
+        SongLikeResponse response = songService.toggleSongLikeButton(songId, userId);
+        return ResponseEntity.ok(
+                ApiResponse.ok("곡 좋아요에 성공하였습니다", response)
         );
     }
 }

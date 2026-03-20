@@ -2,10 +2,7 @@ package com.example.chichi.domain.song;
 
 import com.example.chichi.config.auth.customAnnotation.AuthUserId;
 import com.example.chichi.config.auth.customAnnotation.resolver.AuthUserIdResolver;
-import com.example.chichi.domain.song.dto.AddSongRequest;
-import com.example.chichi.domain.song.dto.CheckSongResponse;
-import com.example.chichi.domain.song.dto.SongListResponse;
-import com.example.chichi.domain.song.dto.SongResponse;
+import com.example.chichi.domain.song.dto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -218,6 +215,24 @@ class SongControllerTest {
                 .andExpect(jsonPath("$.message", containsString("성공")))
                 .andExpect(jsonPath("$.data.items[0].songId").value(1L))
                 .andExpect(jsonPath("$.data.meta.count").value(3))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("좋아요에 성공한다.")
+    @WithMockUser
+    void addSongLike() throws Exception {
+        long songId = 1;
+
+        SongLikeResponse response = new SongLikeResponse(true);
+        given(songService.toggleSongLikeButton(eq(songId), eq(TEST_AUTH_USER_ID))).willReturn(response);
+        mvc.perform(post("/api/songs/{song-id}/like", songId)
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.message", containsString("성공")))
+                .andExpect(jsonPath("$.data.isLiked").value(true))
                 .andDo(print());
     }
 }

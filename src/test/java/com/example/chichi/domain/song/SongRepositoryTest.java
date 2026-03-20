@@ -2,6 +2,7 @@ package com.example.chichi.domain.song;
 
 import com.example.chichi.config.TestQuerydslConfig;
 import com.example.chichi.domain.song.dto.SongListResponse;
+import com.example.chichi.domain.song.repository.SongRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

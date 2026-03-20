@@ -4,6 +4,7 @@ import com.example.chichi.domain.song.dto.CheckSongResponse;
 import com.example.chichi.domain.song.dto.SongListResponse;
 import com.example.chichi.domain.song.dto.SongResponse;
 import com.example.chichi.domain.song.recent.RecentPlayedSongRepository;
+import com.example.chichi.domain.song.repository.SongRepository;
 import com.example.chichi.global.exception.ApiException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -220,4 +221,5 @@ class SongServiceTest {
         assertThat(response.items().get(0).songId()).isEqualTo(song1Id);
         assertThat(response.meta().count()).isEqualTo(simpleSongs.size());
     }
+
 }

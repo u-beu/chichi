@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
-    <meta charset="UTF-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>메인 페이지</title>
     <style>
         body {
@@ -33,6 +34,7 @@
         .profile {
           text-align: center;
         }
+
         .profile img {
           width: 100px;
           height: 100px;
@@ -40,6 +42,7 @@
           object-fit: cover;
           margin-bottom: 10px;
         }
+
         .profile .username {
           font-size: 18px;
           font-weight: bold;
@@ -52,6 +55,7 @@
           gap: 12px;
           margin-bottom: 20px;
         }
+
         .menu button {
           padding: 12px;
           border: none;
@@ -62,6 +66,7 @@
           font-size: 15px;
           transition: 0.2s;
         }
+
         .menu button:hover {
           background: #F2CFB9;
           color: #474747;
@@ -72,11 +77,13 @@
           justify-content: space-between;
           font-size: 14px;
         }
+
         .bottom-links a {
           color: #474747;
           text-decoration: none;
           transition: 0.2s;
         }
+
         .bottom-links a:hover {
           color: var(--mint);
         }
@@ -98,7 +105,7 @@
           display: flex;
           align-items: center;
           justify-content: space-between;
-          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .record-left {
@@ -138,11 +145,13 @@
           border: none;
           cursor: pointer;
         }
+
         .like-btn.liked {
           background-image: url('/images/redHeart.png');
         }
     </style>
 </head>
+
 <body>
 <div class="sidebar">
     <div>
@@ -161,7 +170,7 @@
     <div class="bottom-links">
         <a th:href="@{/settings}">설정</a>
         <form id="logout" th:action="@{/auth/logout}" method="post" style="display:none;">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
         </form>
         <a href="#" onclick="document.getElementById('logout').submit(); return false;">
             로그아웃
@@ -172,69 +181,26 @@
 <div class="content" id="song-list">
     <h2>최신 재생곡 목록</h2>
     <div id="song-list-container">
-        <div th:each="record : ${records.items}" class="record" th:data-id="${record.songId}">
+        <div th:each="record : ${records.items}" class="record" th:data-song-id="${record.songId}">
             <div class="record-left">
                 <img th:src="${record.image!=null && record.image!='null'}
                             ?${record.image}
-                            : @{/images/basicProfileCat.jpg}" alt="앨범" class="album-cover"/>
+                            : @{/images/basicProfileCat.png}" alt="앨범" class="album-cover" />
                 <div class="song-info">
                     <div class="song-title" th:text="${record.title}">노래 제목</div>
                     <div class="song-uploader" th:text="${record.uploader}">가수 이름</div>
                 </div>
             </div>
 
-            <button class="like-btn"
-                    th:classappend="${record.liked} ? ' liked' : ''"
+            <button class="like-btn" th:classappend="${record.liked} ? ' liked' : ''" th:data-song-id="${record.songId}"
                     onclick="toggleLike(this)">
             </button>
         </div>
     </div>
 </div>
 
-<script th:inline="javascript">
-    const eventSource=new EventSource('/connect');
-    eventSource.addEventListener("recentSongUpdate", (event) => {
-        const song = JSON.parse(event.data);
-        const container=document.getElementById('song-list-container');
-
-        const existingRecord = container.querySelector(`[data-id="${song.songId}"]`);
-        if(existingRecord){
-            existingRecord.remove();
-        }
-
-        const newRecord=document.createElement('div');
-        newRecord.className='record';
-        newRecord.setAttribute('data-id', song.songId);
-
-        const songImage=song.image!=null && song.image!='null' ? song.image : '/images/basicProfileCat.png';
-
-        newRecord.innerHTML=`
-        <div class="record-left">
-            <img src="${songImage}" alt="앨범" class="album-cover" />
-            <div class="song-info">
-                <div class="song-title">${song.title}</div>
-                <div class="song-uploader">${song.uploader}</div>
-            </div>
-        </div>
-
-        <button class="like-btn" onclick="toggleLike(this)"></button>
-        `;
-
-        container.prepend(newRecord);
-
-        const records = container.getElementsByClassName('record');
-        if(records.length>30){
-            container.removeChild(records[records.length-1]);
-        }
-    });
-
-    eventSource.onerror=function(){
-    console.log("SSE 연결 끊겼습니다. 재연결을 시도합니다.");
-    };
-
-    function toggleLike(btn) {
-      btn.classList.toggle('liked');
-    }
-</script>
+<script src="/js/songLike.js"></script>
+<script src="/js/recentSongs.js"></script>
 </body>
+
 </html>

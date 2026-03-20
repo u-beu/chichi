@@ -1,4 +1,4 @@
-package com.example.chichi.domain.song;
+package com.example.chichi.domain.song.repository;
 
 import com.example.chichi.domain.song.dto.SongListResponse;
 

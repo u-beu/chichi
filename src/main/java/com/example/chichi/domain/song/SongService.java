@@ -1,9 +1,13 @@
 package com.example.chichi.domain.song;
 
 import com.example.chichi.domain.song.dto.CheckSongResponse;
+import com.example.chichi.domain.song.dto.SongLikeResponse;
 import com.example.chichi.domain.song.dto.SongListResponse;
 import com.example.chichi.domain.song.dto.SongResponse;
 import com.example.chichi.domain.song.recent.RecentPlayedSongRepository;
+import com.example.chichi.domain.song.repository.SongLikeRedisRepository;
+import com.example.chichi.domain.song.repository.SongLikeRepository;
+import com.example.chichi.domain.song.repository.SongRepository;
 import com.example.chichi.global.exception.ApiException;
 import com.example.chichi.global.exception.ExceptionType;
 import jakarta.transaction.Transactional;
@@ -22,6 +26,8 @@ import java.util.stream.Collectors;
 public class SongService {
     private final SongRepository songRepository;
     private final RecentPlayedSongRepository recentPlayedSongRepository;
+    private final SongLikeRepository songLikeRepository;
+    private final SongLikeRedisRepository songLikeRedisRepository;
 
     private final int RECENT_SONG_LIMIT = 30;
 
@@ -91,5 +97,10 @@ public class SongService {
 
         return new SongListResponse(
                 sortedItems, new SongListResponse.Meta(sortedItems.size(), RECENT_SONG_LIMIT));
+    }
+
+    public SongLikeResponse toggleSongLikeButton(Long songId, Long userId) {
+        boolean isLiked = songLikeRedisRepository.toggleLike(userId, songId);
+        return new SongLikeResponse(isLiked);
     }
 }

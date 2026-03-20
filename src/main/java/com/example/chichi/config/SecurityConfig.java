@@ -49,7 +49,8 @@ public class SecurityConfig {
     private final String[] USER_LIST = {
             "/users/**",
             "/auth/logout",
-            "/connect"
+            "/connect",
+            "/api/songs/**/like"
     };
     private final String[] ADMIN_LIST = {
             "/admin/**"
@@ -67,7 +68,8 @@ public class SecurityConfig {
                         .csrfTokenRepository(new HttpSessionCsrfTokenRepository())
                         .ignoringRequestMatchers(
                                 new AntPathRequestMatcher("/api/bot/recent-played-song"),
-                                new AntPathRequestMatcher("/connect")))
+                                new AntPathRequestMatcher("/connect"),
+                                new AntPathRequestMatcher("/api/songs/**")))
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize
