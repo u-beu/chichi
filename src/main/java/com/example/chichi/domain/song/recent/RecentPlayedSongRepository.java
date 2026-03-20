@@ -15,14 +15,14 @@ public class RecentPlayedSongRepository {
     private final StringRedisTemplate redisTemplate;
     private final String KEY_PREFIX = "recent:";
 
-    public void save(String discordId, String songId, long lastPlayedAt) {
+    public void save(Long discordId, Long songId, Long lastPlayedAt) {
         redisTemplate.opsForZSet()
-                .add(KEY_PREFIX + discordId, songId, lastPlayedAt);
+                .add(KEY_PREFIX + discordId, String.valueOf(songId), lastPlayedAt);
     }
 
-    public void deleteByDiscordIdAndSongId(String discordId, String songId) {
+    public void deleteByDiscordIdAndSongId(Long discordId, Long songId) {
         redisTemplate.opsForZSet()
-                .remove(KEY_PREFIX + discordId, songId);
+                .remove(KEY_PREFIX + discordId, String.valueOf(songId));
     }
 
     public void deleteOverLimit(String discordId, int limit) {
@@ -30,7 +30,7 @@ public class RecentPlayedSongRepository {
                 .removeRange(KEY_PREFIX + discordId, 0, -(limit + 1));
     }
 
-    public List<Long> findAllRecentPlayedSongByDiscordIdLatest(String discordId) {
+    public List<Long> findRecentPlayedSongIdsByDiscordIdLatest(Long discordId) {
         Set<String> values = redisTemplate.opsForZSet()
                 .reverseRange(KEY_PREFIX + discordId, 0, -1);
         if (values == null || values.isEmpty()) {

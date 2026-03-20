@@ -73,24 +73,24 @@ public class SongService {
                 .atZone(ZoneId.systemDefault())
                 .toInstant()
                 .toEpochMilli();
-        recentPlayedSongRepository.save(String.valueOf(discordId), String.valueOf(songId), score);
+        recentPlayedSongRepository.save(discordId, songId, score);
         recentPlayedSongRepository.deleteOverLimit(String.valueOf(discordId), RECENT_SONG_LIMIT);
     }
 
     @Transactional
     public void removeRecentPlayedSong(Long discordId, Long songId) {
-        recentPlayedSongRepository.deleteByDiscordIdAndSongId(String.valueOf(discordId), String.valueOf(songId));
+        recentPlayedSongRepository.deleteByDiscordIdAndSongId(discordId, songId);
     }
 
     public SongListResponse getRecentPlayedSongList(Long discordId) {
-        List<Long> recentSongs = recentPlayedSongRepository.findAllRecentPlayedSongByDiscordIdLatest(String.valueOf(discordId));
-        List<SongListResponse.SongSimpleResponse> items = songRepository.findAllSongSimpleByIds(recentSongs);
+        List<Long> recentSongIds = recentPlayedSongRepository.findRecentPlayedSongIdsByDiscordIdLatest(discordId);
+        List<SongListResponse.SongSimpleResponse> items = songRepository.findSongsSimpleByIds(recentSongIds);
 
         Map<Long, SongListResponse.SongSimpleResponse> itemMap = items.stream()
                 .collect(Collectors.toMap(SongListResponse.SongSimpleResponse::songId,
                         item -> item));
 
-        List<SongListResponse.SongSimpleResponse> sortedItems = recentSongs.stream()
+        List<SongListResponse.SongSimpleResponse> sortedItems = recentSongIds.stream()
                 .map(itemMap::get)
                 .filter(Objects::nonNull)
                 .toList();
@@ -100,7 +100,28 @@ public class SongService {
     }
 
     public SongLikeResponse toggleSongLikeButton(Long songId, Long userId) {
-        boolean isLiked = songLikeRedisRepository.toggleLike(userId, songId);
+        long score = LocalDateTime.now()
+                .atZone(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli();
+        boolean isLiked = songLikeRedisRepository.toggleLike(userId, songId, score);
         return new SongLikeResponse(isLiked);
+    }
+
+    public SongListResponse getLikedSongList(Long userId){
+        List<Long> likedSongIds = songLikeRedisRepository.findLikedSongIdsByUserIdLatest(userId);
+        List<SongListResponse.SongSimpleResponse> items = songRepository.findSongsSimpleByIds(likedSongIds);
+
+        Map<Long, SongListResponse.SongSimpleResponse> itemMap = items.stream()
+                .collect(Collectors.toMap(SongListResponse.SongSimpleResponse::songId,
+                        item -> item));
+
+        List<SongListResponse.SongSimpleResponse> sortedItems = likedSongIds.stream()
+                .map(itemMap::get)
+                .filter(Objects::nonNull)
+                .toList();
+
+        return new SongListResponse(
+                sortedItems, new SongListResponse.Meta(sortedItems.size(), sortedItems.size()));
     }
 }

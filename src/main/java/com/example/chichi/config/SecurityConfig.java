@@ -50,7 +50,8 @@ public class SecurityConfig {
             "/users/**",
             "/auth/logout",
             "/connect",
-            "/api/songs/**/like"
+            "/api/songs/*/like",
+            "/api/songs/like"
     };
     private final String[] ADMIN_LIST = {
             "/admin/**"

@@ -55,8 +55,8 @@ class RecentPlayedSongRepositoryTest {
 
         //when : 1(과거, score 낮다) ~ 35(최신, score 높다)
         songIds.forEach(e -> recentPlayedSongRepository.save(
-                String.valueOf(discordId),
-                String.valueOf(e),
+                discordId,
+                e,
                 LocalDateTime.now()
                         .plusMinutes(e)
                         .atZone(ZoneId.systemDefault())
@@ -76,7 +76,7 @@ class RecentPlayedSongRepositoryTest {
 
     @Test
     @DisplayName("최근 재생곡을 최신~과거순으로 가져오는데 성공한다.")
-    void get() {
+    void getRecentPlayedSongsOrderByLatest() {
         //given
         long discordId = 123L;
         List<Long> songIds = LongStream.rangeClosed(1, 15)
@@ -84,8 +84,8 @@ class RecentPlayedSongRepositoryTest {
                 .toList();
         //1(과거, score 낮다) ~ 15(최신, score 높다)
         songIds.forEach(e -> recentPlayedSongRepository.save(
-                String.valueOf(discordId),
-                String.valueOf(e),
+                discordId,
+                e,
                 LocalDateTime.now()
                         .plusMinutes(e)
                         .atZone(ZoneId.systemDefault())
@@ -93,10 +93,11 @@ class RecentPlayedSongRepositoryTest {
                         .toEpochMilli()));
 
         //when
-        List<Long> values = recentPlayedSongRepository.findAllRecentPlayedSongByDiscordIdLatest(String.valueOf(discordId));
+        List<Long> values = recentPlayedSongRepository.findRecentPlayedSongIdsByDiscordIdLatest(discordId);
 
         //then
         assertThat(values.size()).isEqualTo(15);
         assertThat(values.get(0)).isEqualTo(15L);
+        assertThat(values.get(14)).isEqualTo(1L);
     }
 }

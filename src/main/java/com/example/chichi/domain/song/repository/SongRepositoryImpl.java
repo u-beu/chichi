@@ -14,7 +14,7 @@ public class SongRepositoryImpl implements SongRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public List<SongListResponse.SongSimpleResponse> findAllSongSimpleByIds(List<Long> songIds) {
+    public List<SongListResponse.SongSimpleResponse> findSongsSimpleByIds(List<Long> songIds) {
         List<SongListResponse.SongSimpleResponse> result = jpaQueryFactory
                 .select(Projections.constructor(
                         SongListResponse.SongSimpleResponse.class,

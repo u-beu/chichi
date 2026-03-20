@@ -72,7 +72,7 @@ public class SongController {
     public ResponseEntity<ApiResponse<SongListResponse>> getRecentPlayedSongList(@AuthUserId Long userId) {
         SongListResponse response = songService.getRecentPlayedSongList(userId);
         return ResponseEntity.ok(
-                ApiResponse.ok("최근 재생곡 리스트 조회에 성공하였습니다", response)
+                ApiResponse.ok("최근 재생곡 리스트 조회에 성공하였습니다.", response)
         );
     }
 
@@ -81,7 +81,15 @@ public class SongController {
                                                                               @AuthUserId Long userId) {
         SongLikeResponse response = songService.toggleSongLikeButton(songId, userId);
         return ResponseEntity.ok(
-                ApiResponse.ok("곡 좋아요에 성공하였습니다", response)
+                ApiResponse.ok("곡 좋아요에 성공하였습니다.", response)
+        );
+    }
+
+    @GetMapping("/api/songs/like")
+    public ResponseEntity<ApiResponse<SongListResponse>> getLikedSongList(@AuthUserId Long userId){
+        SongListResponse response = songService.getLikedSongList(userId);
+        return ResponseEntity.ok(
+                ApiResponse.ok("좋아요 곡 리스트 조회에 성공하였습니다.", response)
         );
     }
 }

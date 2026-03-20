@@ -4,6 +4,7 @@ import com.example.chichi.config.auth.customAnnotation.AuthUserId;
 import com.example.chichi.config.auth.customAnnotation.resolver.AuthUserIdResolver;
 import com.example.chichi.domain.song.dto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.With;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -204,8 +205,9 @@ class SongControllerTest {
                 List.of(new SongListResponse.SongSimpleResponse(1L, "test-title1", "test-uploader1", "test-image1", false),
                         new SongListResponse.SongSimpleResponse(2L, "test-title2", "test-uploader2", "test-image2", false),
                         new SongListResponse.SongSimpleResponse(3L, "test-title3", "test-uploader3", "test-image3", false));
-        SongListResponse response = new SongListResponse(list, new SongListResponse.Meta(3, 30));
+        SongListResponse response = new SongListResponse(list, new SongListResponse.Meta(list.size(), 30));
         given(songService.getRecentPlayedSongList(eq(TEST_AUTH_USER_ID))).willReturn(response);
+
         //when, then
         mvc.perform(get("/api/users/me/recent-played-songs")
                         .with(csrf()))
@@ -214,7 +216,8 @@ class SongControllerTest {
                 .andExpect(jsonPath("$.status").value("success"))
                 .andExpect(jsonPath("$.message", containsString("성공")))
                 .andExpect(jsonPath("$.data.items[0].songId").value(1L))
-                .andExpect(jsonPath("$.data.meta.count").value(3))
+                .andExpect(jsonPath("$.data.meta.count").value(list.size()))
+                .andExpect(jsonPath("$.data.meta.limit").value(30))
                 .andDo(print());
     }
 
@@ -222,10 +225,12 @@ class SongControllerTest {
     @DisplayName("좋아요에 성공한다.")
     @WithMockUser
     void addSongLike() throws Exception {
+        //given
         long songId = 1;
-
         SongLikeResponse response = new SongLikeResponse(true);
         given(songService.toggleSongLikeButton(eq(songId), eq(TEST_AUTH_USER_ID))).willReturn(response);
+
+        //when, then
         mvc.perform(post("/api/songs/{song-id}/like", songId)
                         .with(csrf()))
                 .andExpect(status().isOk())
@@ -233,6 +238,31 @@ class SongControllerTest {
                 .andExpect(jsonPath("$.status").value("success"))
                 .andExpect(jsonPath("$.message", containsString("성공")))
                 .andExpect(jsonPath("$.data.isLiked").value(true))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("좋아요 곡 리스트 조회에 성공한다.")
+    @WithMockUser
+    void getLikedSongList() throws Exception {
+        //given
+        List<SongListResponse.SongSimpleResponse> list =
+                List.of(new SongListResponse.SongSimpleResponse(1L, "test-title1", "test-uploader1", "test-image1", true),
+                        new SongListResponse.SongSimpleResponse(2L, "test-title2", "test-uploader2", "test-image2", true),
+                        new SongListResponse.SongSimpleResponse(3L, "test-title3", "test-uploader3", "test-image3", true));
+        SongListResponse response = new SongListResponse(list, new SongListResponse.Meta(list.size(), list.size()));
+        given(songService.getLikedSongList(eq(TEST_AUTH_USER_ID))).willReturn(response);
+
+        //when, then
+        mvc.perform(get("/api/songs/like")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.message", containsString("성공")))
+                .andExpect(jsonPath("$.data.items[0].songId").value(1L))
+                .andExpect(jsonPath("$.data.meta.count").value(list.size()))
+                .andExpect(jsonPath("$.data.meta.limit").value(list.size()))
                 .andDo(print());
     }
 }

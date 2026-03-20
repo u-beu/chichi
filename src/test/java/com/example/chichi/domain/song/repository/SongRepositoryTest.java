@@ -1,8 +1,8 @@
-package com.example.chichi.domain.song;
+package com.example.chichi.domain.song.repository;
 
 import com.example.chichi.config.TestQuerydslConfig;
+import com.example.chichi.domain.song.Song;
 import com.example.chichi.domain.song.dto.SongListResponse;
-import com.example.chichi.domain.song.repository.SongRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +53,7 @@ class SongRepositoryTest {
                 ));
 
         //when
-        List<SongListResponse.SongSimpleResponse> response = songRepository.findAllSongSimpleByIds(List.of(1L, 2L, 3L));
+        List<SongListResponse.SongSimpleResponse> response = songRepository.findSongsSimpleByIds(List.of(1L, 2L, 3L));
 
         //then
         assertThat(response.get(0).songId()).isEqualTo(1L);

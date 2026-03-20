@@ -1,9 +1,12 @@
 package com.example.chichi.domain.song;
 
 import com.example.chichi.domain.song.dto.CheckSongResponse;
+import com.example.chichi.domain.song.dto.SongLikeResponse;
 import com.example.chichi.domain.song.dto.SongListResponse;
 import com.example.chichi.domain.song.dto.SongResponse;
 import com.example.chichi.domain.song.recent.RecentPlayedSongRepository;
+import com.example.chichi.domain.song.repository.SongLikeRedisRepository;
+import com.example.chichi.domain.song.repository.SongLikeRepository;
 import com.example.chichi.domain.song.repository.SongRepository;
 import com.example.chichi.global.exception.ApiException;
 import org.junit.jupiter.api.DisplayName;
@@ -29,13 +32,19 @@ import static org.mockito.Mockito.verify;
 class SongServiceTest {
 
     @Mock
-    SongRepository songRepository;
+    private SongRepository songRepository;
 
     @Mock
-    RecentPlayedSongRepository recentPlayedSongRepository;
+    private RecentPlayedSongRepository recentPlayedSongRepository;
+
+    @Mock
+    private SongLikeRepository songLikeRepository;
+
+    @Mock
+    private SongLikeRedisRepository songLikeRedisRepository;
 
     @InjectMocks
-    SongService songService;
+    private SongService songService;
 
     @Test
     @DisplayName("중복된 곡일 경우 ")
@@ -174,7 +183,7 @@ class SongServiceTest {
 
         //then
         verify(recentPlayedSongRepository, times(1))
-                .save(eq(String.valueOf(discordId)), eq(String.valueOf(songId)), anyLong());
+                .save(eq(discordId), eq(songId), anyLong());
         verify(recentPlayedSongRepository, times(1))
                 .deleteOverLimit(eq(String.valueOf(discordId)), anyInt());
     }
@@ -191,10 +200,11 @@ class SongServiceTest {
 
         //then
         verify(recentPlayedSongRepository, times(1))
-                .deleteByDiscordIdAndSongId(eq(String.valueOf(discordId)), eq(String.valueOf(songId)));
+                .deleteByDiscordIdAndSongId(eq(discordId), eq(songId));
     }
 
     @Test
+    @DisplayName("사용자의 최근 재생곡 리스트를 최신~과거순으로 정렬에 성공한다.")
     void getRecentPlayedSongList() {
         //given
         long discordId = 1L;
@@ -202,17 +212,12 @@ class SongServiceTest {
         long song2Id = 333L;
 
         List<Long> recentSongs = List.of(song1Id, song2Id);
-        given(recentPlayedSongRepository.findAllRecentPlayedSongByDiscordIdLatest(eq(String.valueOf(discordId)))).willReturn(recentSongs);
-
-        Song song1 = Song.builder().title("title").uploader("uploader").videoId("test-videoId").build();
-        ReflectionTestUtils.setField(song1, "id", song1Id);
-        Song song2 = Song.builder().title("title").uploader("uploader").videoId("test-videoId").build();
-        ReflectionTestUtils.setField(song2, "id", song2Id);
+        given(recentPlayedSongRepository.findRecentPlayedSongIdsByDiscordIdLatest(eq(discordId))).willReturn(recentSongs);
 
         List<SongListResponse.SongSimpleResponse> simpleSongs = List.of(
-                new SongListResponse.SongSimpleResponse(song1.getId(), song1.getTitle(), song1.getUploader(), song1.getImage(), false),
-                new SongListResponse.SongSimpleResponse(song2.getId(), song2.getTitle(), song2.getUploader(), song2.getImage(), false));
-        given(songRepository.findAllSongSimpleByIds(eq(recentSongs))).willReturn(simpleSongs);
+                new SongListResponse.SongSimpleResponse(song1Id, "test-title", "test-uploader", "test-image", true),
+                new SongListResponse.SongSimpleResponse(song2Id, "test-title", "test-uploader", "test-image", true));
+        given(songRepository.findSongsSimpleByIds(eq(recentSongs))).willReturn(simpleSongs);
 
         //when
         SongListResponse response = songService.getRecentPlayedSongList(discordId);
@@ -222,4 +227,43 @@ class SongServiceTest {
         assertThat(response.meta().count()).isEqualTo(simpleSongs.size());
     }
 
+    @Test
+    @DisplayName("좋아요 토글 버튼 클릭시 성공한다.")
+    void toggleSongLikeButton() {
+        //given
+        long userId = 1L;
+        long songId = 2L;
+        boolean addedSongLike = true;
+        given(songLikeRedisRepository.toggleLike(eq(userId), eq(songId), anyLong())).willReturn(addedSongLike);
+
+        //when
+        SongLikeResponse response = songService.toggleSongLikeButton(songId, userId);
+
+        //then
+        assertThat(response.isLiked()).isEqualTo(addedSongLike);
+    }
+
+    @Test
+    @DisplayName("좋아요 곡 리스트를 최신~과거순으로 정렬에 성공한다.")
+    void getLikedSongList() {
+        //given
+        long userId = 1L;
+        long song1Id = 222L;
+        long song2Id = 333L;
+
+        List<Long> likedSongIds = List.of(song1Id, song2Id);
+        given(songLikeRedisRepository.findLikedSongIdsByUserIdLatest(eq(userId))).willReturn(likedSongIds);
+
+        List<SongListResponse.SongSimpleResponse> simpleSongs = List.of(
+                new SongListResponse.SongSimpleResponse(song1Id, "test-title", "test-uploader", "test-image", true),
+                new SongListResponse.SongSimpleResponse(song2Id, "test-title", "test-uploader", "test-image", true));
+        given(songRepository.findSongsSimpleByIds(eq(likedSongIds))).willReturn(simpleSongs);
+
+        //when
+        SongListResponse response = songService.getLikedSongList(userId);
+
+        //then
+        assertThat(response.items().get(0).songId()).isEqualTo(song1Id);
+        assertThat(response.meta().count()).isEqualTo(simpleSongs.size());
+    }
 }
