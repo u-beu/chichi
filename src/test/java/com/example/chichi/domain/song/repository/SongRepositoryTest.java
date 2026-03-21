@@ -2,6 +2,7 @@ package com.example.chichi.domain.song.repository;
 
 import com.example.chichi.config.TestQuerydslConfig;
 import com.example.chichi.domain.song.Song;
+import com.example.chichi.domain.song.SongLike;
 import com.example.chichi.domain.song.dto.SongListResponse;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,12 +11,13 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
-import java.util.stream.LongStream;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -39,26 +41,46 @@ class SongRepositoryTest {
     @Autowired
     private SongRepository songRepository;
 
+    @Autowired
+    private SongLikeRepository songLikeRepository;
+
     @Test
-    @DisplayName("")
-    void findAllSongSimpleById() {
+    @DisplayName("조회된 노래의 회원 좋아요 여부를 가져오는데 성공한다.")
+    void findSongsSimpleById() {
         //given
-        LongStream.rangeClosed(1, 3)
-                .forEach(e -> songRepository.save(
-                        Song.builder()
-                                .title("test-title")
-                                .uploader("test-uploader")
-                                .videoId(String.valueOf(e))
-                                .build()
-                ));
+        long userId = 123L;
+        long songId1 = 1L;
+        long songId2 = 2L;
+
+        Song song1 = Song.builder()
+                .title("test-title1")
+                .uploader("test-uploader1")
+                .videoId("test-videoId1")
+                .build();
+        songRepository.save(song1);
+        ReflectionTestUtils.setField(song1, "id", songId1);
+
+        Song song2 = Song.builder()
+                .title("test-title2")
+                .uploader("test-uploader2")
+                .videoId("test-videoId2")
+                .build();
+        songRepository.save(song2);
+        ReflectionTestUtils.setField(song2, "id", songId2);
+
+        songLikeRepository.save(SongLike.builder().userId(userId).songId(songId1).score(1000L).build());
 
         //when
-        List<SongListResponse.SongSimpleResponse> response = songRepository.findSongsSimpleByIds(List.of(1L, 2L, 3L));
+        Set<SongListResponse.SongSimpleResponse> response = songRepository.findSongsSimpleByIds(List.of(songId1, songId2), userId);
 
         //then
-        assertThat(response.get(0).songId()).isEqualTo(1L);
-        assertThat(response.get(1).songId()).isEqualTo(2L);
-        assertThat(response.get(2).songId()).isEqualTo(3L);
+        assertThat(response)
+                .extracting(SongListResponse.SongSimpleResponse::songId)
+                .containsAll(List.of(songId1, songId2));
 
+        assertThat(response)
+                .filteredOn(e -> e.songId().equals(songId1))
+                .extracting(SongListResponse.SongSimpleResponse::liked)
+                .containsExactly(true);
     }
 }

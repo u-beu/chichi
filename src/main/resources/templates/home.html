@@ -170,7 +170,7 @@
     <div class="bottom-links">
         <a th:href="@{/settings}">설정</a>
         <form id="logout" th:action="@{/auth/logout}" method="post" style="display:none;">
-            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
         </form>
         <a href="#" onclick="document.getElementById('logout').submit(); return false;">
             로그아웃
@@ -183,16 +183,19 @@
     <div id="song-list-container">
         <div th:each="record : ${records.items}" class="record" th:data-song-id="${record.songId}">
             <div class="record-left">
-                <img th:src="${record.image!=null && record.image!='null'}
-                            ?${record.image}
-                            : @{/images/basicProfileCat.png}" alt="앨범" class="album-cover" />
+                <img th:src="${(record.image == null || record.image == 'null' || record.image == '')
+                            ? '/images/basicProfileCat.png'
+                            : record.image}"
+                     alt="앨범" class="album-cover"/>
                 <div class="song-info">
                     <div class="song-title" th:text="${record.title}">노래 제목</div>
                     <div class="song-uploader" th:text="${record.uploader}">가수 이름</div>
                 </div>
             </div>
 
-            <button class="like-btn" th:classappend="${record.liked} ? ' liked' : ''" th:data-song-id="${record.songId}"
+            <button class="like-btn"
+                    th:classappend="${record.liked} ? ' liked' : ''"
+                    th:data-song-id="${record.songId}"
                     onclick="toggleLike(this)">
             </button>
         </div>

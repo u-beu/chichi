@@ -2,6 +2,7 @@ package com.example.chichi.domain.song;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -18,11 +19,29 @@ public class SongLike {
     private Long id;
 
     @Column(nullable = false, name = "song_id")
-    private String songId;
+    private Long songId;
 
     @Column(nullable = false, name = "user_id")
-    private String userId;
+    private Long userId;
 
     @Column(nullable = false, name = "created_at")
-    private LocalDateTime createdAt;
+    private Long score;
+
+    @Builder
+    public SongLike(Long songId, Long userId, Long score){
+        if (songId <= 0) {
+            throw new IllegalArgumentException("invalid songId");
+        }
+        this.songId = songId;
+
+        if (userId <= 0) {
+            throw new IllegalArgumentException("invalid userId");
+        }
+        this.userId = userId;
+
+        if (score <= 0) {
+            throw new IllegalArgumentException("invalid score");
+        }
+        this.score = score;
+    }
 }

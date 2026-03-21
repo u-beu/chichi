@@ -19,6 +19,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.example.chichi.global.exception.ExceptionType.SONG_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -200,27 +201,27 @@ class SongServiceTest {
 
         //then
         verify(recentPlayedSongRepository, times(1))
-                .deleteByDiscordIdAndSongId(eq(discordId), eq(songId));
+                .deleteByUserIdAndSongId(eq(discordId), eq(songId));
     }
 
     @Test
     @DisplayName("사용자의 최근 재생곡 리스트를 최신~과거순으로 정렬에 성공한다.")
     void getRecentPlayedSongList() {
         //given
-        long discordId = 1L;
+        long userId = 1L;
         long song1Id = 222L;
         long song2Id = 333L;
 
         List<Long> recentSongs = List.of(song1Id, song2Id);
-        given(recentPlayedSongRepository.findRecentPlayedSongIdsByDiscordIdLatest(eq(discordId))).willReturn(recentSongs);
+        given(recentPlayedSongRepository.findRecentPlayedSongIdsByUserIdLatest(eq(userId))).willReturn(recentSongs);
 
-        List<SongListResponse.SongSimpleResponse> simpleSongs = List.of(
+        Set<SongListResponse.SongSimpleResponse> simpleSongs = Set.of(
                 new SongListResponse.SongSimpleResponse(song1Id, "test-title", "test-uploader", "test-image", true),
                 new SongListResponse.SongSimpleResponse(song2Id, "test-title", "test-uploader", "test-image", true));
-        given(songRepository.findSongsSimpleByIds(eq(recentSongs))).willReturn(simpleSongs);
+        given(songRepository.findSongsSimpleByIds(eq(recentSongs), eq(userId))).willReturn(simpleSongs);
 
         //when
-        SongListResponse response = songService.getRecentPlayedSongList(discordId);
+        SongListResponse response = songService.getRecentPlayedSongList(userId);
 
         //then
         assertThat(response.items().get(0).songId()).isEqualTo(song1Id);
@@ -254,10 +255,10 @@ class SongServiceTest {
         List<Long> likedSongIds = List.of(song1Id, song2Id);
         given(songLikeRedisRepository.findLikedSongIdsByUserIdLatest(eq(userId))).willReturn(likedSongIds);
 
-        List<SongListResponse.SongSimpleResponse> simpleSongs = List.of(
+        Set<SongListResponse.SongSimpleResponse> simpleSongs = Set.of(
                 new SongListResponse.SongSimpleResponse(song1Id, "test-title", "test-uploader", "test-image", true),
                 new SongListResponse.SongSimpleResponse(song2Id, "test-title", "test-uploader", "test-image", true));
-        given(songRepository.findSongsSimpleByIds(eq(likedSongIds))).willReturn(simpleSongs);
+        given(songRepository.findSongsSimpleByIds(eq(likedSongIds), eq(userId))).willReturn(simpleSongs);
 
         //when
         SongListResponse response = songService.getLikedSongList(userId);

@@ -4,7 +4,6 @@ import com.example.chichi.config.auth.customAnnotation.AuthUserId;
 import com.example.chichi.config.auth.customAnnotation.resolver.AuthUserIdResolver;
 import com.example.chichi.domain.song.dto.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.With;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

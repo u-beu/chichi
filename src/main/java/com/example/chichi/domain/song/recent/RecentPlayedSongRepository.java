@@ -13,26 +13,26 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class RecentPlayedSongRepository {
     private final StringRedisTemplate redisTemplate;
-    private final String KEY_PREFIX = "recent:";
+    private final String KEY_PREFIX = "recent:user:";
 
-    public void save(Long discordId, Long songId, Long lastPlayedAt) {
+    public void save(Long userId, Long songId, Long lastPlayedAt) {
         redisTemplate.opsForZSet()
-                .add(KEY_PREFIX + discordId, String.valueOf(songId), lastPlayedAt);
+                .add(KEY_PREFIX + userId, String.valueOf(songId), lastPlayedAt);
     }
 
-    public void deleteByDiscordIdAndSongId(Long discordId, Long songId) {
+    public void deleteByUserIdAndSongId(Long userId, Long songId) {
         redisTemplate.opsForZSet()
-                .remove(KEY_PREFIX + discordId, String.valueOf(songId));
+                .remove(KEY_PREFIX + userId, String.valueOf(songId));
     }
 
-    public void deleteOverLimit(String discordId, int limit) {
+    public void deleteOverLimit(String userId, int limit) {
         redisTemplate.opsForZSet()
-                .removeRange(KEY_PREFIX + discordId, 0, -(limit + 1));
+                .removeRange(KEY_PREFIX + userId, 0, -(limit + 1));
     }
 
-    public List<Long> findRecentPlayedSongIdsByDiscordIdLatest(Long discordId) {
+    public List<Long> findRecentPlayedSongIdsByUserIdLatest(Long userId) {
         Set<String> values = redisTemplate.opsForZSet()
-                .reverseRange(KEY_PREFIX + discordId, 0, -1);
+                .reverseRange(KEY_PREFIX + userId, 0, -1);
         if (values == null || values.isEmpty()) {
             return List.of();
         }
