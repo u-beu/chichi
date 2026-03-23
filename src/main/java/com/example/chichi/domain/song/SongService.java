@@ -83,6 +83,8 @@ public class SongService {
     }
 
     public SongListResponse getRecentPlayedSongList(Long userId) {
+        //todo delete
+        log.info("하늘:서비스 진입 getrecentplayedsonglist");
         List<Long> recentSongIds = recentPlayedSongRepository.findRecentPlayedSongIdsByUserIdLatest(userId);
         Set<SongListResponse.SongSimpleResponse> items = songRepository.findSongsSimpleByIds(recentSongIds, userId);
 

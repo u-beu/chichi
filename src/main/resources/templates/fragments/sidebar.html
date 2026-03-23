@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<div th:fragment="sidebar" class="sidebar">
+    <div>
+        <div class="profile">
+            <img th:src="@{/images/basicProfileCat.png}" alt="기본 프로필 이미지">
+            <div class="username" th:text="${username}">사용자 닉네임</div>
+        </div>
+
+        <div class="menu">
+            <button th:classappend="${currentUri == '/'} ? 'active' : ''"
+                    onclick="location.href='/'">최근 재생곡 리스트
+            </button>
+            <button th:classappend="${currentUri == '/songs/liked'} ? 'active' : ''"
+                    onclick="location.href='/songs/liked'">좋아요 곡 리스트
+            </button>
+            <button>메뉴 3</button>
+        </div>
+    </div>
+
+    <div class="bottom-links">
+        <a th:href="@{/settings}">설정</a>
+        <form id="logout" th:action="@{/auth/logout}" method="post" style="display:none;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        </form>
+        <a href="#" onclick="document.getElementById('logout').submit(); return false;">
+            로그아웃
+        </a>
+    </div>
+</div>

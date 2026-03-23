@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/base-layout}">
+<div layout:fragment="content">
+    <h2>최근 재생곡 리스트</h2>
+    <div id="song-list-container">
+        <div th:each="record : ${records.items}" class="record" th:data-song-id="${record.songId}">
+            <div class="record-left">
+                <img th:src="${(record.image == null || record.image == 'null' || record.image == '') 
+                                ? '/images/basicProfileCat.png' : record.image}" alt="앨범" class="album-cover" />
+                <div class="song-info">
+                    <div class="song-title" th:text="${record.title}">노래 제목</div>
+                    <div class="song-uploader" th:text="${record.uploader}">가수 이름</div>
+                </div>
+            </div>
+            <button class="like-btn" th:classappend="${record.liked} ? ' liked' : ''" th:data-song-id="${record.songId}"
+                onclick="toggleLike(this)"></button>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="script">
+    <script src="/js/recentSongs.js"></script>
+</th:block>
+
+</html>
