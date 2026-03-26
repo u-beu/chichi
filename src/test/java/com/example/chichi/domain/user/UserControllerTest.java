@@ -119,7 +119,7 @@ class UserControllerTest {
                         .param("pin", pin)
                         .requestAttr("accessToken", accessToken))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/home"))
+                .andExpect(redirectedUrl("/"))
                 .andDo(print());
 
         verify(userService, times(1)).register(eq(TEST_USER_ID), eq(pin));

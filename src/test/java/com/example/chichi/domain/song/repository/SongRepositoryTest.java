@@ -71,7 +71,7 @@ class SongRepositoryTest {
         songLikeRepository.save(SongLike.builder().userId(userId).songId(songId1).score(1000L).build());
 
         //when
-        Set<SongListResponse.SongSimpleResponse> response = songRepository.findSongsSimpleByIds(List.of(songId1, songId2), userId);
+        Set<SongListResponse.SongSimpleResponse> response = songRepository.findRecentSongSimplesByIds(List.of(songId1, songId2), Set.of(songId1));
 
         //then
         assertThat(response)

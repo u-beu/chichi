@@ -75,13 +75,15 @@ public class PageController {
 
     @GetMapping("/songs/liked")
     public String likedSongPage(Model model, Authentication authentication, HttpServletRequest request) {
+        log.info("하늘: 좋아요 진입");
         PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
         String username = principalDetails.getUsername();
         Long userId = Long.valueOf(principalDetails.getName());
 
         SongListResponse records = songService.getLikedSongList(userId);
+        log.info("하늘:records {}", records.toString());
         model.addAttribute("username", username);
-        model.addAttribute("records", records);
+        model.addAttribute("likedSongs", records);
         model.addAttribute("currentUri", request.getRequestURI());
 
         return "liked-songs";

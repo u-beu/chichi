@@ -1,5 +1,6 @@
 package com.example.chichi.domain.song.repository;
 
+import com.example.chichi.domain.song.dto.SongScoreDto;
 import com.redis.testcontainers.RedisContainer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,9 +11,11 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.LongStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 class SongLikeRedisRepositoryTest {
     private static RedisContainer redisContainer = new RedisContainer("redis:7.2-alpine");
@@ -74,7 +77,7 @@ class SongLikeRedisRepositoryTest {
     }
 
     @Test
-    @DisplayName("좋아요 한 곡들을 최신~과거순으로 가져오는데 성공한다.")
+    @DisplayName("좋아요한 곡들을 가져오는데 성공한다.")
     void getLikedSongsOrderByLatest() {
         //given
         long userId = 123L;
@@ -87,12 +90,14 @@ class SongLikeRedisRepositoryTest {
                 e + 1000));
 
         //when
-        List<Long> values = songLikeRedisRepository.findLikedSongIdsByUserIdLatest(userId);
+        Set<SongScoreDto> values = songLikeRedisRepository.findLikedSongScoresByUserIdFromRedis(userId);
 
         //then
-        assertThat(values.size()).isEqualTo(10);
-        assertThat(values.get(0)).isEqualTo(10L);
-        assertThat(values.get(9)).isEqualTo(1L);
+        assertThat(values)
+                .extracting("songId", "score")
+                .contains(
+                        tuple(1L, 1001L)
+                );
     }
 
 }

@@ -1,9 +1,6 @@
 package com.example.chichi.domain.song;
 
-import com.example.chichi.domain.song.dto.CheckSongResponse;
-import com.example.chichi.domain.song.dto.SongLikeResponse;
-import com.example.chichi.domain.song.dto.SongListResponse;
-import com.example.chichi.domain.song.dto.SongResponse;
+import com.example.chichi.domain.song.dto.*;
 import com.example.chichi.domain.song.recent.RecentPlayedSongRepository;
 import com.example.chichi.domain.song.repository.SongLikeRedisRepository;
 import com.example.chichi.domain.song.repository.SongLikeRepository;
@@ -17,9 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static com.example.chichi.global.exception.ExceptionType.SONG_NOT_FOUND;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -209,22 +204,28 @@ class SongServiceTest {
     void getRecentPlayedSongList() {
         //given
         long userId = 1L;
-        long song1Id = 222L;
-        long song2Id = 333L;
+        long songId1 = 222L;
+        long songId2 = 333L;
 
-        List<Long> recentSongs = List.of(song1Id, song2Id);
-        given(recentPlayedSongRepository.findRecentPlayedSongIdsByUserIdLatest(eq(userId))).willReturn(recentSongs);
+        List<Long> recentSongIds = List.of(songId1, songId2);
+        given(recentPlayedSongRepository.findRecentPlayedSongIdsByUserIdLatest(eq(userId))).willReturn(recentSongIds);
+
+        given(songLikeRedisRepository.findLikedSongScoresByUserIdFromRedis(eq(userId)))
+                .willReturn(Set.of(
+                        new SongScoreDto(songId1, 1000L)
+                ));
+        given(songLikeRepository.findLikedSongScoresByUserIdFromDB(eq(userId))).willReturn(Collections.emptySet());
 
         Set<SongListResponse.SongSimpleResponse> simpleSongs = Set.of(
-                new SongListResponse.SongSimpleResponse(song1Id, "test-title", "test-uploader", "test-image", true),
-                new SongListResponse.SongSimpleResponse(song2Id, "test-title", "test-uploader", "test-image", true));
-        given(songRepository.findSongsSimpleByIds(eq(recentSongs), eq(userId))).willReturn(simpleSongs);
+                new SongListResponse.SongSimpleResponse(songId1, "test-title", "test-uploader", "test-image", true),
+                new SongListResponse.SongSimpleResponse(songId2, "test-title", "test-uploader", "test-image", true));
+        given(songRepository.findRecentSongSimplesByIds(eq(recentSongIds), eq(Set.of(songId1)))).willReturn(simpleSongs);
 
         //when
         SongListResponse response = songService.getRecentPlayedSongList(userId);
 
         //then
-        assertThat(response.items().get(0).songId()).isEqualTo(song1Id);
+        assertThat(response.items().get(0).songId()).isEqualTo(songId1);
         assertThat(response.meta().count()).isEqualTo(simpleSongs.size());
     }
 
@@ -249,22 +250,28 @@ class SongServiceTest {
     void getLikedSongList() {
         //given
         long userId = 1L;
-        long song1Id = 222L;
-        long song2Id = 333L;
+        long songId1 = 222L;
+        long songId2 = 333L;
 
-        List<Long> likedSongIds = List.of(song1Id, song2Id);
-        given(songLikeRedisRepository.findLikedSongIdsByUserIdLatest(eq(userId))).willReturn(likedSongIds);
+        given(songLikeRedisRepository.findLikedSongScoresByUserIdFromRedis(eq(userId)))
+                .willReturn(Set.of(
+                        new SongScoreDto(songId1, 1000L)
+                ));
+        given(songLikeRepository.findLikedSongScoresByUserIdFromDB(eq(userId)))
+                .willReturn(Set.of(
+                        new SongScoreDto(songId2, 2000L)
+                ));
 
         Set<SongListResponse.SongSimpleResponse> simpleSongs = Set.of(
-                new SongListResponse.SongSimpleResponse(song1Id, "test-title", "test-uploader", "test-image", true),
-                new SongListResponse.SongSimpleResponse(song2Id, "test-title", "test-uploader", "test-image", true));
-        given(songRepository.findSongsSimpleByIds(eq(likedSongIds), eq(userId))).willReturn(simpleSongs);
+                new SongListResponse.SongSimpleResponse(songId1, "test-title1", "test-uploader1", "test-image1", true),
+                new SongListResponse.SongSimpleResponse(songId2, "test-title2", "test-uploader2", "test-image2", true));
+        given(songRepository.findLikedSongSimplesByIds(eq(List.of(songId2, songId1)))).willReturn(simpleSongs);
 
         //when
         SongListResponse response = songService.getLikedSongList(userId);
 
         //then
-        assertThat(response.items().get(0).songId()).isEqualTo(song1Id);
+        assertThat(response.items().get(0).songId()).isEqualTo(songId2);
         assertThat(response.meta().count()).isEqualTo(simpleSongs.size());
     }
 }

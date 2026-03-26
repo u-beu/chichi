@@ -1,9 +1,6 @@
 package com.example.chichi.domain.song;
 
-import com.example.chichi.domain.song.dto.CheckSongResponse;
-import com.example.chichi.domain.song.dto.SongLikeResponse;
-import com.example.chichi.domain.song.dto.SongListResponse;
-import com.example.chichi.domain.song.dto.SongResponse;
+import com.example.chichi.domain.song.dto.*;
 import com.example.chichi.domain.song.recent.RecentPlayedSongRepository;
 import com.example.chichi.domain.song.repository.SongLikeRedisRepository;
 import com.example.chichi.domain.song.repository.SongLikeRepository;
@@ -19,6 +16,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -83,10 +81,13 @@ public class SongService {
     }
 
     public SongListResponse getRecentPlayedSongList(Long userId) {
-        //todo delete
-        log.info("하늘:서비스 진입 getrecentplayedsonglist");
         List<Long> recentSongIds = recentPlayedSongRepository.findRecentPlayedSongIdsByUserIdLatest(userId);
-        Set<SongListResponse.SongSimpleResponse> items = songRepository.findSongsSimpleByIds(recentSongIds, userId);
+        Set<Long> likedSongIds = likedSongScoresByUserId(userId)
+                .stream()
+                .map(SongScoreDto::songId)
+                .collect(Collectors.toSet());
+
+        Set<SongListResponse.SongSimpleResponse> items = songRepository.findRecentSongSimplesByIds(recentSongIds, likedSongIds);
 
         Map<Long, SongListResponse.SongSimpleResponse> itemMap = items.stream()
                 .collect(Collectors.toMap(
@@ -112,20 +113,33 @@ public class SongService {
     }
 
     public SongListResponse getLikedSongList(Long userId) {
-        List<Long> likedSongIds = songLikeRedisRepository.findLikedSongIdsByUserIdLatest(userId);
-        Set<SongListResponse.SongSimpleResponse> items = songRepository.findSongsSimpleByIds(likedSongIds, userId);
+        Set<SongScoreDto> likedSongScores = likedSongScoresByUserId(userId);
+        List<Long> sortedLikedSongIds = likedSongScores.stream()
+                .sorted(Comparator.comparingDouble(SongScoreDto::score).reversed())
+                .map(SongScoreDto::songId)
+                .toList();
+
+        Set<SongListResponse.SongSimpleResponse> items = songRepository.findLikedSongSimplesByIds(sortedLikedSongIds);
 
         Map<Long, SongListResponse.SongSimpleResponse> itemMap = items.stream()
                 .collect(Collectors.toMap(
                         SongListResponse.SongSimpleResponse::songId,
                         item -> item));
 
-        List<SongListResponse.SongSimpleResponse> sortedItems = likedSongIds.stream()
+        List<SongListResponse.SongSimpleResponse> sortedItems = sortedLikedSongIds.stream()
                 .map(itemMap::get)
                 .filter(Objects::nonNull)
                 .toList();
 
         return new SongListResponse(
                 sortedItems, new SongListResponse.Meta(sortedItems.size(), sortedItems.size()));
+    }
+
+    private Set<SongScoreDto> likedSongScoresByUserId(Long userId) {
+        Set<SongScoreDto> likedSongIdsFromRedis = songLikeRedisRepository.findLikedSongScoresByUserIdFromRedis(userId);
+        Set<SongScoreDto> likedSongIdsFromDB = songLikeRepository.findLikedSongScoresByUserIdFromDB(userId);
+
+        return Stream.concat(likedSongIdsFromRedis.stream(), likedSongIdsFromDB.stream())
+                .collect(Collectors.toSet());
     }
 }

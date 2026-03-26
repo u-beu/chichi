@@ -9,7 +9,7 @@
             <p>좋아요 표시한 곡이 없습니다.</p>
         </div>
 
-        <div th:each="song : ${likedSongs}" class="record" th:data-song-id="${song.songId}">
+        <div th:each="song : ${likedSongs.items}" class="record" th:data-song-id="${song.songId}">
             <div class="record-left">
                 <img th:src="${(song.image == null || song.image == 'null' || song.image == '') 
                                 ? '/images/basicProfileCat.png' : song.image}" alt="앨범 커버" class="album-cover" />

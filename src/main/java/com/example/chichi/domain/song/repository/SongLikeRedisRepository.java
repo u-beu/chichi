@@ -1,12 +1,16 @@
 package com.example.chichi.domain.song.repository;
 
+import com.example.chichi.domain.song.dto.SongScoreDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.util.Collections;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
@@ -15,13 +19,13 @@ public class SongLikeRedisRepository {
     private final StringRedisTemplate redisTemplate;
     private final String KEY_PREFIX = "songlike:user:";
 
-    public boolean toggleLike(Long userId, Long songId, Long addedAt) {
+    public boolean toggleLike(Long userId, Long songId, Long score) {
         String key = KEY_PREFIX + userId;
         String value = String.valueOf(songId);
 
-        Double score = redisTemplate.opsForZSet().score(key, value);
-        if (score == null) {
-            redisTemplate.opsForZSet().add(key, value, addedAt);
+        Double isLiked = redisTemplate.opsForZSet().score(key, value);
+        if (isLiked == null) {
+            redisTemplate.opsForZSet().add(key, value, score);
             return true;
         } else {
             redisTemplate.opsForZSet().remove(key, value);
@@ -29,14 +33,19 @@ public class SongLikeRedisRepository {
         }
     }
 
-    public List<Long> findLikedSongIdsByUserIdLatest(Long userId) {
-        Set<String> values = redisTemplate.opsForZSet()
-                .reverseRange(KEY_PREFIX + userId, 0, -1);
-        if (values == null || values.isEmpty()) {
-            return List.of();
+    public Set<SongScoreDto> findLikedSongScoresByUserIdFromRedis(Long userId) {
+        Set<ZSetOperations.TypedTuple<String>> tuples = redisTemplate.opsForZSet()
+                .reverseRangeWithScores(KEY_PREFIX + userId, 0, -1);
+
+        if (tuples == null || tuples.isEmpty()) {
+            return Collections.emptySet();
         }
-        return values.stream()
-                .map(Long::parseLong)
-                .toList();
+
+        return tuples.stream()
+                .map(tuple -> new SongScoreDto(
+                        Long.parseLong(Objects.requireNonNull(tuple.getValue())),
+                        Objects.requireNonNull(tuple.getScore()).longValue()
+                ))
+                .collect(Collectors.toSet());
     }
 }

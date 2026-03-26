@@ -15,23 +15,23 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SseService {
     private final Map<Long, SseEmitter> emitters = new ConcurrentHashMap<>();
 
-    public SseEmitter createConnection(long discordId) {
+    public SseEmitter createConnection(long userId) {
         SseEmitter emitter = new SseEmitter(30 * 60 * 1000L);
-        this.emitters.put(discordId, emitter);
+        this.emitters.put(userId, emitter);
 
-        emitter.onCompletion(() -> this.emitters.remove(discordId));
-        emitter.onTimeout(() -> this.emitters.remove(discordId));
+        emitter.onCompletion(() -> this.emitters.remove(userId));
+        emitter.onTimeout(() -> this.emitters.remove(userId));
 
         try {
             emitter.send(SseEmitter.event().name("connect").data("connected"));
         } catch (IOException e) {
-            emitters.remove(discordId);
+            emitters.remove(userId);
         }
         return emitter;
     }
 
-    public void broadcast(long discordId, SongResponse song) {
-        SseEmitter emitter = emitters.get(discordId);
+    public void broadcast(long userId, SongResponse song) {
+        SseEmitter emitter = emitters.get(userId);
         SongListResponse.SongSimpleResponse data =
                 new SongListResponse.SongSimpleResponse(song.songId(), song.title(), song.uploader(), song.image(),false);
 
@@ -41,7 +41,7 @@ public class SseService {
                         SseEmitter.event().name("recentSongUpdate").data(data)
                 );
             } catch (IOException e) {
-                emitters.remove(discordId);
+                emitters.remove(userId);
             }
         }
     }

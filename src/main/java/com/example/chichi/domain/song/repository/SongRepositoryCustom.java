@@ -6,5 +6,8 @@ import java.util.List;
 import java.util.Set;
 
 public interface SongRepositoryCustom {
-    Set<SongListResponse.SongSimpleResponse> findSongsSimpleByIds(List<Long> songIds, Long userId);
+    Set<SongListResponse.SongSimpleResponse> findRecentSongSimplesByIds(List<Long> songIds, Set<Long> likedSongIds);
+
+    Set<SongListResponse.SongSimpleResponse> findLikedSongSimplesByIds(List<Long> songIds);
+
 }
