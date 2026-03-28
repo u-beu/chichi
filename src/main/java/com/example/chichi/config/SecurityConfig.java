@@ -69,8 +69,7 @@ public class SecurityConfig {
                         .csrfTokenRepository(new HttpSessionCsrfTokenRepository())
                         .ignoringRequestMatchers(
                                 new AntPathRequestMatcher("/api/bot/recent-played-song"),
-                                new AntPathRequestMatcher("/connect"),
-                                new AntPathRequestMatcher("/api/songs/**")))
+                                new AntPathRequestMatcher("/connect")))
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests((authorize) -> authorize

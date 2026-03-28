@@ -80,13 +80,15 @@ public class SongController {
     public ResponseEntity<ApiResponse<SongLikeResponse>> toggleSongLikeButton(@PathVariable("song-id") Long songId,
                                                                               @AuthUserId Long userId) {
         SongLikeResponse response = songService.toggleSongLikeButton(songId, userId);
+        String message = response.isLiked() ?
+                "곡 [좋아요]에 성공하였습니다." : "곡 [좋아요 취소]에 성공하였습니다.";
         return ResponseEntity.ok(
-                ApiResponse.ok("곡 좋아요에 성공하였습니다.", response)
+                ApiResponse.ok(message, response)
         );
     }
 
     @GetMapping("/api/songs/like")
-    public ResponseEntity<ApiResponse<SongListResponse>> getLikedSongList(@AuthUserId Long userId){
+    public ResponseEntity<ApiResponse<SongListResponse>> getLikedSongList(@AuthUserId Long userId) {
         SongListResponse response = songService.getLikedSongList(userId);
         return ResponseEntity.ok(
                 ApiResponse.ok("좋아요 곡 리스트 조회에 성공하였습니다.", response)
