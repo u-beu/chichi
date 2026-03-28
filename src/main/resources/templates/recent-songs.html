@@ -2,8 +2,12 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
     layout:decorate="~{layouts/base-layout}">
 <div layout:fragment="content">
-    <h2>최근 재생곡 리스트</h2>
+    <h2>최근 재생곡 목록</h2>
     <div id="song-list-container">
+        <div th:if="${records == null || #lists.isEmpty(records.items)}" style="text-align: center; margin-top: 50px; color: #999;">
+            <p>최근 재생한 곡이 없습니다.</p>
+        </div>
+
         <div th:each="record : ${records.items}" class="record" th:data-song-id="${record.songId}">
             <div class="record-left">
                 <img th:src="${(record.image == null || record.image == 'null' || record.image == '') 

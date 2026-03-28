@@ -5,7 +5,7 @@
     <h2>좋아요 곡 목록</h2>
 
     <div id="liked-song-container">
-        <div th:if="${#lists.isEmpty(likedSongs)}" style="text-align: center; margin-top: 50px; color: #999;">
+        <div th:if="${likedSongs == null || #lists.isEmpty(likedSongs.items)}" style="text-align: center; margin-top: 50px; color: #999;">
             <p>좋아요 표시한 곡이 없습니다.</p>
         </div>
 
