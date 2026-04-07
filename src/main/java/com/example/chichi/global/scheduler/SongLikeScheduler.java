@@ -22,7 +22,7 @@ public class SongLikeScheduler {
     private final SongLikeRepository songLikeRepository;
     private final String KEY_PREFIX = "songlike:user:";
 
-    @Scheduled(cron = "0 0 4 * * *", zone="Asia/Seoul")
+    @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
     @Transactional
     public void syncSongLikesToDB() {
         Set<String> keys = redisTemplate.keys(KEY_PREFIX + "*");
