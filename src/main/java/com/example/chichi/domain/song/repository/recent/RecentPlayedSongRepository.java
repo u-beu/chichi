@@ -1,4 +1,4 @@
-package com.example.chichi.domain.song.recent;
+package com.example.chichi.domain.song.repository.recent;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

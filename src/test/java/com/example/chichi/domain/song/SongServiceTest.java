@@ -1,9 +1,9 @@
 package com.example.chichi.domain.song;
 
 import com.example.chichi.domain.song.dto.*;
-import com.example.chichi.domain.song.recent.RecentPlayedSongRepository;
-import com.example.chichi.domain.song.repository.SongLikeRedisRepository;
-import com.example.chichi.domain.song.repository.SongLikeRepository;
+import com.example.chichi.domain.song.repository.recent.RecentPlayedSongRepository;
+import com.example.chichi.domain.song.repository.songlike.redis.SongLikeRedisRepository;
+import com.example.chichi.domain.song.repository.songlike.SongLikeRepository;
 import com.example.chichi.domain.song.repository.SongRepository;
 import com.example.chichi.global.exception.ApiException;
 import org.junit.jupiter.api.DisplayName;
@@ -21,8 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class SongServiceTest {
@@ -231,18 +230,43 @@ class SongServiceTest {
 
     @Test
     @DisplayName("좋아요 토글 버튼 클릭시 성공한다.")
-    void toggleSongLikeButton() {
+    void toggleSongLikeButton_like() {
         //given
         long userId = 1L;
         long songId = 2L;
-        boolean addedSongLike = true;
-        given(songLikeRedisRepository.toggleLike(eq(userId), eq(songId), anyLong())).willReturn(addedSongLike);
+        boolean isLiked = true;
+        given(songLikeRepository.findByUserIdAndSongId(eq(userId), eq(songId))).willReturn(Optional.empty());
+        given(songLikeRedisRepository.toggleLike(eq(userId), eq(songId), anyLong())).willReturn(isLiked);
 
         //when
         SongLikeResponse response = songService.toggleSongLikeButton(songId, userId);
 
         //then
-        assertThat(response.isLiked()).isEqualTo(addedSongLike);
+        assertThat(response.isLiked()).isEqualTo(isLiked);
+        verify(songLikeRepository, never()).delete(any());
+        verify(songLikeRedisRepository, never()).deleteLike(anyLong(), anyLong());
+    }
+
+    @Test
+    @DisplayName("좋아요 '취소' 토글 버튼 클릭시 성공한다.")
+    void toggleSongLikeButton_like_cancel() {
+        //given
+        long userId = 1L;
+        long songId = 2L;
+        SongLike songLike = SongLike.builder()
+                .userId(userId)
+                .songId(songId)
+                .score(123L)
+                .build();
+        given(songLikeRepository.findByUserIdAndSongId(eq(userId), eq(songId))).willReturn(Optional.of(songLike));
+
+        //when
+        SongLikeResponse response = songService.toggleSongLikeButton(songId, userId);
+
+        //then
+        assertThat(response.isLiked()).isEqualTo(false);
+        verify(songLikeRepository, times(1)).delete(eq(songLike));
+        verify(songLikeRedisRepository, times(1)).deleteLike(eq(userId), eq(songId));
     }
 
     @Test

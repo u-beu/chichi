@@ -1,4 +1,4 @@
-package com.example.chichi.domain.song.repository;
+package com.example.chichi.domain.song.repository.songlike.redis;
 
 import com.example.chichi.domain.song.dto.SongScoreDto;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ public class SongLikeRedisRepository {
     private final StringRedisTemplate redisTemplate;
     private final String KEY_PREFIX = "songlike:user:";
 
-    public boolean toggleLike(Long userId, Long songId, Long score) {
+    public boolean toggleLike(Long userId, Long songId, long score) {
         String key = KEY_PREFIX + userId;
         String value = String.valueOf(songId);
 
@@ -47,5 +47,12 @@ public class SongLikeRedisRepository {
                         Objects.requireNonNull(tuple.getScore()).longValue()
                 ))
                 .collect(Collectors.toSet());
+    }
+
+    public void deleteLike(Long userId, Long songId) {
+        String key = KEY_PREFIX + userId;
+        String value = String.valueOf(songId);
+
+        redisTemplate.opsForZSet().remove(key, value);
     }
 }

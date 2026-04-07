@@ -28,7 +28,7 @@ public class SongLike {
     private Long score;
 
     @Builder
-    public SongLike(Long songId, Long userId, Long score){
+    public SongLike(Long songId, Long userId, long score){
         if (songId <= 0) {
             throw new IllegalArgumentException("invalid songId");
         }
@@ -39,6 +39,13 @@ public class SongLike {
         }
         this.userId = userId;
 
+        if (score <= 0) {
+            throw new IllegalArgumentException("invalid score");
+        }
+        this.score = score;
+    }
+
+    public void updateScore(long score){
         if (score <= 0) {
             throw new IllegalArgumentException("invalid score");
         }

@@ -4,6 +4,7 @@ import com.example.chichi.config.TestQuerydslConfig;
 import com.example.chichi.domain.song.Song;
 import com.example.chichi.domain.song.SongLike;
 import com.example.chichi.domain.song.dto.SongListResponse;
+import com.example.chichi.domain.song.repository.songlike.SongLikeRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

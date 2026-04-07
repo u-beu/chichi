@@ -1,9 +1,9 @@
 package com.example.chichi.domain.song;
 
 import com.example.chichi.domain.song.dto.*;
-import com.example.chichi.domain.song.recent.RecentPlayedSongRepository;
-import com.example.chichi.domain.song.repository.SongLikeRedisRepository;
-import com.example.chichi.domain.song.repository.SongLikeRepository;
+import com.example.chichi.domain.song.repository.recent.RecentPlayedSongRepository;
+import com.example.chichi.domain.song.repository.songlike.redis.SongLikeRedisRepository;
+import com.example.chichi.domain.song.repository.songlike.SongLikeRepository;
 import com.example.chichi.domain.song.repository.SongRepository;
 import com.example.chichi.global.exception.ApiException;
 import com.example.chichi.global.exception.ExceptionType;
@@ -104,11 +104,20 @@ public class SongService {
     }
 
     public SongLikeResponse toggleSongLikeButton(Long songId, Long userId) {
-        long score = LocalDateTime.now()
-                .atZone(ZoneId.systemDefault())
-                .toInstant()
-                .toEpochMilli();
-        boolean isLiked = songLikeRedisRepository.toggleLike(userId, songId, score);
+        Optional<SongLike> songlike = songLikeRepository.findByUserIdAndSongId(userId, songId);
+        boolean isLiked;
+
+        if (songlike.isPresent()) {
+            songLikeRepository.delete(songlike.get());
+            songLikeRedisRepository.deleteLike(userId, songId);
+            isLiked = false;
+        } else {
+            long score = LocalDateTime.now()
+                    .atZone(ZoneId.systemDefault())
+                    .toInstant()
+                    .toEpochMilli();
+            isLiked = songLikeRedisRepository.toggleLike(userId, songId, score);
+        }
         return new SongLikeResponse(isLiked);
     }
 
