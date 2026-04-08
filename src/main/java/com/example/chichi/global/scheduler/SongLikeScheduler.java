@@ -25,6 +25,7 @@ public class SongLikeScheduler {
     @Scheduled(cron = "0 0 4 * * *", zone = "Asia/Seoul")
     @Transactional
     public void syncSongLikesToDB() {
+        log.debug("[SCHEDULER] [SONGLIKE] 새벽 4시 좋아요 곡 Redis -> DB 플러시 작업 수행");
         Set<String> keys = redisTemplate.keys(KEY_PREFIX + "*");
         if (keys.isEmpty()) {
             return;
