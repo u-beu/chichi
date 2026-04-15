@@ -5,6 +5,7 @@ import com.example.chichi.config.auth.customAnnotation.AuthUsername;
 import com.example.chichi.domain.song.SongService;
 import com.example.chichi.domain.song.dto.SongListResponse;
 import com.example.chichi.domain.user.RoleType;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,23 +47,40 @@ public class PageController {
         return "register";
     }
 
-    @GetMapping("/home")
-    public String homePage(Model model,
-                           Authentication authentication) {
+    @GetMapping("/")
+    public String index(Model model, Authentication authentication, HttpServletRequest request) {
         if (authentication == null) {
             return "login";
-        } else {
-            List<String> listRoleString = RoleType.toListRoleString(authentication.getAuthorities());
-            if (listRoleString.contains(RoleType.GUEST.getAuthority())) {
-                return "register";
-            } else {
-                String username = ((PrincipalDetails) authentication.getPrincipal()).getUsername();
-                Long discordId = Long.valueOf(((PrincipalDetails) authentication.getPrincipal()).getDiscordId());
-                SongListResponse records = songService.getRecentPlayedSongList(discordId);
-                model.addAttribute("username", username);
-                model.addAttribute("records", records);
-                return "home";
-            }
         }
+
+        List<String> listRoleString = RoleType.toListRoleString(authentication.getAuthorities());
+
+        if (listRoleString.contains(RoleType.GUEST.getAuthority())) {
+            return "register";
+        }
+
+        PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
+        String username = principalDetails.getUsername();
+        Long userId = Long.valueOf(principalDetails.getName());
+
+        SongListResponse records = songService.getRecentPlayedSongList(userId);
+        model.addAttribute("username", username);
+        model.addAttribute("records", records);
+        model.addAttribute("currentUri", request.getRequestURI());
+        return "recent-songs";
+    }
+
+    @GetMapping("/songs/liked")
+    public String likedSongPage(Model model, Authentication authentication, HttpServletRequest request) {
+        PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
+        String username = principalDetails.getUsername();
+        Long userId = Long.valueOf(principalDetails.getName());
+
+        SongListResponse records = songService.getLikedSongList(userId);
+        model.addAttribute("username", username);
+        model.addAttribute("likedSongs", records);
+        model.addAttribute("currentUri", request.getRequestURI());
+
+        return "liked-songs";
     }
 }

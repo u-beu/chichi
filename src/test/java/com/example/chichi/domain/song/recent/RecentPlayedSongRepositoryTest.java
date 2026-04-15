@@ -1,5 +1,6 @@
 package com.example.chichi.domain.song.recent;
 
+import com.example.chichi.domain.song.repository.recent.RecentPlayedSongRepository;
 import com.redis.testcontainers.RedisContainer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,35 +49,35 @@ class RecentPlayedSongRepositoryTest {
     @DisplayName("최근 재생곡 35개를 저장한 후 30개로 제한하면 가장 오래된 곡 5개가 없어진다.")
     void save_deleteOverLimit() {
         //given
-        long discordId = 123L;
+        long userId = 123L;
         List<Long> songIds = LongStream.rangeClosed(1, 35)
                 .boxed()
                 .toList();
 
         //when : 1(과거, score 낮다) ~ 35(최신, score 높다)
         songIds.forEach(e -> recentPlayedSongRepository.save(
-                String.valueOf(discordId),
-                String.valueOf(e),
+                userId,
+                e,
                 LocalDateTime.now()
                         .plusMinutes(e)
                         .atZone(ZoneId.systemDefault())
                         .toInstant()
                         .toEpochMilli()));
         //then
-        List<String> allValues = redisTemplate.opsForZSet().range("recent:" + discordId, 0, -1).stream().toList();
+        List<String> allValues = redisTemplate.opsForZSet().range("recent:user:" + userId, 0, -1).stream().toList();
         assertThat(allValues.get(0)).isEqualTo(String.valueOf(1L));
 
         //when
-        recentPlayedSongRepository.deleteOverLimit(String.valueOf(discordId), 30);
+        recentPlayedSongRepository.deleteOverLimit(String.valueOf(userId), 30);
 
         //then
-        List<String> limitValues = redisTemplate.opsForZSet().range("recent:" + discordId, 0, -1).stream().toList();
+        List<String> limitValues = redisTemplate.opsForZSet().range("recent:user:" + userId, 0, -1).stream().toList();
         assertThat(limitValues.get(0)).isEqualTo(String.valueOf(6L));
     }
 
     @Test
     @DisplayName("최근 재생곡을 최신~과거순으로 가져오는데 성공한다.")
-    void get() {
+    void getRecentPlayedSongsOrderByLatest() {
         //given
         long discordId = 123L;
         List<Long> songIds = LongStream.rangeClosed(1, 15)
@@ -84,8 +85,8 @@ class RecentPlayedSongRepositoryTest {
                 .toList();
         //1(과거, score 낮다) ~ 15(최신, score 높다)
         songIds.forEach(e -> recentPlayedSongRepository.save(
-                String.valueOf(discordId),
-                String.valueOf(e),
+                discordId,
+                e,
                 LocalDateTime.now()
                         .plusMinutes(e)
                         .atZone(ZoneId.systemDefault())
@@ -93,10 +94,11 @@ class RecentPlayedSongRepositoryTest {
                         .toEpochMilli()));
 
         //when
-        List<Long> values = recentPlayedSongRepository.findAllRecentPlayedSongByDiscordIdLatest(String.valueOf(discordId));
+        List<Long> values = recentPlayedSongRepository.findRecentPlayedSongIdsByUserIdLatest(discordId);
 
         //then
         assertThat(values.size()).isEqualTo(15);
         assertThat(values.get(0)).isEqualTo(15L);
+        assertThat(values.get(14)).isEqualTo(1L);
     }
 }

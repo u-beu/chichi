@@ -23,14 +23,14 @@ public class BotApiController {
 
     @PostMapping("/api/bot/recent-played-song")
     public ResponseEntity<ApiResponse<String>> updateRecentSongList(@RequestBody @Valid UpdateRecentSongRequest request) {
-        userService.checkUserByDiscordId(request.discordId());
+        long userId = userService.getUserByDiscordId(request.discordId());
         SongResponse recentPlayedSong = songService.addSong(
                 request.title(),
                 request.uploader(),
                 request.image(),
                 request.videoId());
-        songService.addRecentPlayedSong(request.discordId(), recentPlayedSong.songId());
-        sseService.broadcast(request.discordId(), recentPlayedSong);
+        songService.addRecentPlayedSong(userId, recentPlayedSong.songId());
+        sseService.broadcast(userId, recentPlayedSong);
         return ResponseEntity.ok(
                 ApiResponse.ok("최신 재생곡 목록 갱신에 성공하였습니다.")
         );

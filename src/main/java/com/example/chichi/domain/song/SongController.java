@@ -1,10 +1,7 @@
 package com.example.chichi.domain.song;
 
 import com.example.chichi.config.auth.customAnnotation.AuthUserId;
-import com.example.chichi.domain.song.dto.AddSongRequest;
-import com.example.chichi.domain.song.dto.CheckSongResponse;
-import com.example.chichi.domain.song.dto.SongListResponse;
-import com.example.chichi.domain.song.dto.SongResponse;
+import com.example.chichi.domain.song.dto.*;
 import com.example.chichi.global.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -75,7 +72,26 @@ public class SongController {
     public ResponseEntity<ApiResponse<SongListResponse>> getRecentPlayedSongList(@AuthUserId Long userId) {
         SongListResponse response = songService.getRecentPlayedSongList(userId);
         return ResponseEntity.ok(
-                ApiResponse.ok("최근 재생곡 리스트 조회에 성공하였습니다", response)
+                ApiResponse.ok("최근 재생곡 리스트 조회에 성공하였습니다.", response)
+        );
+    }
+
+    @PostMapping("/api/songs/{song-id}/like")
+    public ResponseEntity<ApiResponse<SongLikeResponse>> toggleSongLikeButton(@PathVariable("song-id") Long songId,
+                                                                              @AuthUserId Long userId) {
+        SongLikeResponse response = songService.toggleSongLikeButton(songId, userId);
+        String message = response.isLiked() ?
+                "곡 [좋아요]에 성공하였습니다." : "곡 [좋아요 취소]에 성공하였습니다.";
+        return ResponseEntity.ok(
+                ApiResponse.ok(message, response)
+        );
+    }
+
+    @GetMapping("/api/songs/like")
+    public ResponseEntity<ApiResponse<SongListResponse>> getLikedSongList(@AuthUserId Long userId) {
+        SongListResponse response = songService.getLikedSongList(userId);
+        return ResponseEntity.ok(
+                ApiResponse.ok("좋아요 곡 리스트 조회에 성공하였습니다.", response)
         );
     }
 }

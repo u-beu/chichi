@@ -50,10 +50,13 @@ class BotApiControllerTest {
     @WithMockUser
     void updateRecentSongList() throws Exception {
         //given
+        long userId = 1L;
+        long discordId = 2L;
+        given(userService.getUserByDiscordId(eq(discordId))).willReturn(userId);
+
         String title = "test-title";
         String uploader = "test-uploader";
         String videoId = "test-videoId";
-        long discordId = 2L;
         Song song = Song.builder()
                 .title(title)
                 .uploader(uploader)
@@ -76,9 +79,8 @@ class BotApiControllerTest {
                 .andExpect(jsonPath("$.status").value("success"))
                 .andExpect(jsonPath("$.message", containsString("성공")));
 
-        verify(songService).addRecentPlayedSong(eq(discordId), eq(recentSong.songId()));
-        verify(sseService).broadcast(eq(discordId), eq(recentSong));
-        verify(userService).checkUserByDiscordId(eq(discordId));
+        verify(songService).addRecentPlayedSong(eq(userId), eq(recentSong.songId()));
+        verify(sseService).broadcast(eq(userId), eq(recentSong));
     }
 
     @Test
@@ -98,7 +100,7 @@ class BotApiControllerTest {
         ReflectionTestUtils.setField(song, "id", 3L);
         UpdateRecentSongRequest request = new UpdateRecentSongRequest(title, uploader, null, videoId, discordId);
 
-        doThrow(new ApiException(USER_NOT_FOUND)).when(userService).checkUserByDiscordId(eq(discordId));
+        doThrow(new ApiException(USER_NOT_FOUND)).when(userService).getUserByDiscordId(eq(discordId));
 
         //when, then
         mvc.perform(post("/api/bot/recent-played-song")

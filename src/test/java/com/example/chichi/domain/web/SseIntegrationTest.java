@@ -17,6 +17,7 @@ import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -69,9 +70,11 @@ public class SseIntegrationTest {
         userRepository.deleteAll();
     }
 
+    private long userId;
+
     @Test
-    @DisplayName("디스코드id가 같은 사용자에게만 방송한다.")
-    void broadcast_same_discordId() {
+    @DisplayName("user id가 같은 사용자에게만 방송한다.")
+    void broadcast_same_userId() {
         //given
         long discordId = 111L;
         String user1AccessToken = createAccessToken(discordId);
@@ -93,7 +96,7 @@ public class SseIntegrationTest {
                         event.event().equals("connect") && event.data().contains("connected"))
                 .then(() -> {
                     sseService.broadcast(
-                            discordId,
+                            this.userId,
                             new SongResponse(3L, title, "singer", null, "test-videoId"));
                 })
                 .expectNextMatches(event ->
@@ -103,11 +106,11 @@ public class SseIntegrationTest {
     }
 
     @Test
-    @DisplayName("디스코드id가 다른 사용자에게는 방송하지 않는다.")
-    void not_broadcast_different_discordId() {
+    @DisplayName("user id가 다른 사용자에게는 방송하지 않는다.")
+    void not_broadcast_different_userId() {
         //given
-        long discordId = 111L;
-        long different_discordId = 222L;
+        long discordId = 222L;
+        long different_userId = 333L;
         String user1AccessToken = createAccessToken(discordId);
 
         Flux<ServerSentEvent<String>> stream1 = webTestClient.get()
@@ -128,7 +131,7 @@ public class SseIntegrationTest {
                         event.event().equals("connect") && event.data().contains("connected"))
                 .then(() -> {
                     sseService.broadcast(
-                            different_discordId,
+                            different_userId,
                             new SongResponse(3L, title, "singer", null, "test-videoId"));
                 })
                 .expectNoEvent(Duration.ofSeconds(3))
@@ -138,18 +141,19 @@ public class SseIntegrationTest {
 
 
     private String createAccessToken(long discordId) {
-        User user = User.builder()
-                .discordId(discordId)
-                .pin("123456")
-                .roleTypes(Set.of(RoleType.USER))
-                .build();
-        userRepository.save(user);
-
+        User savedUser = userRepository.save(
+                User.builder()
+                        .discordId(discordId)
+                        .pin("123456")
+                        .roleTypes(Set.of(RoleType.USER))
+                        .build()
+        );
+        this.userId = savedUser.getId();
         return tokenService.createAccessToken(
                 discordId,
                 "test@gmail.com",
                 "test-username",
-                user.getRoleTypes().stream()
+                savedUser.getRoleTypes().stream()
                         .map(RoleType::getAuthority)
                         .toList());
     }

@@ -1,6 +1,7 @@
 package com.example.chichi.domain.web;
 
 import com.example.chichi.config.auth.customAnnotation.AuthUserDiscordId;
+import com.example.chichi.config.auth.customAnnotation.AuthUserId;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -16,7 +17,7 @@ public class WebController {
 
     @GetMapping(value = "/connect",
             produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public SseEmitter connect(@AuthUserDiscordId Long discordId) {
-        return sseService.createConnection(discordId);
+    public SseEmitter connect(@AuthUserId Long userId) {
+        return sseService.createConnection(userId);
     }
 }

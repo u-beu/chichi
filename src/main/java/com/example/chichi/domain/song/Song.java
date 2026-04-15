@@ -47,7 +47,6 @@ public class Song {
         }
         this.uploader = uploader;
 
-        // todo 기본 이미지 준비하기
         this.image = StringUtils.hasText(image) ? image : null;
 
         if (!StringUtils.hasText(videoId)) {

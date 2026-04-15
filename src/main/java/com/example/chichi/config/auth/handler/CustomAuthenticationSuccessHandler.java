@@ -46,7 +46,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             tokenService.saveRefreshToken(email, refreshToken);
             CookieUtils.addCookie(response, "refreshToken", refreshToken, RoleType.USER);
 
-            redirectUrl = UriComponentsBuilder.fromPath("/home")
+            redirectUrl = UriComponentsBuilder.fromPath("/")
                     .build()
                     .toString();
         }

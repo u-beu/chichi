@@ -90,9 +90,9 @@ public class UserService {
         tokenService.deleteRefreshToken(String.valueOf(userId));
     }
 
-    public void checkUserByDiscordId(long discordId) {
-        userRepository.findByDiscordId(discordId).orElseThrow(
-                () -> new ApiException(USER_NOT_FOUND)
-        );
+    public long getUserByDiscordId(long discordId) {
+        return userRepository.findByDiscordId(discordId)
+                .orElseThrow(() -> new ApiException(USER_NOT_FOUND))
+                .getId();
     }
 }

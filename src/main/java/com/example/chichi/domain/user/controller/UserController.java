@@ -39,7 +39,7 @@ public class UserController {
                 accessToken,
                 response
         );
-        String redirectUrl = UriComponentsBuilder.fromPath("/home")
+        String redirectUrl = UriComponentsBuilder.fromPath("/")
                 .build()
                 .toString();
         response.sendRedirect(redirectUrl);

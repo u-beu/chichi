@@ -39,7 +39,7 @@ public class SecurityConfig {
             "/login",
             "/images/**",
             "/register",
-            "/home",
+            "/",
             "/auth/refresh",
             "/api/bot/**"
     };
@@ -49,7 +49,9 @@ public class SecurityConfig {
     private final String[] USER_LIST = {
             "/users/**",
             "/auth/logout",
-            "/connect"
+            "/connect",
+            "/api/songs/*/like",
+            "/api/songs/like"
     };
     private final String[] ADMIN_LIST = {
             "/admin/**"
