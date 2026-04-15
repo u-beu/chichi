@@ -200,3 +200,9 @@ nginx/**/*.pem
 nginx/**/*.key
 docker-compose-local.yml
 /build/generated
+
+### 로컬환경 배포 관련 쉘스크립트 ###
+build-and-push-local.sh
+deploy.sh
+.buildx-cache
+data
