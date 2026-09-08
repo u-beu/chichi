@@ -1,0 +1,34 @@
+# 개인 설정파일
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.crt
+*.sql
+*.sqlite
+credentials.json
+service-account.json
+.vscode/
+.idea/
+
+# IDE 설정파일
+node_modules/
+build/
+.gradle/
+target/
+out/
+venv/
+.venv/
+__pycache__/
+*.pyc
+
+# 로그 및 미디어 파일
+*.log
+logs/
+*.pt
+*.bin
+*.mp3
+*.wav
+*.mp4

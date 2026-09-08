@@ -198,8 +198,11 @@ Thumbs.db
 *.env
 nginx/**/*.pem
 nginx/**/*.key
+docker-compose.yml
 docker-compose-local.yml
 /build/generated
+init-letsencrypt.sh
+wait-for-services.sh
 
 ### 로컬환경 배포 관련 쉘스크립트 ###
 build-and-push-local.sh
