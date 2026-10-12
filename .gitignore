@@ -204,8 +204,9 @@ docker-compose-local.yml
 init-letsencrypt.sh
 wait-for-services.sh
 
-### 로컬환경 배포 관련 쉘스크립트 ###
+### 로컬환경 및 배포 관련 쉘스크립트 ###
 build-and-push-local.sh
 deploy.sh
 .buildx-cache
 data
+TODO.md
