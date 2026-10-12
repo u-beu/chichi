@@ -12,18 +12,26 @@
 - Build JAR: `./gradlew bootJar`
 
 ## Development Rules
-- **UI/UX:** Render views using Thymeleaf templates (YouTube Music-inspired design).
+- **UI/UX:**
+  - Thymeleaf 템플릿 기반 뷰 랜더링 (YouTube Music 스타일 디자인 반영)
+  - SSE(Server-Sent Events)를 통한 웹 UI 실시간 재생 상태 업데이트
 - **Data Operations:**
-    - Check Database first before Redis operations for long-term data consistency (e.g., music likes).
-    - Preserve chronological order from Redis IDs when retrieving song lists via Querydsl.
-- **Pub/Sub:** Publish play request events to the `playback` channel on Redis Queue when a user clicks a song on the UI.
-- **REST API:** Provide API endpoints to receive playback metadata sent directly from `chichi-bot`.
+  - **데이터 정합성:** 장기 데이터(예: 노래 좋아요) 관리 시 Redis 작업 전 Database 우선 조회
+  - **정렬 유지:** Querydsl 노래 목록 조회 시 Redis ID의 chronological order 유지
+- **Messaging & Event Flow (Redis Queue):**
+  - **Playback Request:** 웹 UI 노래 클릭 시 Redis Queue로 재생 요청 이벤트 Publish
+  - **Playback Metadata Sync & Analysis Trigger:**
+    - `chichi-bot` 발행 재생 음원 데이터(제목, 가수, URL, 썸네일) 메시지 수신
+    - DB 저장 및 SSE 기반 UI 업데이트
+    - DB 내 음원 분석 데이터 존재 여부 확인 후, 미존재 시 `chichi-bot` Worker로 분석 요청 메시지 Publish
+  - **Audio Analysis Sync:** `chichi-bot` Worker의 PyTorch 분석 완료 메시지 수신 -> DB 저장
 
 ## Code Style & Architecture
-- **Layer Architecture:** Keep business logic strictly within Service classes; Controllers should only handle requests and responses.
-- **DTOs:** Perform Entity to DTO conversions in the Service layer. Do not expose JPA Entities directly to views or APIs.
-- **Error Handling:** Use custom runtime exceptions and handle global exceptions centrally using `@RestControllerAdvice` or `@ControllerAdvice`.
-- **Testing:** Prefer unit tests (`@ExtendWith(MockitoExtension.class)`) over slow integration tests (`@SpringBootTest`) whenever possible.
+- **Layer Architecture:** 비즈니스 로직은 엄격히 Service 클래스에 작성 (Controller는 요청/응답 처리만 담당)
+- **DTOs:** Entity -> DTO 변환은 Service 계층에서 수행 (JPA Entity의 뷰/API 직접 노출 금지)
+- **Error Handling:** 커스텀 Runtime Exception 사용 및 `@RestControllerAdvice` / `@ControllerAdvice` 기반 중앙 예외 처리
+- **Testing:** 느린 Integration Test (`@SpringBootTest`) 대신 Unit Test (`@ExtendWith(MockitoExtension.class)`) 지향
 
 ## Output Style
-- Concise responses only.
+- 서론/군더더기 없이 핵심 위주로 직관적이고 간결하게 답변
+- 한국어로 항상 답변
