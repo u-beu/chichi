@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/base-layout}">
+<main class="content" layout:fragment="content">
+    <div class="content-inner">
+        <h1 class="page-title">맞춤 추천 <span class="tag">AI 분석</span></h1>
+        <p class="page-sub">좋아요한 곡의 장르와 분위기를 분석해 골랐어요.</p>
+
+        <div class="empty-msg" th:if="${recommend == null || recommend.analyzedCount() == 0}">
+            <p>좋아요한 곡이 생기면 취향을 분석해서 추천해 드려요.</p>
+        </div>
+
+        <th:block th:if="${recommend != null && recommend.analyzedCount() > 0}">
+            <div class="taste">
+                <span class="taste-label">내 취향</span>
+                <span class="chip" th:each="genre : ${recommend.genres()}" th:text="${genre}">장르</span>
+                <span class="chip mood" th:each="mood : ${recommend.moods()}" th:text="${mood}">분위기</span>
+                <p class="taste-note" th:text="|분석 완료 ${recommend.analyzedCount()}곡 기준|">분석 완료 3곡 기준</p>
+            </div>
+
+            <div class="song-list">
+                <div th:each="song : ${recommend.items()}" class="record">
+                    <div class="record-left">
+                        <img th:src="${(song.image() == null || song.image() == '') ? '/images/basicProfileCat.png' : song.image()}"
+                             alt="앨범 커버" class="album-cover" />
+                        <div class="song-info">
+                            <div class="song-title" th:text="${song.title()}">노래 제목</div>
+                            <div class="song-uploader" th:text="${song.uploader()}">가수 이름</div>
+                            <div class="song-reason" th:text="${song.reason()}">추천 이유</div>
+                        </div>
+                    </div>
+                    <span class="match" th:text="|일치 ${song.matchPercent()}%|">일치 90%</span>
+                    <button type="button" class="play-btn" aria-label="Discord에서 재생">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.9l12-7.5a1 1 0 0 0 0-1.7l-12-7.5A1 1 0 0 0 7 4.5Z"/></svg>
+                        <span>Discord 재생</span>
+                    </button>
+                </div>
+            </div>
+        </th:block>
+    </div>
+</main>
+
+</html>
