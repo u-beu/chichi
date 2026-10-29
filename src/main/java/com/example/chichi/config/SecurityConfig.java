@@ -40,8 +40,7 @@ public class SecurityConfig {
             "/images/**",
             "/register",
             "/",
-            "/auth/refresh",
-            "/api/bot/**"
+            "/auth/refresh"
     };
     private final String[] GUEST_LIST = {
             "/register/pin"
@@ -68,7 +67,6 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf
                         .csrfTokenRepository(new HttpSessionCsrfTokenRepository())
                         .ignoringRequestMatchers(
-                                new AntPathRequestMatcher("/api/bot/recent-played-song"),
                                 new AntPathRequestMatcher("/connect")))
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
