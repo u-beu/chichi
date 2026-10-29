@@ -25,6 +25,13 @@
     - DB 저장 및 SSE 기반 UI 업데이트
     - DB 내 음원 분석 데이터 존재 여부 확인 후, 미존재 시 `chichi-bot` Worker로 분석 요청 메시지 Publish
   - **Audio Analysis Sync:** `chichi-bot` Worker의 PyTorch 분석 완료 메시지 수신 -> DB 저장
+  - **Queue Schema (Redis List, `chichi-bot` 문서 기준):**
+    - 발행(`LPUSH`) 재생 요청: `bot:commands` -> `{"action": "playback", "user_id", "query"}` (`guild_id` 없음, 봇이 `user_id`로 음성채널 접속 길드를 직접 탐색)
+    - 발행(`LPUSH`) 분석 요청: `worker:analysis-requests` -> `{"videoId"}`
+    - 소비 재생 기록: `spring:play-history` <- `{"title", "uploader", "image", "videoId", "discordId"}`
+    - 소비 재생 실패 알림: `spring:playback-result` <- `{"discordId", "status": "not_in_voice"}`
+    - 소비 분석 결과: `spring:analysis-results` <- 성공 `{"videoId", "genre", "mood"}` / 실패 `{"videoId", "error"}`
+  - **통신 원칙:** `chichi-bot`과 REST 직접 통신 금지, Redis List 기반 메시지 버스만 사용
 
 ## Code Style & Architecture
 - **Layer Architecture:** 비즈니스 로직은 엄격히 Service 클래스에 작성 (Controller는 요청/응답 처리만 담당)

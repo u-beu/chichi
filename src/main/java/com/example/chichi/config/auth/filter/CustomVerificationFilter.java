@@ -63,7 +63,6 @@ public class CustomVerificationFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         return path.equals("/login") ||
                 path.startsWith("/error") ||
-                path.startsWith("/images") ||
-                path.startsWith("/api/bot/recent-played-song");
+                path.startsWith("/images");
     }
 }
