@@ -1,126 +1,37 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CHICHI Bot - Register</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #36393F;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .container {
-            text-align: center;
-            background-color: #2f3136;
-            padding: 40px;
-            border-radius: 10px;
-            width: 350px;
-            box-sizing: border-box;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.25);
-        }
-
-        h1 {
-            font-size: 1.8rem;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            font-size: 0.95rem;
-            color: #b9bbbe;
-            margin-bottom: 25px;
-        }
-
-        input {
-            width: 100%;
-            box-sizing: border-box;
-            padding: 12px;
-            margin-top: 10px;
-            border-radius: 6px;
-            border: none;
-            outline: none;
-            background-color: #202225;
-            color: white;
-            font-size: 1rem;
-        }
-
-        input:focus:not([readonly]) {
-            border: 1px solid #7289DA;
-        }
-
-        input[readonly] {
-            color: #c9c9c9;
-            cursor: not-allowed;
-        }
-
-        .submit-btn {
-            width: 100%;
-            box-sizing: border-box;
-            background-color: #7289DA;
-            border: none;
-            padding: 14px;
-            font-size: 1rem;
-            font-weight: bold;
-            color: white;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 20px;
-            transition: background-color 0.25s;
-        }
-
-        .submit-btn:hover {
-            background-color: #5f73a0;
-        }
-
-        .submit-btn:active {
-            background-color: #4e5b7c;
-        }
-
-        .footer {
-            margin-top: 15px;
-            font-size: 0.85rem;
-            color: #b9bbbe;
-        }
-
-        .logo {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            object-fit: cover;
-            margin-bottom: 15px;
-        }
-    </style>
+    <title>CHICHI Bot - 회원 등록</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&amp;display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
-<body>
+<body class="auth-page">
 
-<div class="container">
-    <img th:src="@{/images/logo.png}" alt="ChiChi Bot Logo" class="logo">
-    <h1>회원 등록</h1>
-    <p class="subtitle">서비스 이용을 위해 PIN을 등록해주세요.</p>
+<main class="auth-card">
+    <img th:src="@{/images/logo.png}" alt="CHICHI 로고" class="auth-logo">
+    <h1 class="auth-title">회원 등록</h1>
+    <p class="auth-sub">서비스 이용을 위해 PIN을 등록해주세요.</p>
 
     <form method="post" th:action="@{/register/pin}" autocomplete="off">
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-        <input type="text" id="username" th:value="${username}" readonly>
+        <input type="text" id="username" th:value="${username}" readonly aria-label="Discord 사용자명">
         <input type="password" id="pin"
                name="pin"
                placeholder="PIN (숫자 6자리)"
                maxlength="6"
                pattern="[0-9]{6}"
                inputmode="numeric"
+               aria-label="PIN"
                required>
-        <button type="submit" class="submit-btn">등록하기</button>
+        <button type="submit" class="auth-btn">등록하기</button>
     </form>
 
-    <div class="footer">
-        <p>Powered by Discord</p>
-    </div>
-</div>
+    <p class="auth-foot">Powered by Discord</p>
+</main>
 
 </body>
 </html>
