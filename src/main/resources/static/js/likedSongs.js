@@ -13,11 +13,10 @@ function removeRecordIfUnliked(button) {
                 const otherRecords = container.getElementsByClassName('record');
 
                 if (otherRecords.length === 0) {
-                    container.innerHTML = `
-                <div style="text-align: center; margin-top: 50px; color: #999;">
-                    좋아요 표시한 곡이 없습니다.
-                </div>
-                `;
+                    const empty = document.createElement('div');
+                    empty.className = 'empty-msg';
+                    empty.textContent = '좋아요 표시한 곡이 없습니다.';
+                    container.replaceChildren(empty);
                 }
             }, 300);
         }

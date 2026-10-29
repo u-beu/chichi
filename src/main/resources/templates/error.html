@@ -1,56 +1,17 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>서버 오류가 발생했습니다</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f9f9f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        .error-container {
-            max-width: 480px;
-            padding: 32px;
-            background: #FBF2ED;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        h1 {
-            font-size: 32px;
-            margin-bottom: 16px;
-            color: #AB968A;
-        }
-        p {
-            margin-bottom: 16px;
-            color: #555;
-            line-height: 1.5;
-        }
-        .code {
-            font-size: 14px;
-            color: #888;
-            margin-bottom: 20px;
-        }
-        a {
-            display: inline-block;
-            padding: 10px 20px;
-            background: #CDD5C6;
-            color: #474747;
-            border-radius: 6px;
-            text-decoration: none;
-        }
-        a:hover {
-            background: #F2CFB3;
-        }
-    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&amp;display=swap">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
-<body>
-<div class="error-container">
-    <h1 th:switch="${status}">
+<body class="auth-page">
+<main class="auth-card">
+    <h1 class="auth-code" th:switch="${status}">
         <span th:case="400">400 BAD REQUEST</span>
         <span th:case="401">401 UNAUTHORIZED</span>
         <span th:case="403">403 FORBIDDEN</span>
@@ -58,7 +19,7 @@
         <span th:case="500">500 SERVER ERROR</span>
         <span th:case="*">UNKNOWN ERROR</span>
     </h1>
-    <p th:switch="${status}">
+    <p class="auth-sub" th:switch="${status}">
         <span th:case="400">잘못된 요청입니다.</span>
         <span th:case="401">사용자 인증이 필요합니다.</span>
         <span th:case="403">접근 권한이 없어 이용할 수 없습니다.</span>
@@ -66,7 +27,7 @@
         <span th:case="500">서버에서 문제가 발생했습니다.<br>잠시 후 다시 시도해주세요.</span>
         <span th:case="*">알 수 없는 문제가 발생했습니다.</span>
     </p>
-    <a th:href="@{/home}">메인 페이지로 돌아가기</a>
-</div>
+    <a th:href="@{/home}" class="auth-btn">메인 페이지로 돌아가기</a>
+</main>
 </body>
 </html>

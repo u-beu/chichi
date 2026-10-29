@@ -2,6 +2,8 @@ package com.example.chichi.domain.web;
 
 import com.example.chichi.config.auth.PrincipalDetails;
 import com.example.chichi.config.auth.customAnnotation.AuthUsername;
+import com.example.chichi.domain.recommend.RecommendService;
+import com.example.chichi.domain.recommend.dto.RecommendResponse;
 import com.example.chichi.domain.song.SongService;
 import com.example.chichi.domain.song.dto.SongListResponse;
 import com.example.chichi.domain.user.RoleType;
@@ -23,6 +25,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PageController {
     private final SongService songService;
+    private final RecommendService recommendService;
 
     @Value("${spring.security.oauth2.client.registration.discord.client-id}")
     private String clientId;
@@ -82,5 +85,19 @@ public class PageController {
         model.addAttribute("currentUri", request.getRequestURI());
 
         return "liked-songs";
+    }
+
+    @GetMapping("/songs/recommended")
+    public String recommendedSongPage(Model model, Authentication authentication, HttpServletRequest request) {
+        PrincipalDetails principalDetails = (PrincipalDetails) authentication.getPrincipal();
+        String username = principalDetails.getUsername();
+        Long userId = Long.valueOf(principalDetails.getName());
+
+        RecommendResponse recommend = recommendService.getRecommendations(userId);
+        model.addAttribute("username", username);
+        model.addAttribute("recommend", recommend);
+        model.addAttribute("currentUri", request.getRequestURI());
+
+        return "recommend";
     }
 }

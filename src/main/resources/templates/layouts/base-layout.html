@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 
 <head>
     <meta charset="UTF-8"/>
@@ -7,15 +7,31 @@
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <title>CHICHI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin"/>
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&amp;display=swap"/>
     <link rel="stylesheet" th:href="@{/css/style.css}"/>
 </head>
 
 <body>
 <div th:replace="~{fragments/sidebar :: sidebar}"></div>
 
-<div class="content" layout:fragment="content"></div>
+<main class="content" layout:fragment="content"></main>
+
+<dialog id="play-dialog" class="play-dialog" aria-labelledby="play-dialog-title">
+    <h2 id="play-dialog-title">음성채널에 먼저 들어가 주세요</h2>
+    <p>Discord에서 음성채널에 접속한 뒤 아래 버튼을 눌러주세요. 접속한 채널에서 곡을 재생해 드려요.</p>
+    <p class="play-dialog-song" id="play-dialog-song"></p>
+    <div class="dialog-actions">
+        <button type="button" class="dialog-btn ghost" id="play-dialog-cancel">취소</button>
+        <button type="button" class="dialog-btn" id="play-dialog-confirm">들어갔어요</button>
+    </div>
+</dialog>
+<div class="toast" id="toast" role="status"></div>
 
 <script src="/js/songLike.js"></script>
+<script src="/js/songPlay.js"></script>
 
 <th:block layout:fragment="script"></th:block>
 </body>

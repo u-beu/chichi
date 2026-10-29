@@ -1,30 +1,47 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<div th:fragment="sidebar" class="sidebar">
-    <div>
-        <div class="profile">
-            <img th:src="@{/images/basicProfileCat.png}" alt="기본 프로필 이미지">
-            <div class="username" th:text="${username}">사용자 닉네임</div>
-        </div>
-
-        <div class="menu">
-            <button th:classappend="${currentUri == '/'} ? 'active' : ''"
-                    onclick="location.href='/'">최근 재생곡 목록
-            </button>
-            <button th:classappend="${currentUri == '/songs/liked'} ? 'active' : ''"
-                    onclick="location.href='/songs/liked'">좋아요 곡 목록
-            </button>
-            <button>메뉴 3</button>
-        </div>
+<aside th:fragment="sidebar" class="sidebar">
+    <div class="profile">
+        <img th:src="@{/images/basicProfileCat.png}" alt="기본 프로필 이미지">
+        <div class="username" th:text="${username}">사용자 닉네임</div>
     </div>
 
+    <nav class="menu" aria-label="메뉴">
+        <a class="note" th:href="@{/}" th:classappend="${currentUri == '/'} ? 'active' : ''"
+           th:attr="aria-current=${currentUri == '/'} ? 'page' : null">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+            <span>최근 재생</span>
+        </a>
+        <a class="note" th:href="@{/songs/liked}" th:classappend="${currentUri == '/songs/liked'} ? 'active' : ''"
+           th:attr="aria-current=${currentUri == '/songs/liked'} ? 'page' : null">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linejoin="round" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/></svg>
+            <span>좋아요</span>
+        </a>
+        <a class="note" th:href="@{/songs/recommended}"
+           th:classappend="${currentUri == '/songs/recommended'} ? 'active' : ''"
+           th:attr="aria-current=${currentUri == '/songs/recommended'} ? 'page' : null">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9ZM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8Z"/></svg>
+            <span>맞춤 추천</span>
+        </a>
+    </nav>
+
     <div class="bottom-links">
-        <a th:href="@{/settings}">설정</a>
+        <a th:href="@{/settings}">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>
+            <span>설정</span>
+        </a>
         <form id="logout" th:action="@{/auth/logout}" method="post" style="display:none;">
             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
         </form>
         <a href="#" onclick="document.getElementById('logout').submit(); return false;">
-            로그아웃
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3M16 16l4-4-4-4M20 12H9"/></svg>
+            <span>로그아웃</span>
         </a>
     </div>
-</div>
+</aside>
+</html>
