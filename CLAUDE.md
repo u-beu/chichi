@@ -39,6 +39,9 @@
 - **Error Handling:** 커스텀 Runtime Exception 사용 및 `@RestControllerAdvice` / `@ControllerAdvice` 기반 중앙 예외 처리
 - **Testing:** 느린 Integration Test (`@SpringBootTest`) 대신 Unit Test (`@ExtendWith(MockitoExtension.class)`) 지향
 
+## Code Modification Rules
+- 모든 소스 코드 수정(`Edit` 또는 `Write`) 전, 반드시 변경 내용(Diff)을 먼저 제시하고 사용자 승인을 받고 진행
+
 ## Output Style
 - 서론/군더더기 없이 핵심 위주로 직관적이고 간결하게 답변
 - 한국어로 항상 답변
