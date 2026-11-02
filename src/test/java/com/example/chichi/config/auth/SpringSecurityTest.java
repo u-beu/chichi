@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -138,6 +139,56 @@ public class SpringSecurityTest {
                 .andExpect(forwardedUrl("/error"))
                 .andExpect(request().attribute("status", 403))
                 .andDo(print());
+    }
+
+    @Test
+    @DisplayName("USER 권한이면 재생 요청 API 접근을 허용한다.")
+    void play_api_access_allowed() throws Exception {
+        //given
+        Cookie cookie = accessTokenCookie(RoleType.USER);
+
+        //when, then
+        mvc.perform(post("/api/songs/{song-id}/play", 1L)
+                        .cookie(cookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"test-title\",\"uploader\":\"test-uploader\"}")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("USER 권한이 아니면 재생 요청 API 접근을 거부한다.")
+    void play_api_access_denied() throws Exception {
+        //given
+        Cookie cookie = accessTokenCookie(RoleType.GUEST);
+
+        //when, then
+        mvc.perform(post("/api/songs/{song-id}/play", 1L)
+                        .cookie(cookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"title\":\"test-title\",\"uploader\":\"test-uploader\"}")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(forwardedUrl("/error"))
+                .andExpect(request().attribute("status", 403))
+                .andDo(print());
+    }
+
+    private Cookie accessTokenCookie(RoleType roleType) {
+        User user = User.builder()
+                .discordId(1L)
+                .pin("111111")
+                .roleTypes(Set.of(roleType))
+                .build();
+        userRepository.save(user);
+
+        String accessToken = tokenService.createAccessToken(user.getDiscordId(),
+                "test@gmail.com",
+                "test-username",
+                List.of(roleType.getAuthority()));
+        return new Cookie("accessToken", accessToken.replace("Bearer ", ""));
     }
 
     @Test

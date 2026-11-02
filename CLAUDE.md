@@ -26,7 +26,7 @@
     - DB 내 음원 분석 데이터 존재 여부 확인 후, 미존재 시 `chichi-bot` Worker로 분석 요청 메시지 Publish
   - **Audio Analysis Sync:** `chichi-bot` Worker의 PyTorch 분석 완료 메시지 수신 -> DB 저장
   - **Queue Schema (Redis List, `chichi-bot` 문서 기준):**
-    - 발행(`LPUSH`) 재생 요청: `bot:commands` -> `{"action": "playback", "user_id", "query"}` (`guild_id` 없음, 봇이 `user_id`로 음성채널 접속 길드를 직접 탐색)
+    - 발행(`LPUSH`) 재생 요청: `bot:commands` -> `{"action": "playback", "discordId", "query"}`
     - 발행(`LPUSH`) 분석 요청: `worker:analysis-requests` -> `{"videoId"}`
     - 소비 재생 기록: `spring:play-history` <- `{"title", "uploader", "image", "videoId", "discordId"}`
     - 소비 재생 실패 알림: `spring:playback-result` <- `{"discordId", "status": "not_in_voice"}`

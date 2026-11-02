@@ -1,10 +1,11 @@
-// "Discord 재생" 버튼: 음성채널 안내 -> "들어갔어요" 확인 후 재생 요청.
-// 재생 요청 발행(POST /api/songs/{id}/play)은 TODO.md 이슈 2에서 requestPlayback에 연결한다.
+// "Discord 재생" 버튼: 음성채널 안내 -> "들어갔어요" 확인 후 재생 요청(POST /api/songs/{id}/play).
 (function () {
     const dialog = document.getElementById('play-dialog');
     const songLabel = document.getElementById('play-dialog-song');
     const toast = document.getElementById('toast');
-    let pendingSongId = null;
+    const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]').content;
+    let pendingSong = null;
     let toastTimer;
 
     function showToast(message) {
@@ -14,10 +15,36 @@
         toastTimer = setTimeout(() => toast.classList.remove('on'), 2400);
     }
 
-    function requestPlayback(songId) {
-        // TODO(이슈 2): POST /api/songs/{songId}/play 호출
-        console.log('재생 요청 대기(미연결):', songId);
-        showToast('재생 요청 기능은 준비 중이에요.');
+    function requestPlayback(song) {
+        fetch(`/api/songs/${song.songId}/play`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                [csrfHeader]: csrfToken
+            },
+            body: JSON.stringify({title: song.title, uploader: song.uploader})
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('서버 응답 실패');
+                }
+                showToast('Discord로 재생을 요청했어요.');
+            })
+            .catch((err) => {
+                console.error('재생 요청 중 오류:', err);
+                showToast('재생 요청에 실패했어요.');
+            });
+    }
+
+    // 카드의 곡 정보 (제목/가수는 서버로 보낼 검색어로 사용)
+    function songOf(record) {
+        const title = record.querySelector('.song-title');
+        const uploader = record.querySelector('.song-uploader');
+        return {
+            songId: record.dataset.songId || null,
+            title: title ? title.textContent.trim() : '',
+            uploader: uploader ? uploader.textContent.trim() : ''
+        };
     }
 
     // "가수 - 제목" 형식 (가수 정보가 없으면 제목만)
@@ -37,27 +64,31 @@
             return;
         }
         const record = playBtn.closest('.record');
-        pendingSongId = record ? record.dataset.songId || null : null;
+        pendingSong = record ? songOf(record) : null;
         songLabel.textContent = record ? songLabelOf(record) : '';
         dialog.showModal();
     });
 
     document.getElementById('play-dialog-cancel').addEventListener('click', () => {
-        pendingSongId = null;
+        pendingSong = null;
         dialog.close();
     });
 
     document.getElementById('play-dialog-confirm').addEventListener('click', () => {
-        const songId = pendingSongId;
-        pendingSongId = null;
+        const song = pendingSong;
+        pendingSong = null;
         dialog.close();
-        requestPlayback(songId);
+        if (!song || !song.songId || !song.title) {
+            showToast('재생할 곡 정보를 찾을 수 없어요.');
+            return;
+        }
+        requestPlayback(song);
     });
 
     // 배경 클릭 시 닫기
     dialog.addEventListener('click', (event) => {
         if (event.target === dialog) {
-            pendingSongId = null;
+            pendingSong = null;
             dialog.close();
         }
     });
