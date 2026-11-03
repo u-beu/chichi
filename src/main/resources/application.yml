@@ -3,9 +3,9 @@ spring:
     name: chichi
 
   datasource:
-    url: jdbc:mysql://${DB_HOST}:3306/${DB_NAME}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useLegacyDatetimeCode=false
+    url: jdbc:mysql://${DB_HOST}:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&useLegacyDatetimeCode=false
     username: ${DB_USER}
-    password: ${DB_PWD}
+    password: ${MYSQL_ROOT_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -19,9 +19,9 @@ spring:
         show_sql: true
         format_sql: true
 
-  redis:
-    host: ${REDIS_HOST}
-    port: 6379
+  data:
+    redis:
+      url: ${REDIS_URL}
 
   security:
     oauth2:

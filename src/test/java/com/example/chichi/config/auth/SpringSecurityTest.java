@@ -55,8 +55,8 @@ public class SpringSecurityTest {
     @DynamicPropertySource
     static void props(DynamicPropertyRegistry registry) {
         //redis
-        registry.add("spring.redis.host", redisContainer::getHost);
-        registry.add("spring.redis.port", redisContainer::getFirstMappedPort);
+        registry.add("spring.data.redis.url",
+                () -> "redis://" + redisContainer.getHost() + ":" + redisContainer.getFirstMappedPort());
         //mysql
         registry.add("spring.datasource.url", mySQLContainer::getJdbcUrl);
         registry.add("spring.datasource.username", mySQLContainer::getUsername);
