@@ -87,6 +87,16 @@ public class SpringSecurityTest {
     }
 
     @Test
+    @DisplayName("비로그인 상태에서도 정적 리소스(css, js) 접근을 허용한다.")
+    void static_resource_access_allowed() throws Exception {
+        //when, then
+        mvc.perform(get("/css/style.css"))
+                .andExpect(status().isOk());
+        mvc.perform(get("/js/songLike.js"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     @DisplayName("권한이 있을 경우 리소스 접근을 허용한다.")
     void resource_access_allowed() throws Exception {
         //given

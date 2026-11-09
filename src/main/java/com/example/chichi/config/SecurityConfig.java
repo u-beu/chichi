@@ -38,6 +38,8 @@ public class SecurityConfig {
             "/error",
             "/login",
             "/images/**",
+            "/css/**",
+            "/js/**",
             "/register",
             "/",
             "/auth/refresh"
