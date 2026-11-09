@@ -527,14 +527,24 @@ svg {
     --dc-sub: #B9BBBE;
     justify-content: center;
     align-items: center;
-    padding: 24px 16px;
+    padding: 32px 16px;
     background: var(--dc-bg);
     color: #fff;
 }
 
-.auth-card {
+.wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 32px;
+    align-items: center;
+    justify-content: center;
     width: 100%;
-    max-width: 380px;
+    max-width: 1040px;
+}
+
+.auth-card {
+    flex: 0 1 380px;
+    min-width: 0;
     padding: 36px 32px 28px;
     border-radius: 16px;
     background: var(--dc-card);
@@ -622,6 +632,39 @@ svg {
 
 .auth-page form .auth-btn {
     margin-top: 18px;
+}
+
+/* 서비스 소개 (샘플 + 설명) */
+.showcase { flex: 1 1 440px; min-width: 0; max-width: 560px; }
+.shot { display: flex; height: 300px; border-radius: 12px; overflow: hidden;
+        background: var(--cat-fur); color: var(--ink); text-align: left;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, .35); }
+.shot-side { flex: 0 0 150px; padding: 14px 10px; background: var(--apricot);
+             display: flex; flex-direction: column; gap: 6px; }
+.shot-profile { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 12px; font-weight: 700; }
+.shot-profile img { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; }
+.shot .note { padding: 7px 10px; border-radius: 6px; font-size: 12px; font-weight: 500; }
+.n1 { background: var(--tab1); font-weight: 700; } .n2 { background: var(--tab2); } .n3 { background: var(--tab3); }
+.shot-main { flex: 1; min-width: 0; padding: 16px; }
+.shot-main h3 { margin: 0 0 2px; font-size: 15px; }
+.shot-main p { margin: 0 0 12px; font-size: 11px; color: var(--ink-soft); }
+.rec { display: flex; align-items: center; gap: 10px; padding: 8px 10px; margin-bottom: 6px;
+       background: var(--card); border: 1px solid var(--line); border-radius: 10px; }
+.cover { flex: 0 0 32px; height: 32px; border-radius: 6px; }
+.c1 { background: var(--tab3); } .c2 { background: var(--tab2); } .c3 { background: var(--tab1); } .c4 { background: var(--tab4); }
+.rec .info { flex: 1; min-width: 0; }
+.rec .t { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rec .u { font-size: 10px; color: var(--ink-soft); }
+.rec .play { flex: 0 0 auto; padding: 4px 8px; border-radius: 999px; background: var(--mint); color: #fff; font-size: 10px; font-weight: 700; }
+.rec .heart { flex: 0 0 auto; color: #E8707E; font-size: 14px; }
+.rec .heart.dim { opacity: .25; }
+.about { margin-top: 16px; }
+.about h2 { margin: 0 0 8px; font-size: 18px; }
+.about p { margin: 0; font-size: 14px; line-height: 1.65; color: #DCDDDE; }
+
+@media (max-width: 520px) {
+    .shot-side { display: none; }
+    .auth-card { padding-inline: 20px; }
 }
 
 .auth-code {
