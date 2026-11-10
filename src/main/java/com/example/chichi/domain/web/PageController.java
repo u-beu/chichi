@@ -8,17 +8,14 @@ import com.example.chichi.domain.song.SongService;
 import com.example.chichi.domain.song.dto.SongListResponse;
 import com.example.chichi.domain.user.RoleType;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
-import java.util.UUID;
 
 @Slf4j
 @Controller
@@ -27,20 +24,8 @@ public class PageController {
     private final SongService songService;
     private final RecommendService recommendService;
 
-    @Value("${spring.security.oauth2.client.registration.discord.client-id}")
-    private String clientId;
-
-    @Value("${spring.security.oauth2.client.registration.discord.redirect-uri}")
-    private String redirectUri;
-
     @GetMapping("/login")
-    public String loginPage(HttpSession session, Model model) {
-        String state = UUID.randomUUID().toString();
-        session.setAttribute("oauth_state", state);
-
-        model.addAttribute("state", state);
-        model.addAttribute("clientId", clientId);
-        model.addAttribute("redirectUri", redirectUri);
+    public String loginPage() {
         return "login";
     }
 
