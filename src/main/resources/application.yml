@@ -53,7 +53,8 @@ logging:
 jwt:
   secret: ${JWT_SECRET}
   access:
-    expiration: 1800 #30분
+    user-expiration: 1800 #30분 (USER)
+    guest-expiration: 600 #10분 (GUEST)
     header: Authorization
 
   refresh:

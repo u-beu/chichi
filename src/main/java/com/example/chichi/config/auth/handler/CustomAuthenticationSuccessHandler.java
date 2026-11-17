@@ -43,7 +43,7 @@ public class CustomAuthenticationSuccessHandler implements AuthenticationSuccess
             CookieUtils.addCookie(response, "accessToken", accessToken, RoleType.USER);
 
             String refreshToken = tokenService.createRefreshToken(discordId, email, username, roles);
-            tokenService.saveRefreshToken(email, refreshToken);
+            tokenService.saveRefreshToken(String.valueOf(discordId), refreshToken);
             CookieUtils.addCookie(response, "refreshToken", refreshToken, RoleType.USER);
 
             redirectUrl = UriComponentsBuilder.fromPath("/")
