@@ -1,5 +1,7 @@
 package com.example.chichi.config.auth;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.example.chichi.domain.user.RoleType;
 import com.example.chichi.domain.user.TokenRepository;
 import com.example.chichi.domain.user.User;
@@ -11,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -19,13 +22,16 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -42,6 +48,9 @@ public class SpringSecurityTest {
 
     @Autowired
     TokenService tokenService;
+
+    @Value("${jwt.secret}")
+    private String jwtSecret;
 
     @Container
     private static RedisContainer redisContainer = new RedisContainer("redis:7.2-alpine");
@@ -304,6 +313,125 @@ public class SpringSecurityTest {
                         "AUTH_EXCEPTION_TYPE",
                         ExceptionType.USER_NOT_FOUND
                 ))
+                .andDo(print());
+    }
+
+    private static final String PLAY_BODY = "{\"title\":\"test-title\",\"uploader\":\"test-uploader\"}";
+
+    private String expiredAccessToken() {
+        return JWT.create()
+                .withSubject("AccessToken")
+                .withExpiresAt(new Date(System.currentTimeMillis() - 1000))
+                .withClaim("discord_id", 1L)
+                .sign(Algorithm.HMAC512(jwtSecret));
+    }
+
+    private Cookie refreshTokenCookie(boolean savedInRedis) {
+        User user = User.builder()
+                .discordId(1L)
+                .pin("111111")
+                .roleTypes(Set.of(RoleType.USER))
+                .build();
+        userRepository.save(user);
+
+        String refreshToken = tokenService.createRefreshToken(1L, "test@gmail.com", "test-username",
+                List.of(RoleType.USER.getAuthority()));
+        if (savedInRedis) {
+            tokenService.saveRefreshToken("1", refreshToken);
+        }
+        return new Cookie("refreshToken", refreshToken);
+    }
+
+    @Test
+    @DisplayName("액세스 토큰이 만료되어도 유효한 리프레시 토큰이 있으면 액세스 토큰을 재발급하고 요청을 허용한다.")
+    void reissue_when_access_expired() throws Exception {
+        //given
+        Cookie accessCookie = new Cookie("accessToken", expiredAccessToken());
+        Cookie refreshCookie = refreshTokenCookie(true);
+
+        //when
+        MvcResult result = mvc.perform(post("/api/songs/{song-id}/play", 1L)
+                        .cookie(accessCookie, refreshCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(PLAY_BODY)
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(cookie().maxAge("accessToken", 7 * 24 * 60 * 60))
+                .andExpect(cookie().doesNotExist("refreshToken"))
+                .andDo(print())
+                .andReturn();
+
+        //then
+        String reissued = result.getResponse().getCookie("accessToken").getValue().replace("Bearer+", "");
+        assertThat(tokenService.isTokenValid(reissued)).isTrue();
+    }
+
+    @Test
+    @DisplayName("액세스 토큰 쿠키가 없어도 유효한 리프레시 토큰이 있으면 액세스 토큰을 재발급한다.")
+    void reissue_when_access_missing() throws Exception {
+        //given
+        Cookie refreshCookie = refreshTokenCookie(true);
+
+        //when, then
+        mvc.perform(post("/api/songs/{song-id}/play", 1L)
+                        .cookie(refreshCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(PLAY_BODY)
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(cookie().exists("accessToken"))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("리프레시 토큰이 Redis에 저장된 값과 다르면 재발급하지 않고 로그인 페이지로 리다이렉트한다.")
+    void no_reissue_when_refresh_not_saved() throws Exception {
+        //given
+        Cookie accessCookie = new Cookie("accessToken", expiredAccessToken());
+        Cookie refreshCookie = refreshTokenCookie(false);
+
+        //when, then
+        mvc.perform(post("/api/songs/{song-id}/play", 1L)
+                        .cookie(accessCookie, refreshCookie)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(PLAY_BODY)
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"))
+                .andExpect(request().attribute("AUTH_EXCEPTION_TYPE", ExceptionType.INVALID_TOKEN))
+                .andExpect(cookie().doesNotExist("accessToken"))
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("로그아웃하면 리프레시 토큰이 삭제되고 같은 리프레시 토큰으로는 재발급되지 않는다.")
+    void logout_invalidates_refresh_token() throws Exception {
+        //given
+        Cookie accessCookie = accessTokenCookie(RoleType.USER);
+        String refreshToken = tokenService.createRefreshToken(1L, "test@gmail.com", "test-username",
+                List.of(RoleType.USER.getAuthority()));
+        tokenService.saveRefreshToken("1", refreshToken);
+
+        //when: 로그아웃
+        mvc.perform(post("/auth/logout")
+                        .cookie(accessCookie)
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"))
+                .andExpect(cookie().maxAge("refreshToken", 0))
+                .andDo(print());
+
+        //then: Redis에서 삭제, 같은 refresh 로 재발급 불가
+        assertThat(tokenRepository.findTokenByKey("refresh:1")).isNull();
+        mvc.perform(post("/api/songs/{song-id}/play", 1L)
+                        .cookie(new Cookie("accessToken", expiredAccessToken()), new Cookie("refreshToken", refreshToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(PLAY_BODY)
+                        .with(csrf()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/login"))
+                .andExpect(request().attribute("AUTH_EXCEPTION_TYPE", ExceptionType.INVALID_TOKEN))
                 .andDo(print());
     }
 }

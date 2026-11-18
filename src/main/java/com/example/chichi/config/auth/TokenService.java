@@ -4,6 +4,7 @@ import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.Claim;
+import com.example.chichi.domain.user.RoleType;
 import com.example.chichi.domain.user.TokenRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -24,8 +25,11 @@ public class TokenService {
     @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${jwt.access.expiration}")
-    private long accessTokenExpirationInSeconds;
+    @Value("${jwt.access.user-expiration}")
+    private long userAccessTokenExpirationInSeconds;
+
+    @Value("${jwt.access.guest-expiration}")
+    private long guestAccessTokenExpirationInSeconds;
 
     @Value("${jwt.refresh.expiration}")
     private long refreshTokenExpirationInSeconds;
@@ -47,9 +51,12 @@ public class TokenService {
     private final TokenRepository tokenRepository;
 
     public String createAccessToken(long discordId, String email, String username, List<String> roles) {
+        long expirationInSeconds = roles.contains(RoleType.GUEST.getAuthority())
+                ? guestAccessTokenExpirationInSeconds
+                : userAccessTokenExpirationInSeconds;
         return "Bearer " + JWT.create()
                 .withSubject(ACCESS_TOKEN_SUBJECT)
-                .withExpiresAt(new Date(System.currentTimeMillis() + accessTokenExpirationInSeconds * 1000))
+                .withExpiresAt(new Date(System.currentTimeMillis() + expirationInSeconds * 1000))
                 .withClaim(DISCORD_ID_CLAIM, discordId)
                 .withClaim(EMAIL_CLAIM, email)
                 .withClaim(USERNAME_CLAIM, username)
@@ -74,6 +81,14 @@ public class TokenService {
                 .filter(c -> c.getName().equals("accessToken"))
                 .map(Cookie::getValue)
                 .map(s -> s.replace(BEARER_COOKIE, ""))
+                .findFirst();
+    }
+
+    public Optional<String> extractRefreshTokenFromCookie(Cookie[] cookies) {
+        if (cookies == null) return Optional.empty();
+        return Arrays.stream(cookies)
+                .filter(c -> c.getName().equals("refreshToken"))
+                .map(Cookie::getValue)
                 .findFirst();
     }
 
@@ -116,8 +131,8 @@ public class TokenService {
         }
     }
 
-    public void saveRefreshToken(String email, String refreshToken) {
-        tokenRepository.save(REFRESH_KEY + email, refreshToken, refreshTokenExpirationInSeconds);
+    public void saveRefreshToken(String discordId, String refreshToken) {
+        tokenRepository.save(REFRESH_KEY + discordId, refreshToken, refreshTokenExpirationInSeconds);
     }
 
     public boolean matchRefreshToken(String discordId, String refreshToken) {
@@ -133,8 +148,8 @@ public class TokenService {
                 (tokenExpirationInMilliSeconds - System.currentTimeMillis()) / 1000);
     }
 
-    public void deleteRefreshToken(String email) {
-        tokenRepository.deleteRefreshTokenByKey(REFRESH_KEY + email);
+    public void deleteRefreshToken(String discordId) {
+        tokenRepository.deleteRefreshTokenByKey(REFRESH_KEY + discordId);
     }
 
     public boolean checkBlackList(String accessToken) {

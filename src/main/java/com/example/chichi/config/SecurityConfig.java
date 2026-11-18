@@ -41,8 +41,7 @@ public class SecurityConfig {
             "/css/**",
             "/js/**",
             "/register",
-            "/",
-            "/auth/refresh"
+            "/"
     };
     private final String[] GUEST_LIST = {
             "/register/pin"
