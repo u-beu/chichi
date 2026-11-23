@@ -46,6 +46,7 @@ public class UserService {
 
         String newAccessToken = tokenService.createAccessToken(discordId, email, username, roles);
         String refreshToken = tokenService.createRefreshToken(discordId, email, username, roles);
+        tokenService.saveRefreshToken(String.valueOf(discordId), refreshToken);
 
         CookieUtils.addCookie(response, "accessToken", newAccessToken, RoleType.USER);
         CookieUtils.addCookie(response, "refreshToken", refreshToken, RoleType.USER);
@@ -62,32 +63,10 @@ public class UserService {
         }
     }
 
-    public void refreshToken(long userId, String refreshToken, HttpServletResponse response) {
-        if (tokenService.matchRefreshToken(String.valueOf(userId), refreshToken)) {
-            tokenService.saveTokenBlackList(refreshToken);
-
-            Map<String, Object> claims = tokenService.extractClaims(refreshToken);
-            String discordId = String.valueOf(claims.get("discord_id"));
-            String username = String.valueOf(claims.get("username"));
-            String email = String.valueOf(claims.get("email"));
-            // 올바른 형변환
-            @SuppressWarnings("unchecked")
-            List<String> roles = (List<String>) claims.get("roles");
-
-            String newAccessToken = tokenService.createAccessToken(Long.parseLong(discordId), email, username, roles);
-            String newRefreshToken = tokenService.createRefreshToken(Long.parseLong(discordId), email, username, roles);
-            tokenService.saveRefreshToken(String.valueOf(userId), newRefreshToken);
-
-            CookieUtils.addCookie(response, "accessToken", newAccessToken, RoleType.USER);
-            CookieUtils.addCookie(response, "refreshToken", newRefreshToken, RoleType.USER);
-        } else {
-            throw new ApiException(INVALID_TOKEN);
-        }
-    }
-
-    public void logout(long userId, String accessToken) {
+    public void logout(long discordId, String accessToken, HttpServletResponse response) {
         tokenService.saveTokenBlackList(accessToken);
-        tokenService.deleteRefreshToken(String.valueOf(userId));
+        tokenService.deleteRefreshToken(String.valueOf(discordId));
+        CookieUtils.deleteCookie(response, "refreshToken");
     }
 
     public long getUserByDiscordId(long discordId) {

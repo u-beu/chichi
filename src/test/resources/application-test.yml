@@ -45,7 +45,8 @@ logging:
 jwt:
   secret: "test-secret-key-test-secret-key-test-secret-key-test-secret-key-test-secret-key"
   access:
-    expiration: 800
+    user-expiration: 800
+    guest-expiration: 600
     header: Authorization
 
   refresh:

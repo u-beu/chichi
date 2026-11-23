@@ -2,6 +2,7 @@ package com.example.chichi.domain.user;
 
 import com.example.chichi.config.auth.TokenService;
 import com.example.chichi.global.exception.ApiException;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -101,6 +102,7 @@ class UserServiceTest {
 
         //then
         verify(tokenService, times(1)).saveTokenBlackList(eq("access-token"));
+        verify(tokenService, times(1)).saveRefreshToken(eq("1"), eq(newRefreshToken));
         assertThat(Objects.requireNonNull(response.getCookie("accessToken")).getValue())
                 .isEqualTo(newAccessToken);
         assertThat(Objects.requireNonNull(response.getCookie("refreshToken")).getValue())
@@ -158,68 +160,21 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("리프레시 토큰이 유효하지 않으면 예외가 발생한다.")
-    void refreshToken1() {
-        //given
-        given(tokenService.matchRefreshToken(eq(String.valueOf(1L)), eq("refresh-token"))).willReturn(false);
-        MockHttpServletResponse response = new MockHttpServletResponse();
-
-        //when, then
-        assertThatExceptionOfType(ApiException.class)
-                .isThrownBy(() -> userService.refreshToken(1L, "refresh-token", response))
-                .withMessage(INVALID_TOKEN.getMessage());
-    }
-
-    @Test
-    @DisplayName("리프레시 토큰이 유효하면 액세스 토큰을 새로 발급한다.")
-    void refreshToken2() {
-        //given
-        String newAccessToken = "new-access-token";
-        String newRefreshToken = "new-refresh-token";
-        given(tokenService.matchRefreshToken(eq(String.valueOf(1L)), eq("refresh-token"))).willReturn(true);
-        MockHttpServletResponse response = new MockHttpServletResponse();
-
-        Map<String, Object> claims = Map.of(
-                "discord_id", String.valueOf(1L),
-                "email", "test@gmail.com",
-                "username", "test-username",
-                "roles", List.of(RoleType.USER.getAuthority())
-        );
-        given(tokenService.extractClaims(eq("refresh-token"))).willReturn(claims);
-        given(tokenService.createAccessToken(
-                eq(1L),
-                eq("test@gmail.com"),
-                eq("test-username"),
-                eq(List.of(RoleType.USER.getAuthority())))
-        ).willReturn(newAccessToken);
-        given(tokenService.createRefreshToken(
-                eq(1L),
-                eq("test@gmail.com"),
-                eq("test-username"),
-                eq(List.of(RoleType.USER.getAuthority())))
-        ).willReturn(newRefreshToken);
-
-        //when
-        userService.refreshToken(1L, "refresh-token", response);
-
-        //then
-        assertThat(Objects.requireNonNull(response.getCookie("accessToken")).getValue())
-                .isEqualTo(newAccessToken);
-        assertThat(Objects.requireNonNull(response.getCookie("refreshToken")).getValue())
-                .isEqualTo(newRefreshToken);
-    }
-
-    @Test
-    @DisplayName("로그아웃시 액세스 토큰을 블랙리스트화되고 리프레시 토큰은 삭제된다.")
+    @DisplayName("로그아웃시 액세스 토큰은 블랙리스트화되고 리프레시 토큰은 discordId 기준으로 삭제되며 리프레시 쿠키가 만료된다.")
     void logout() {
         //given
         String accessToken = "Bearer access-token";
+        MockHttpServletResponse response = new MockHttpServletResponse();
 
         //when
-        userService.logout(1L, accessToken);
+        userService.logout(1L, accessToken, response);
 
         //then
         verify(tokenService, times(1)).saveTokenBlackList(eq(accessToken));
         verify(tokenService, times(1)).deleteRefreshToken(eq(String.valueOf(1L)));
+        Cookie refreshCookie = response.getCookie("refreshToken");
+        assertThat(refreshCookie).isNotNull();
+        assertThat(refreshCookie.getMaxAge()).isZero();
+        assertThat(refreshCookie.getValue()).isEmpty();
     }
 }
