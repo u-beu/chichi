@@ -72,10 +72,16 @@ public class SseIntegrationTest {
 
     private long userId;
 
+    /**
+     * [목적] SSE 연결 후 같은 user id로 broadcast하면 해당 사용자에게 이벤트가 전달되는지 확인한다.
+     *
+     * [검증]
+     * 1. 연결 직후 connect 이벤트를 수신한다.
+     * 2. broadcast 후 recentSongUpdate 이벤트에 곡 제목이 담겨 수신된다.
+     */
     @Test
     @DisplayName("user id가 같은 사용자에게만 방송한다.")
     void broadcast_same_userId() {
-        //given
         long discordId = 111L;
         String user1AccessToken = createAccessToken(discordId);
 
@@ -90,7 +96,6 @@ public class SseIntegrationTest {
                 .getResponseBody();
         String title = "test-title";
 
-        //when, then
         StepVerifier.create(stream1)
                 .expectNextMatches(event ->
                         event.event().equals("connect") && event.data().contains("connected"))
@@ -105,10 +110,16 @@ public class SseIntegrationTest {
                 .verify(Duration.ofSeconds(3));
     }
 
+    /**
+     * [목적] 다른 user id로 broadcast하면 연결된 사용자에게 이벤트가 전달되지 않는지 확인한다.
+     *
+     * [검증]
+     * 1. 연결 직후 connect 이벤트를 수신한다.
+     * 2. broadcast 후 3초간 추가 이벤트가 없다.
+     */
     @Test
     @DisplayName("user id가 다른 사용자에게는 방송하지 않는다.")
     void not_broadcast_different_userId() {
-        //given
         long discordId = 222L;
         long different_userId = 333L;
         String user1AccessToken = createAccessToken(discordId);
@@ -125,7 +136,6 @@ public class SseIntegrationTest {
 
         String title = "test-title";
 
-        //when, then
         StepVerifier.create(stream1)
                 .expectNextMatches(event ->
                         event.event().equals("connect") && event.data().contains("connected"))

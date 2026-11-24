@@ -1,7 +1,6 @@
-package com.example.chichi.domain.song.repository;
+package com.example.chichi.domain.song.repository.songlike.redis;
 
 import com.example.chichi.domain.song.dto.SongScoreDto;
-import com.example.chichi.domain.song.repository.songlike.redis.SongLikeRedisRepository;
 import com.redis.testcontainers.RedisContainer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,41 +45,52 @@ class SongLikeRedisRepositoryTest {
         redisTemplate.getConnectionFactory().getConnection().flushAll();
     }
 
+    /**
+     * [목적] 이미 좋아요한 곡에 토글하면 좋아요가 해제되는지 확인한다.
+     *
+     * [검증]
+     * 1. toggleLike 결과가 false이다.
+     */
     @Test
     @DisplayName("이미 좋아요한 곡일 경우 한번 더 누르면 좋아요가 해제된다.")
     void alreadyLikedSong_removeLike() {
-        //given
         long userId = 1L;
         long songId = 2L;
         long score = 123456L;
         redisTemplate.opsForZSet().add("songlike:user:" + userId, String.valueOf(songId), score);
 
-        //when
         boolean result = songLikeRedisRepository.toggleLike(userId, songId, score);
 
-        //then
         assertThat(result).isFalse();
     }
 
+    /**
+     * [목적] 좋아요하지 않은 곡에 토글하면 좋아요가 등록되는지 확인한다.
+     *
+     * [검증]
+     * 1. toggleLike 결과가 true이다.
+     */
     @Test
     @DisplayName("곡 좋아요에 성공한다.")
     void likedSong() {
-        //given
         long userId = 1L;
         long songId = 2L;
         long score = 123456L;
 
-        //when
         boolean result = songLikeRedisRepository.toggleLike(userId, songId, score);
 
-        //then
         assertThat(result).isTrue();
     }
 
+    /**
+     * [목적] Redis에 저장된 좋아요 곡과 점수를 조회할 수 있는지 확인한다.
+     *
+     * [검증]
+     * 1. 조회 결과에 songId와 score 쌍(1, 1001)이 포함된다.
+     */
     @Test
     @DisplayName("좋아요한 곡들을 가져오는데 성공한다.")
     void getLikedSongsOrderByLatest() {
-        //given
         long userId = 123L;
         List<Long> songIds = LongStream.rangeClosed(1, 10)
                 .boxed()
@@ -90,10 +100,8 @@ class SongLikeRedisRepositoryTest {
                 String.valueOf(e),
                 e + 1000));
 
-        //when
         Set<SongScoreDto> values = songLikeRedisRepository.findLikedSongScoresByUserIdFromRedis(userId);
 
-        //then
         assertThat(values)
                 .extracting("songId", "score")
                 .contains(

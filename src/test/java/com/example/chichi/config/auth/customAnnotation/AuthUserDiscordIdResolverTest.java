@@ -23,9 +23,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.BDDMockito.given;
 
 @ContextConfiguration
@@ -48,26 +47,34 @@ class AuthUserDiscordIdResolverTest {
         authUserDiscordIdResolver = new AuthUserDiscordIdResolver();
     }
 
+    /**
+     * [목적] @AuthUserDiscordId 파라미터를 이 Resolver가 지원하는지 확인한다.
+     *
+     * [검증]
+     * 1. @AuthUserDiscordId 어노테이션과 기대 타입이면 supportsParameter가 true를 반환한다.
+     */
     @Test
     @DisplayName("메서드 파라미터의 조건이 맞으면 true를 반환한다.")
     void supportsParameter() {
-        //given
         given(methodParameter.hasParameterAnnotation(AuthUserDiscordId.class))
                 .willReturn(true);
         given(methodParameter.getParameterType())
                 .willAnswer(invocation -> Long.class);
 
-        //when
         boolean result = authUserDiscordIdResolver.supportsParameter(methodParameter);
 
-        //then
-        assertTrue(result);
+        assertThat(result).isTrue();
     }
 
+    /**
+     * [목적] SecurityContext의 인증 정보에서 사용자 디스코드 id를 꺼내 반환하는지 확인한다.
+     *
+     * [검증]
+     * 1. 반환값이 PrincipalDetails에 담긴 사용자 디스코드 id와 일치한다.
+     */
     @Test
     @DisplayName("SecurityContext에 저장된 AuthenticationToken에서 사용자 디스코드 id를 가져온다.")
     void resolveArgument() throws Exception {
-        //given
         long discordId = 12345L;
 
         Map<String, Object> attributes = new HashMap<>();
@@ -83,20 +90,23 @@ class AuthUserDiscordIdResolverTest {
         Authentication mockAuth = new UsernamePasswordAuthenticationToken(mockUser, null, null);
         SecurityContextHolder.getContext().setAuthentication(mockAuth);
 
-        //when
         Object result = authUserDiscordIdResolver.resolveArgument(methodParameter, null, webRequest, binderFactory);
 
-        //then
-        assertEquals(discordId, result);
+        assertThat(result).isEqualTo(discordId);
     }
 
+    /**
+     * [목적] 인증 정보가 없을 때 인자 해석이 실패하는지 확인한다.
+     *
+     * [검증]
+     * 1. 예외가 발생한다.
+     * 2. 메시지가 "@AuthUserDiscordId authentication 로드 실패"이다.
+     */
     @Test
     @DisplayName("SecurityContext에 저장된 AuthenticationToken을 찾을 수 없으면 예외가 발생한다.")
-    void roadAuthentication() {
-        //given
+    void resolveArgument_noAuthentication() {
         SecurityContextHolder.clearContext();
 
-        //when, then
         assertThatExceptionOfType(Exception.class)
                 .isThrownBy(() -> authUserDiscordIdResolver.resolveArgument(methodParameter, null, webRequest, binderFactory))
                 .withMessage("@AuthUserDiscordId authentication 로드 실패");

@@ -87,28 +87,44 @@ public class SpringSecurityTest {
         userRepository.deleteAll();
     }
 
+    /**
+     * [목적] 디스코드 로그인 인증 요청이 OAuth2 인증 페이지로 리다이렉트되는지 확인한다.
+     *
+     * [검증]
+     * 1. 응답이 3xx 리다이렉트이다.
+     */
     @Test
     @DisplayName("디스코드 로그인 인증 요청시 리다이렉트한다.")
     void redirect() throws Exception {
-        //when, then
         mvc.perform(get("/oauth2/authorization/discord"))
                 .andExpect(status().is3xxRedirection());
     }
 
+    /**
+     * [목적] 비로그인 상태에서도 정적 리소스에 접근할 수 있는지 확인한다.
+     *
+     * [검증]
+     * 1. /css/style.css 요청이 200이다.
+     * 2. /js/songLike.js 요청이 200이다.
+     */
     @Test
     @DisplayName("비로그인 상태에서도 정적 리소스(css, js) 접근을 허용한다.")
     void static_resource_access_allowed() throws Exception {
-        //when, then
         mvc.perform(get("/css/style.css"))
                 .andExpect(status().isOk());
         mvc.perform(get("/js/songLike.js"))
                 .andExpect(status().isOk());
     }
 
+    /**
+     * [목적] USER 권한 토큰으로 인증이 필요한 리소스에 접근할 수 있는지 확인한다.
+     *
+     * [검증]
+     * 1. 로그아웃 요청이 /login으로 3xx 리다이렉트된다(인증 통과).
+     */
     @Test
     @DisplayName("권한이 있을 경우 리소스 접근을 허용한다.")
     void resource_access_allowed() throws Exception {
-        //given
         User user = User.builder()
                 .discordId(1L)
                 .pin("111111")
@@ -123,7 +139,7 @@ public class SpringSecurityTest {
                         .map(RoleType::getAuthority)
                         .toList());
         Cookie cookie = new Cookie("accessToken", accessToken.replace("Bearer ", ""));
-        //when, then
+
         mvc.perform(post("/auth/logout")
                         .cookie(cookie)
                         .with(csrf()))
@@ -132,10 +148,15 @@ public class SpringSecurityTest {
                 .andDo(print());
     }
 
+    /**
+     * [목적] 필요한 권한(ADMIN)이 없는 토큰으로 접근하면 거부되는지 확인한다.
+     *
+     * [검증]
+     * 1. /error로 포워딩되고 status 속성이 403이다.
+     */
     @Test
     @DisplayName("필요한 권한이 없을 경우 리소스 접근을 거부한다.")
     void resource_access_denied() throws Exception {
-        //given
         User user = User.builder()
                 .discordId(1L)
                 .pin("111111")
@@ -150,7 +171,7 @@ public class SpringSecurityTest {
                         .map(RoleType::toString)
                         .toList());
         Cookie cookie = new Cookie("accessToken", accessToken.replace("Bearer ", ""));
-        //when, then
+
         mvc.perform(post("/admin")
                         .cookie(cookie)
                         .with(csrf()))
@@ -160,13 +181,17 @@ public class SpringSecurityTest {
                 .andDo(print());
     }
 
+    /**
+     * [목적] USER 권한이면 재생 요청 API에 접근할 수 있는지 확인한다.
+     *
+     * [검증]
+     * 1. 응답이 200이고 status가 success이다.
+     */
     @Test
     @DisplayName("USER 권한이면 재생 요청 API 접근을 허용한다.")
     void play_api_access_allowed() throws Exception {
-        //given
         Cookie cookie = accessTokenCookie(RoleType.USER);
 
-        //when, then
         mvc.perform(post("/api/songs/{song-id}/play", 1L)
                         .cookie(cookie)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -177,13 +202,17 @@ public class SpringSecurityTest {
                 .andDo(print());
     }
 
+    /**
+     * [목적] GUEST 권한이면 재생 요청 API 접근이 거부되는지 확인한다.
+     *
+     * [검증]
+     * 1. /error로 포워딩되고 status 속성이 403이다.
+     */
     @Test
     @DisplayName("USER 권한이 아니면 재생 요청 API 접근을 거부한다.")
     void play_api_access_denied() throws Exception {
-        //given
         Cookie cookie = accessTokenCookie(RoleType.GUEST);
 
-        //when, then
         mvc.perform(post("/api/songs/{song-id}/play", 1L)
                         .cookie(cookie)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -210,10 +239,15 @@ public class SpringSecurityTest {
         return new Cookie("accessToken", accessToken.replace("Bearer ", ""));
     }
 
+    /**
+     * [목적] CSRF 토큰 없이 요청하면 접근이 거부되는지 확인한다.
+     *
+     * [검증]
+     * 1. /error로 포워딩되고 status 속성이 403이다.
+     */
     @Test
     @DisplayName("CSRF토큰을 입력하지 않으면 예외가 발생하고 에러 페이지로 리다이렉트한다.")
     void test_csrf() throws Exception {
-        //when, then
         mvc.perform(post("/auth/logout"))
                 .andExpect(status().isOk())
                 .andExpect(forwardedUrl("/error"))
@@ -221,13 +255,19 @@ public class SpringSecurityTest {
                 .andDo(print());
     }
 
+    /**
+     * [목적] 유효하지 않은 액세스 토큰이면 로그인 페이지로 리다이렉트되는지 확인한다.
+     *
+     * [검증]
+     * 1. /login으로 3xx 리다이렉트된다.
+     * 2. AUTH_EXCEPTION_TYPE이 INVALID_TOKEN이다.
+     */
     @Test
     @DisplayName("유효하지 않은 액세스 토큰이면 예외가 발생하고 로그인 페이지로 리다이렉트한다.")
     void invalid_token() throws Exception {
-        //given
         String invalidToken = "invalid-token";
         Cookie cookie = new Cookie("accessToken", invalidToken);
-        //when, then
+
         mvc.perform(post("/auth/logout")
                         .cookie(cookie)
                         .with(csrf()))
@@ -240,10 +280,16 @@ public class SpringSecurityTest {
                 .andDo(print());
     }
 
+    /**
+     * [목적] 쿠키가 없으면 로그인 페이지로 리다이렉트되는지 확인한다.
+     *
+     * [검증]
+     * 1. /login으로 3xx 리다이렉트된다.
+     * 2. AUTH_EXCEPTION_TYPE이 MISSING_COOKIE이다.
+     */
     @Test
     @DisplayName("쿠키가 없으면 예외가 발생하고 로그인 페이지로 리다이렉트한다.")
     void cookie_null() throws Exception {
-        //when, then
         mvc.perform(post("/auth/logout")
                         .with(csrf()))
                 .andExpect(status().is3xxRedirection())
@@ -255,12 +301,18 @@ public class SpringSecurityTest {
                 .andDo(print());
     }
 
+    /**
+     * [목적] 쿠키에 액세스 토큰이 없으면 로그인 페이지로 리다이렉트되는지 확인한다.
+     *
+     * [검증]
+     * 1. /login으로 3xx 리다이렉트된다.
+     * 2. AUTH_EXCEPTION_TYPE이 MISSING_TOKEN이다.
+     */
     @Test
     @DisplayName("쿠키안에 액세스 토큰이 없으면 예외가 발생하고 로그인 페이지로 리다이렉트한다.")
     void token_null() throws Exception {
-        //given
         Cookie cookie = new Cookie("nothing", "nothing");
-        //when, then
+
         mvc.perform(post("/auth/logout")
                         .cookie(cookie)
                         .with(csrf()))
@@ -273,15 +325,21 @@ public class SpringSecurityTest {
                 .andDo(print());
     }
 
+    /**
+     * [목적] 블랙리스트된 액세스 토큰이면 로그인 페이지로 리다이렉트되는지 확인한다.
+     *
+     * [검증]
+     * 1. /login으로 3xx 리다이렉트된다.
+     * 2. AUTH_EXCEPTION_TYPE이 BLACKLIST_TOKEN이다.
+     */
     @Test
     @DisplayName("블랙리스트된 액세스 토큰이면 예외가 발생하고 로그인 페이지로 리다이렉트한다.")
     void blacklist_token() throws Exception {
-        //given
         String blacklistToken = "blacklist-token";
         Cookie cookie = new Cookie("accessToken", blacklistToken);
 
         tokenRepository.save("black:" + blacklistToken, "blacklisted", 10);
-        //when, then
+
         mvc.perform(post("/auth/logout")
                         .cookie(cookie)
                         .with(csrf()))
@@ -294,16 +352,22 @@ public class SpringSecurityTest {
                 .andDo(print());
     }
 
+    /**
+     * [목적] 가입되지 않은 사용자의 토큰이면 로그인 페이지로 리다이렉트되는지 확인한다.
+     *
+     * [검증]
+     * 1. /login으로 3xx 리다이렉트된다.
+     * 2. AUTH_EXCEPTION_TYPE이 USER_NOT_FOUND이다.
+     */
     @Test
     @DisplayName("가입된 사용자가 아니면 예외가 발생하고 로그인 페이지로 리다이렉트한다.")
     void none_user() throws Exception {
-        //given
         String accessToken = tokenService.createAccessToken(1L,
                 "test",
                 "test",
                 List.of("ROLE_USER"));
         Cookie cookie = new Cookie("accessToken", accessToken.replace("Bearer ", ""));
-        //when, then
+
         mvc.perform(post("/auth/logout")
                         .cookie(cookie)
                         .with(csrf()))
@@ -342,14 +406,19 @@ public class SpringSecurityTest {
         return new Cookie("refreshToken", refreshToken);
     }
 
+    /**
+     * [목적] 액세스 토큰이 만료되어도 유효한 리프레시 토큰이 있으면 액세스 토큰이 재발급되고 요청이 허용되는지 확인한다.
+     *
+     * [검증]
+     * 1. 응답이 200이고 accessToken 쿠키 maxAge가 7일이며 refreshToken 쿠키는 내려가지 않는다.
+     * 2. 재발급된 액세스 토큰이 유효하다.
+     */
     @Test
     @DisplayName("액세스 토큰이 만료되어도 유효한 리프레시 토큰이 있으면 액세스 토큰을 재발급하고 요청을 허용한다.")
     void reissue_when_access_expired() throws Exception {
-        //given
         Cookie accessCookie = new Cookie("accessToken", expiredAccessToken());
         Cookie refreshCookie = refreshTokenCookie(true);
 
-        //when
         MvcResult result = mvc.perform(post("/api/songs/{song-id}/play", 1L)
                         .cookie(accessCookie, refreshCookie)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -362,18 +431,21 @@ public class SpringSecurityTest {
                 .andDo(print())
                 .andReturn();
 
-        //then
         String reissued = result.getResponse().getCookie("accessToken").getValue().replace("Bearer+", "");
         assertThat(tokenService.isTokenValid(reissued)).isTrue();
     }
 
+    /**
+     * [목적] 액세스 토큰 쿠키가 없어도 유효한 리프레시 토큰이 있으면 액세스 토큰이 재발급되는지 확인한다.
+     *
+     * [검증]
+     * 1. 응답이 200이고 accessToken 쿠키가 생성된다.
+     */
     @Test
     @DisplayName("액세스 토큰 쿠키가 없어도 유효한 리프레시 토큰이 있으면 액세스 토큰을 재발급한다.")
     void reissue_when_access_missing() throws Exception {
-        //given
         Cookie refreshCookie = refreshTokenCookie(true);
 
-        //when, then
         mvc.perform(post("/api/songs/{song-id}/play", 1L)
                         .cookie(refreshCookie)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -384,14 +456,20 @@ public class SpringSecurityTest {
                 .andDo(print());
     }
 
+    /**
+     * [목적] 리프레시 토큰이 Redis에 저장된 값과 다르면 재발급되지 않는지 확인한다.
+     *
+     * [검증]
+     * 1. /login으로 3xx 리다이렉트된다.
+     * 2. AUTH_EXCEPTION_TYPE이 INVALID_TOKEN이다.
+     * 3. accessToken 쿠키가 생성되지 않는다.
+     */
     @Test
     @DisplayName("리프레시 토큰이 Redis에 저장된 값과 다르면 재발급하지 않고 로그인 페이지로 리다이렉트한다.")
     void no_reissue_when_refresh_not_saved() throws Exception {
-        //given
         Cookie accessCookie = new Cookie("accessToken", expiredAccessToken());
         Cookie refreshCookie = refreshTokenCookie(false);
 
-        //when, then
         mvc.perform(post("/api/songs/{song-id}/play", 1L)
                         .cookie(accessCookie, refreshCookie)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -404,16 +482,22 @@ public class SpringSecurityTest {
                 .andDo(print());
     }
 
+    /**
+     * [목적] 로그아웃하면 리프레시 토큰이 삭제되어 같은 토큰으로 재발급되지 않는지 확인한다.
+     *
+     * [검증]
+     * 1. 로그아웃 후 refreshToken 쿠키 maxAge가 0이다.
+     * 2. Redis의 refresh:1 키가 삭제된다.
+     * 3. 같은 리프레시 토큰으로 재발급 요청 시 /login으로 리다이렉트되고 INVALID_TOKEN이다.
+     */
     @Test
     @DisplayName("로그아웃하면 리프레시 토큰이 삭제되고 같은 리프레시 토큰으로는 재발급되지 않는다.")
     void logout_invalidates_refresh_token() throws Exception {
-        //given
         Cookie accessCookie = accessTokenCookie(RoleType.USER);
         String refreshToken = tokenService.createRefreshToken(1L, "test@gmail.com", "test-username",
                 List.of(RoleType.USER.getAuthority()));
         tokenService.saveRefreshToken("1", refreshToken);
 
-        //when: 로그아웃
         mvc.perform(post("/auth/logout")
                         .cookie(accessCookie)
                         .with(csrf()))
@@ -422,7 +506,8 @@ public class SpringSecurityTest {
                 .andExpect(cookie().maxAge("refreshToken", 0))
                 .andDo(print());
 
-        //then: Redis에서 삭제, 같은 refresh 로 재발급 불가
+
+        // Redis에서 삭제, 같은 refresh 토큰으로 재발급 불가
         assertThat(tokenRepository.findTokenByKey("refresh:1")).isNull();
         mvc.perform(post("/api/songs/{song-id}/play", 1L)
                         .cookie(new Cookie("accessToken", expiredAccessToken()), new Cookie("refreshToken", refreshToken))

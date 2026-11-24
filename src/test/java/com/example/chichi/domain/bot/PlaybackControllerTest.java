@@ -54,14 +54,19 @@ class PlaybackControllerTest {
         given(authUserDiscordIdResolver.resolveArgument(any(), any(), any(), any())).willReturn(TEST_AUTH_DISCORD_ID);
     }
 
+    /**
+     * [목적] 유효한 재생 요청이 들어오면 200 응답과 함께 재생 요청 서비스가 호출되는지 확인한다.
+     *
+     * [검증]
+     * 1. 응답 status가 success이고 message에 "성공"이 포함된다.
+     * 2. 인증된 discordId와 요청 본문으로 requestPlayback이 호출된다.
+     */
     @Test
     @DisplayName("재생 요청에 성공한다.")
     @WithMockUser
     void requestPlayback() throws Exception {
-        //given
         PlaybackRequest request = new PlaybackRequest("test-title", "test-uploader");
 
-        //when, then
         mvc.perform(post("/api/songs/{song-id}/play", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(request))
@@ -71,17 +76,23 @@ class PlaybackControllerTest {
                 .andExpect(jsonPath("$.status").value("success"))
                 .andExpect(jsonPath("$.message", containsString("성공")))
                 .andDo(print());
+
         verify(playbackRequestService).requestPlayback(eq(TEST_AUTH_DISCORD_ID), eq(request));
     }
 
+    /**
+     * [목적] 제목이 공백인 재생 요청은 검증에 실패해 400을 반환하고 서비스를 호출하지 않는지 확인한다.
+     *
+     * [검증]
+     * 1. 응답 상태가 400이고 message가 INVALID_INPUT과 일치한다.
+     * 2. playbackRequestService와 상호작용이 없다.
+     */
     @Test
     @DisplayName("제목이 비어 있으면 재생 요청에 실패한다.")
     @WithMockUser
     void requestPlayback_blankTitle() throws Exception {
-        //given
         PlaybackRequest invalidRequest = new PlaybackRequest(" ", "test-uploader");
 
-        //when, then
         mvc.perform(post("/api/songs/{song-id}/play", 1L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(invalidRequest))
@@ -90,6 +101,7 @@ class PlaybackControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.message").value(INVALID_INPUT.getMessage()))
                 .andDo(print());
+
         verifyNoInteractions(playbackRequestService);
     }
 }
