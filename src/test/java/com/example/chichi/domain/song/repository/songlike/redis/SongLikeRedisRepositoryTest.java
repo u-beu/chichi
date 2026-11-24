@@ -1,7 +1,6 @@
-package com.example.chichi.domain.song.repository;
+package com.example.chichi.domain.song.repository.songlike.redis;
 
 import com.example.chichi.domain.song.dto.SongScoreDto;
-import com.example.chichi.domain.song.repository.songlike.redis.SongLikeRedisRepository;
 import com.redis.testcontainers.RedisContainer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;

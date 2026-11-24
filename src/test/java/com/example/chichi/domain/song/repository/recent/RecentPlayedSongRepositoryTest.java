@@ -1,6 +1,5 @@
-package com.example.chichi.domain.song.recent;
+package com.example.chichi.domain.song.repository.recent;
 
-import com.example.chichi.domain.song.repository.recent.RecentPlayedSongRepository;
 import com.redis.testcontainers.RedisContainer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
