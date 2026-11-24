@@ -1,23 +1,30 @@
-name: Test and buildx docker image, Deploy to EC2
+name: CI (PR) / CD (manual, EC2)
 
 on:
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
     inputs:
       env:
-        description: "배포 옵션 선택"
+        description: "실행 옵션 (init/prod_*/config는 EC2 필요: repo variable EC2_ENABLED=true일 때만 실행)"
         required: true
-        default: 'prod_none'
+        default: 'test_only'
         type: choice
         options:
+          - test_only
           - init
           - prod_create
           - prod_none
           - prod_update
           - config
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
-    if: ${{ github.event.inputs.env != 'config' }}
+    if: ${{ github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && github.event.inputs.env != 'config') }}
     runs-on: ubuntu-latest
           
     steps:
@@ -33,8 +40,9 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        
-    - name: Enable Docker Daemon 
+        cache: gradle
+
+    - name: Enable Docker Daemon
       run: |
         sudo systemctl start docker || true
         docker info
@@ -47,7 +55,7 @@ jobs:
 
   build:
     needs: test
-    if: ${{ github.event.inputs.env != 'config' }}
+    if: ${{ vars.EC2_ENABLED == 'true' && github.event_name == 'workflow_dispatch' && !contains(fromJSON('["config","test_only"]'), github.event.inputs.env) }}
     runs-on: ubuntu-latest
 
     steps:
@@ -92,7 +100,7 @@ jobs:
 
   deploy-init:
     needs: build
-    if: ${{ github.event.inputs.env == 'init' }}
+    if: ${{ vars.EC2_ENABLED == 'true' && github.event_name == 'workflow_dispatch' && github.event.inputs.env == 'init' }}
     runs-on: ubuntu-latest
 
     steps:
@@ -144,7 +152,7 @@ jobs:
 
   deploy-prod:
     needs: build
-    if: ${{ startsWith(github.event.inputs.env, 'prod') }}
+    if: ${{ vars.EC2_ENABLED == 'true' && github.event_name == 'workflow_dispatch' && startsWith(github.event.inputs.env, 'prod') }}
     runs-on: ubuntu-latest
 
     steps:
@@ -161,7 +169,7 @@ jobs:
             ./deploy.sh
 
   deploy-config:
-    if: ${{ github.event.inputs.env == 'config' }}
+    if: ${{ vars.EC2_ENABLED == 'true' && github.event_name == 'workflow_dispatch' && github.event.inputs.env == 'config' }}
     runs-on: ubuntu-latest
 
     steps:
