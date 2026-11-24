@@ -44,16 +44,22 @@ class RecentPlayedSongRepositoryTest {
         redisTemplate.getConnectionFactory().getConnection().flushAll();
     }
 
+    /**
+     * [목적] 최근 재생곡을 한도(30개) 초과로 저장한 뒤 한도로 제한하면 가장 오래된 곡부터 삭제되는지 확인한다.
+     *
+     * [검증]
+     * 1. 35개 저장 직후 가장 오래된 곡(1)이 첫 번째이다.
+     * 2. deleteOverLimit(30) 이후 가장 오래된 곡이 6으로 바뀐다(5개 삭제).
+     */
     @Test
     @DisplayName("최근 재생곡 35개를 저장한 후 30개로 제한하면 가장 오래된 곡 5개가 없어진다.")
     void save_deleteOverLimit() {
-        //given
         long userId = 123L;
         List<Long> songIds = LongStream.rangeClosed(1, 35)
                 .boxed()
                 .toList();
 
-        //when : 1(과거, score 낮다) ~ 35(최신, score 높다)
+        // 1(과거, score 낮다) ~ 35(최신, score 높다)
         songIds.forEach(e -> recentPlayedSongRepository.save(
                 userId,
                 e,
@@ -62,27 +68,31 @@ class RecentPlayedSongRepositoryTest {
                         .atZone(ZoneId.systemDefault())
                         .toInstant()
                         .toEpochMilli()));
-        //then
+
         List<String> allValues = redisTemplate.opsForZSet().range("recent:user:" + userId, 0, -1).stream().toList();
         assertThat(allValues.get(0)).isEqualTo(String.valueOf(1L));
 
-        //when
         recentPlayedSongRepository.deleteOverLimit(String.valueOf(userId), 30);
 
-        //then
         List<String> limitValues = redisTemplate.opsForZSet().range("recent:user:" + userId, 0, -1).stream().toList();
         assertThat(limitValues.get(0)).isEqualTo(String.valueOf(6L));
     }
 
+    /**
+     * [목적] 최근 재생곡 id 목록이 최신순으로 조회되는지 확인한다.
+     *
+     * [검증]
+     * 1. 조회된 개수가 저장한 개수(15)와 같다.
+     * 2. 첫 번째가 가장 최신(15), 마지막이 가장 오래된 곡(1)이다.
+     */
     @Test
     @DisplayName("최근 재생곡을 최신~과거순으로 가져오는데 성공한다.")
     void getRecentPlayedSongsOrderByLatest() {
-        //given
         long discordId = 123L;
         List<Long> songIds = LongStream.rangeClosed(1, 15)
                 .boxed()
                 .toList();
-        //1(과거, score 낮다) ~ 15(최신, score 높다)
+        // 1(과거, score 낮다) ~ 15(최신, score 높다)
         songIds.forEach(e -> recentPlayedSongRepository.save(
                 discordId,
                 e,
@@ -92,10 +102,8 @@ class RecentPlayedSongRepositoryTest {
                         .toInstant()
                         .toEpochMilli()));
 
-        //when
         List<Long> values = recentPlayedSongRepository.findRecentPlayedSongIdsByUserIdLatest(discordId);
 
-        //then
         assertThat(values.size()).isEqualTo(15);
         assertThat(values.get(0)).isEqualTo(15L);
         assertThat(values.get(14)).isEqualTo(1L);

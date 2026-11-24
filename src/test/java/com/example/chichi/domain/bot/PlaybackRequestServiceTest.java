@@ -40,13 +40,20 @@ class PlaybackRequestServiceTest {
         given(redisTemplate.opsForList()).willReturn(listOperations);
     }
 
+    /**
+     * [목적] 재생 요청 시 제목/가수로 만든 query가 bot:commands 큐에 발행되는지 확인한다.
+     *
+     * [검증]
+     * 1. action이 playback이다.
+     * 2. discordId가 요청한 사용자와 일치한다.
+     * 3. query가 "제목 가수" 형태이다.
+     * 4. guild_id 필드가 포함되지 않는다.
+     */
     @Test
     @DisplayName("요청의 제목/가수로 query를 만들어 bot:commands에 발행한다.")
     void requestPlayback() throws Exception {
-        //when
         playbackRequestService.requestPlayback(DISCORD_ID, new PlaybackRequest("test-title", "test-uploader"));
 
-        //then
         JsonNode json = publishedPayload();
         assertThat(json.get("action").asText()).isEqualTo("playback");
         assertThat(json.get("discordId").asLong()).isEqualTo(DISCORD_ID);
@@ -54,13 +61,17 @@ class PlaybackRequestServiceTest {
         assertThat(json.has("guild_id")).isFalse();
     }
 
+    /**
+     * [목적] 가수 정보가 없는 재생 요청은 제목만으로 query가 만들어지는지 확인한다.
+     *
+     * [검증]
+     * 1. 발행된 query가 제목과 같다.
+     */
     @Test
     @DisplayName("가수가 비어 있으면 제목만 query로 발행한다.")
     void requestPlayback_withoutUploader() throws Exception {
-        //when
         playbackRequestService.requestPlayback(DISCORD_ID, new PlaybackRequest("test-title", null));
 
-        //then
         assertThat(publishedPayload().get("query").asText()).isEqualTo("test-title");
     }
 

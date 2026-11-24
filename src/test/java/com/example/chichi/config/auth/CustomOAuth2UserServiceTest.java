@@ -3,6 +3,7 @@ package com.example.chichi.config.auth;
 import com.example.chichi.domain.user.RoleType;
 import com.example.chichi.domain.user.User;
 import com.example.chichi.domain.user.UserRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -38,9 +39,16 @@ public class CustomOAuth2UserServiceTest {
     @InjectMocks
     private CustomOAuth2UserService customOAuth2UserService;
 
+    /**
+     * [목적] Discord OAuth2 사용자 정보를 기반으로 PrincipalDetails가 생성되는지 확인한다.
+     *
+     * [검증]
+     * 1. 결과가 PrincipalDetails 타입이다.
+     * 2. discord_id, email, username 속성이 Discord 응답 및 DB 사용자와 일치한다.
+     */
     @Test
+    @DisplayName("Discord 로그인 시 사용자 정보로 PrincipalDetails를 생성한다.")
     void loadUser() {
-        //given
         long discordId = 1L;
         String email = "test@gmail.com";
         String username = "test-username";
@@ -89,14 +97,11 @@ public class CustomOAuth2UserServiceTest {
         given(delegate.loadUser(eq(userRequest))).willReturn(mockOAuth2User);
         given(userRepository.findByDiscordId(eq(discordId))).willReturn(Optional.of(user));
 
-        //when
         OAuth2User result = customOAuth2UserService.loadUser(userRequest);
 
-        //then
         assertThat(result).isInstanceOf(PrincipalDetails.class);
         assertThat(Optional.ofNullable(result.getAttribute("discord_id")).get()).isEqualTo(discordId);
         assertThat(Optional.ofNullable(result.getAttribute("email")).get()).isEqualTo(email);
         assertThat(Optional.ofNullable(result.getAttribute("username")).get()).isEqualTo(username);
-
     }
 }

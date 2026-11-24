@@ -24,9 +24,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -90,10 +92,17 @@ class UserControllerTest {
         given(authUserDiscordIdResolver.resolveArgument(any(), any(), any(), any())).willReturn(TEST_DISCORD_ID);
     }
 
+    /**
+     * [목적] GUEST 사용자가 PIN을 입력해 가입하면 토큰이 재발행되고 메인 페이지로 리다이렉트되는지 확인한다.
+     *
+     * [검증]
+     * 1. "/"로 3xx 리다이렉트된다.
+     * 2. userService.register가 인증된 userId와 pin으로 1회 호출된다.
+     * 3. reissueTokensAfterUserRegister가 가입된 사용자와 기존 액세스 토큰으로 1회 호출된다.
+     */
     @Test
     @DisplayName("가입시 핀을 입력하면 성공한다.")
     void register() throws Exception {
-        //given
         String pin = "111111";
         String accessToken = "mock-access-token";
 
@@ -118,7 +127,6 @@ class UserControllerTest {
                 .build();
         given(userService.register(eq(TEST_USER_ID), eq(pin))).willReturn(updatedUser);
 
-        //when, then
         mvc.perform(post("/register/pin")
                         .principal(guestAuthentication)
                         .with(authentication(guestAuthentication))
@@ -138,15 +146,20 @@ class UserControllerTest {
         );
     }
 
+    /**
+     * [목적] 유효한 PIN 변경 요청(숫자 6자리)이 성공하고 서비스에 위임되는지 확인한다.
+     *
+     * [검증]
+     * 1. 응답이 200이고 message가 "PIN 번호를 변경하였습니다."이다.
+     * 2. userService.changePin이 인증된 userId, 현재 PIN, 새 PIN으로 1회 호출된다.
+     */
     @Test
     @DisplayName("pin 변경시 유효성 검사(숫자6자리)에 통과해야 성공한다.")
     void changePin() throws Exception {
-        //given
         String currentPin = "111111";
         String newPin = "222222";
         ChangePinRequest validRequest = new ChangePinRequest(currentPin, newPin);
 
-        //when, then
         mvc.perform(patch("/api/users/me/pin")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonMapper.writeValueAsString(validRequest))
@@ -161,13 +174,18 @@ class UserControllerTest {
         verify(userService, times(1)).changePin(eq(TEST_USER_ID), eq(currentPin), eq(newPin));
     }
 
+    /**
+     * [목적] 로그아웃 요청이 인증된 discordId와 액세스 토큰으로 처리되고 로그인 페이지로 리다이렉트되는지 확인한다.
+     *
+     * [검증]
+     * 1. "/login"으로 3xx 리다이렉트된다.
+     * 2. userService.logout이 인증된 discordId와 액세스 토큰으로 1회 호출된다.
+     */
     @Test
     @DisplayName("로그아웃 요청시 인증된 discordId와 액세스 토큰으로 로그아웃하고 로그인 페이지로 리다이렉트한다.")
     void logout() throws Exception {
-        //given
         String accessToken = "mock-access-token";
 
-        //when, then
         mvc.perform(post("/auth/logout")
                         .with(csrf())
                         .with(authentication(createUserAuthentication()))

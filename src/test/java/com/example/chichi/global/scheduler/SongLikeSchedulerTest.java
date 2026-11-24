@@ -22,17 +22,26 @@ import static org.mockito.Mockito.verify;
 class SongLikeSchedulerTest {
     @Mock
     private RedisTemplate<String, String> redisTemplate;
+
     @Mock
     private SongLikeRepository songLikeRepository;
+
     @Mock
     private ZSetOperations<String, String> zSetOperations;
+
     @InjectMocks
     private SongLikeScheduler songLikeScheduler;
 
+    /**
+     * [목적] 스케줄러 실행 시 Redis의 좋아요 데이터가 DB로 동기화되고 Redis 키가 삭제되는지 확인한다.
+     *
+     * [검증]
+     * 1. 사용자별 Redis 키가 각각 1회 삭제된다.
+     * 2. 좋아요 데이터가 DB에 saveAll로 1회 저장된다.
+     */
     @Test
     @DisplayName("새벽 3시에 스케쥴러 로직을 검증한다.")
     void syncSongLikesToDB() {
-        //given
         given(redisTemplate.opsForZSet()).willReturn(zSetOperations);
 
         String prefix = "songlike:user:";
@@ -52,10 +61,8 @@ class SongLikeSchedulerTest {
                 new DefaultTypedTuple<>("21", 2100d));
         given(zSetOperations.rangeWithScores(prefix + userId2, 0, -1)).willReturn(user2typedTuples);
 
-        //when
         songLikeScheduler.syncSongLikesToDB();
 
-        //then
         verify(redisTemplate, times(1)).delete(prefix + userId1);
         verify(redisTemplate, times(1)).delete(prefix + userId2);
         verify(songLikeRepository, times(1)).saveAll(any());

@@ -45,10 +45,16 @@ class SongRepositoryTest {
     @Autowired
     private SongLikeRepository songLikeRepository;
 
+    /**
+     * [목적] 조회된 곡 목록에 사용자의 좋아요 여부가 함께 반영되는지 확인한다.
+     *
+     * [검증]
+     * 1. 요청한 두 곡이 모두 조회된다.
+     * 2. 좋아요한 곡(songId1)의 liked가 true이다.
+     */
     @Test
     @DisplayName("조회된 노래의 회원 좋아요 여부를 가져오는데 성공한다.")
     void findSongsSimpleById() {
-        //given
         long userId = 123L;
         long songId1 = 1L;
         long songId2 = 2L;
@@ -71,10 +77,8 @@ class SongRepositoryTest {
 
         songLikeRepository.save(SongLike.builder().userId(userId).songId(songId1).score(1000L).build());
 
-        //when
         Set<SongListResponse.SongSimpleResponse> response = songRepository.findRecentSongSimplesByIds(List.of(songId1, songId2), Set.of(songId1));
 
-        //then
         assertThat(response)
                 .extracting(SongListResponse.SongSimpleResponse::songId)
                 .containsAll(List.of(songId1, songId2));

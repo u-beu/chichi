@@ -39,39 +39,46 @@ class UserRepositoryTest {
     private final long TEST_DISCORD_ID = 12345678910L;
     private final String TEST_PIN = "123456";
 
+    /**
+     * [목적] 저장된 회원을 디스코드 id로 조회할 수 있는지 확인한다.
+     *
+     * [검증]
+     * 1. 조회 결과가 존재한다.
+     * 2. discordId와 pin이 저장한 값과 일치한다.
+     */
     @Test
     @DisplayName("회원이 존재할 시 디스코드id로 회원 데이터를 가져온다.")
     void findByDiscordId() {
-        //given
         User user = User.builder()
                 .discordId(TEST_DISCORD_ID)
                 .pin(TEST_PIN)
                 .build();
         userRepository.save(user);
 
-        //when
         Optional<User> foundUser = userRepository.findByDiscordId(TEST_DISCORD_ID);
 
-        //then
         assertThat(foundUser).isPresent();
         assertThat(foundUser.get().getDiscordId()).isEqualTo(TEST_DISCORD_ID);
         assertThat(foundUser.get().getPin()).isEqualTo(TEST_PIN);
     }
 
+    /**
+     * [목적] 저장된 회원의 디스코드 id로 존재 여부를 조회하면 true가 반환되는지 확인한다.
+     *
+     * [검증]
+     * 1. existsByDiscordId 결과가 true이다.
+     */
     @Test
     @DisplayName("회원이 존재할 시 디스코드id로 검색해 있다면 True를 반환한다.")
     void existsByDiscordId() {
-        //given
         User user = User.builder()
                 .discordId(TEST_DISCORD_ID)
                 .pin(TEST_PIN)
                 .build();
         userRepository.save(user);
 
-        //when
         boolean exists = userRepository.existsByDiscordId(TEST_DISCORD_ID);
 
-        //then
         assertThat(exists).isTrue();
     }
 }
