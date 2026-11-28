@@ -29,7 +29,7 @@
     - 발행(`LPUSH`) 재생 요청: `bot:commands` -> `{"action": "playback", "discordId", "query"}`
     - 발행(`LPUSH`) 분석 요청: `worker:analysis-requests` -> `{"videoId"}`
     - 소비 재생 기록: `spring:play-history` <- `{"title", "uploader", "image", "videoId", "discordId"}`
-    - 소비 재생 실패 알림: `spring:playback-result` <- `{"discordId", "status": "not_in_voice"}`
+    - 소비 재생 실패 알림: `spring:playback-failure` <- `{"discordId", "status"}` (status: `not_in_voice` / `video_too_long` / `search_failed` / `no_permission` / `connect_failed` / `playback_failed`)
     - 소비 분석 결과: `spring:analysis-results` <- 성공 `{"videoId", "genre", "mood"}` / 실패 `{"videoId", "error"}`
   - **통신 원칙:** `chichi-bot`과 REST 직접 통신 금지, Redis List 기반 메시지 버스만 사용
 
