@@ -1,5 +1,6 @@
 package com.example.chichi.domain.web;
 
+import com.example.chichi.domain.bot.dto.PlaybackFailureResponse;
 import com.example.chichi.domain.song.dto.SongListResponse;
 import com.example.chichi.domain.song.dto.SongResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,17 @@ public class SseService {
                 emitter.send(
                         SseEmitter.event().name("recentSongUpdate").data(data)
                 );
+            } catch (IOException e) {
+                emitters.remove(userId);
+            }
+        }
+    }
+
+    public void broadcastPlaybackFailure(long userId, PlaybackFailureResponse response) {
+        SseEmitter emitter = emitters.get(userId);
+        if (emitter != null) {
+            try {
+                emitter.send(SseEmitter.event().name("playbackFailure").data(response));
             } catch (IOException e) {
                 emitters.remove(userId);
             }
