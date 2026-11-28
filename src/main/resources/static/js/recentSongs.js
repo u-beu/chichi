@@ -73,6 +73,58 @@ eventSource.addEventListener("recentSongUpdate", (event) => {
     }
 });
 
+const failureToasts = new Map(); // status -> { el, badge, count }
+
+function getFailureContainer() {
+    let container = document.getElementById('failure-toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'failure-toast-container';
+        document.body.append(container);
+    }
+    return container;
+}
+
+function showFailureToast({ status, message }) {
+    const existing = failureToasts.get(status);
+    if (existing) {
+        existing.count += 1;
+        existing.badge.textContent = existing.count;
+        existing.badge.hidden = false;
+        return;
+    }
+
+    const el = document.createElement('div');
+    el.className = 'failure-toast';
+    el.setAttribute('role', 'alert');
+
+    const text = document.createElement('span');
+    text.className = 'failure-toast-msg';
+    text.textContent = message;
+
+    const badge = document.createElement('span');
+    badge.className = 'failure-toast-badge';
+    badge.hidden = true;
+
+    const closeBtn = document.createElement('button');
+    closeBtn.type = 'button';
+    closeBtn.className = 'failure-toast-close';
+    closeBtn.setAttribute('aria-label', '닫기');
+    closeBtn.textContent = '✕';
+    closeBtn.addEventListener('click', () => {
+        el.remove();
+        failureToasts.delete(status);
+    });
+
+    el.append(text, badge, closeBtn);
+    getFailureContainer().append(el);
+    failureToasts.set(status, { el, badge, count: 1 });
+}
+
+eventSource.addEventListener("playbackFailure", (event) => {
+    showFailureToast(JSON.parse(event.data));
+});
+
 eventSource.onerror = function () {
     console.log("SSE 연결 끊겼습니다. 재연결을 시도합니다.");
 };

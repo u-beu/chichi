@@ -20,6 +20,7 @@
     --sky: #8CCBF2;
     --sky-ink: #1F6C9C;
     --sky-bg: #E3F3FC;
+    --danger: #D9534F;
 
     --tab1: #FFF4C2;
     --tab2: #FFDFE5;
@@ -55,6 +56,7 @@
         --sky: #7DC3EE;
         --sky-ink: #A9DCF8;
         --sky-bg: #2B3C48;
+        --danger: #FF8A80;
 
         --tab1: #5B533A;
         --tab2: #55434A;
@@ -463,6 +465,56 @@ svg {
     transform: translate(-50%, 0);
 }
 
+/* ---------- 재생 실패 지속형 토스트 ---------- */
+#failure-toast-container {
+    position: fixed;
+    right: 16px;
+    bottom: 28px;
+    z-index: 41;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: calc(100% - 32px);
+    pointer-events: none;
+}
+
+.failure-toast {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: var(--radius);
+    border: 1px solid var(--danger);
+    background: var(--card);
+    color: var(--ink);
+    font-size: 14px;
+    box-shadow: var(--shadow-hover);
+    pointer-events: auto;
+}
+
+.failure-toast-msg { flex: 1; }
+
+.failure-toast-badge {
+    min-width: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--danger);
+    color: var(--cat-fur);
+    font-size: 12px;
+    font-weight: 700;
+    text-align: center;
+}
+
+.failure-toast-close {
+    border: 0;
+    background: none;
+    color: var(--ink-soft);
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.failure-toast-close:hover { color: var(--ink); }
+
 /* ---------- 맞춤 추천 ---------- */
 .tag {
     display: inline-flex;
@@ -747,6 +799,10 @@ svg {
     }
 
     .toast {
+        bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+    }
+
+    #failure-toast-container {
         bottom: calc(96px + env(safe-area-inset-bottom, 0px));
     }
 }
